@@ -1,0 +1,33 @@
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+secrets/
+
+# .NET outputs
+**/bin/
+**/obj/
+
+# Frontend outputs and dependencies
+**/node_modules/
+**/dist/
+
+# IDE and operating-system files
+.vs/
+.opencode/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.user
+*.suo
+
+# Local database, queue, backup, and import artifacts
+data/
+backups/
+imports/
+*.dump
+*.sql

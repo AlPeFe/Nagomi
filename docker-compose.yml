@@ -1,0 +1,120 @@
+name: nagomi
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - internal
+    security_opt:
+      - no-new-privileges:true
+
+  rabbitmq:
+    image: rabbitmq:4.2-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?Set RABBITMQ_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:?Set RABBITMQ_VHOST in .env}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks:
+      - internal
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/src/Nagomi.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      ConnectionStrings__Nagomi: Host=postgres;Port=5432;Database=${POSTGRES_DB:?Set POSTGRES_DB in .env};Username=${POSTGRES_USER:?Set POSTGRES_USER in .env};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      Database__MigrateOnStartup: "true"
+      ProviderIntegration__RabbitMq__Uri: ${RABBITMQ_URI:-amqp://${RABBITMQ_USER:?Set RABBITMQ_USER in .env}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env}@rabbitmq:5672/${RABBITMQ_VHOST:?Set RABBITMQ_VHOST in .env}}
+      Authentication__ProviderIntegration__Issuer: ${OAUTH_ISSUER:?Set OAUTH_ISSUER in .env}
+      Authentication__ProviderIntegration__SigningCertificatePath: ${OAUTH_SIGNING_CERTIFICATE_PATH:-}
+      Authentication__ProviderIntegration__SigningCertificatePassword: ${OAUTH_SIGNING_CERTIFICATE_PASSWORD:-}
+      Authentication__ProviderIntegration__EncryptionCertificatePath: ${OAUTH_ENCRYPTION_CERTIFICATE_PATH:-}
+      Authentication__ProviderIntegration__EncryptionCertificatePassword: ${OAUTH_ENCRYPTION_CERTIFICATE_PASSWORD:-}
+      Authentication__ProviderIntegration__BootstrapClient__Enabled: ${OAUTH_BOOTSTRAP_ENABLED:-false}
+      Authentication__ProviderIntegration__BootstrapClient__ClientId: ${OAUTH_BOOTSTRAP_CLIENT_ID:-}
+      Authentication__ProviderIntegration__BootstrapClient__ClientSecret: ${OAUTH_BOOTSTRAP_CLIENT_SECRET:-}
+      Authentication__ProviderIntegration__BootstrapClient__DisplayName: ${OAUTH_BOOTSTRAP_DISPLAY_NAME:-}
+      Authentication__ProviderIntegration__BootstrapClient__ProviderId: ${OAUTH_BOOTSTRAP_PROVIDER_ID:-00000000-0000-0000-0000-000000000000}
+      Authentication__ProviderIntegration__BootstrapClient__Role: ${OAUTH_BOOTSTRAP_ROLE:-operator}
+      Authentication__ProviderIntegration__BootstrapClient__Contracts__0: ${OAUTH_BOOTSTRAP_CONTRACT:-}
+      SimulatedIdentity__UserIdentifier: ${SIMULATED_ACTOR_ID:?Set SIMULATED_ACTOR_ID in .env}
+      SimulatedIdentity__RequestingOrganizationIdentifier: ${SIMULATED_ORGANIZATION_ID:?Set SIMULATED_ORGANIZATION_ID in .env}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    expose:
+      - "8080"
+    networks:
+      - edge
+      - internal
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - edge
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  edge:
+  internal:
+    internal: true
+
+volumes:
+  postgres-data:
+  rabbitmq-data:

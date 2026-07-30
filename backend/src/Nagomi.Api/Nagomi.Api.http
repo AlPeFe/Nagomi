@@ -1,0 +1,6 @@
+@Nagomi.Api_HostAddress = http://localhost:5286
+
+GET {{Nagomi.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

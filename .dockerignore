@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+.git/
+.vs/
+.opencode/
+openspec/
+tests/
+*.user
+*.suo

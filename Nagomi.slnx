@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/backend/" />
+  <Folder Name="/backend/src/">
+    <Project Path="backend/src/Nagomi.Api/Nagomi.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Nagomi.IntegrationTests/Nagomi.IntegrationTests.csproj" />
+    <Project Path="tests/Nagomi.UnitTests/Nagomi.UnitTests.csproj" />
+  </Folder>
+</Solution>
