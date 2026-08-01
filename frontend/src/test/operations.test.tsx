@@ -65,6 +65,9 @@ describe('solicitudes y navegación', () => {
   it('guarda un borrador incompleto y navega a su detalle', async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
+      if (url.includes('/reference-data/provinces')) return json([])
+      if (url.includes('/reference-data/municipalities')) return json([])
+      if (url.includes('/reference-data/healthcare-facilities')) return json([])
       if (url.includes('/drafts') && init?.method === 'POST') return json({ ...backendRequest, id: 'draft-1', publicId: null, status: 0, journeyRecords: [], recurrence: null })
       return json({ ...backendRequest, id: 'draft-1', publicId: null, status: 0, journeyRecords: [], recurrence: null })
     }); vi.stubGlobal('fetch', fetchMock)
@@ -79,7 +82,8 @@ describe('solicitudes y navegación', () => {
   })
 
   it('permite configurar una recurrencia con días y vuelta', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => json(backendRequest)))
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) =>
+      String(input).includes('/reference-data/') ? json([]) : json(backendRequest)))
     const user = userEvent.setup(); renderAt('/solicitudes/nueva')
     await user.click(screen.getByRole('button', { name: 'Recurrente' }))
     expect(screen.getByLabelText('Desde *')).toBeRequired()
