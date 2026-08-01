@@ -32,7 +32,7 @@ export function RequestFormPage() {
     event.preventDefault(); setSaving(submit ? 'submit' : 'draft'); setMessage('')
     const data = Object.fromEntries(new FormData(event.currentTarget))
     const patientParts = String(data.patientName ?? '').trim().split(/\s+/); const lastName = patientParts.length > 1 ? patientParts.pop() : undefined
-    const location = (prefix: 'origin' | 'destination') => ({ type: String(data[`${prefix}Type`]) as 'PrivateAddress' | 'HealthcareFacility', name: String(data[`${prefix}Name`] ?? ''), address: String(data[`${prefix}Address`] ?? '') || undefined, municipality: String(data[`${prefix}Municipality`] ?? '') || undefined, observations: String(data[`${prefix}Observations`] ?? '') || undefined })
+    const location = (prefix: 'origin' | 'destination') => ({ type: String(data[`${prefix}Type`]) as 'PrivateAddress' | 'HealthcareFacility', name: String(data[`${prefix}Name`] ?? ''), address: String(data[`${prefix}Address`] ?? '') || undefined, municipality: String(data[`${prefix}Municipality`] ?? '') || undefined, phone: String(data[`${prefix}Phone`] ?? '') || undefined, observations: String(data[`${prefix}Observations`] ?? '') || undefined })
     const draft: TransportRequestDraft = {
       patient: { firstName: patientParts.join(' ') || undefined, lastName, documentNumber: String(data.patientDocument ?? '') || undefined, healthCardNumber: String(data.healthCard ?? '') || undefined, phone: String(data.patientPhone ?? '') || undefined },
       reason: data.reason ? { code: String(data.reason), description: String(data.reason) } : undefined,

@@ -127,7 +127,6 @@ export function LocationFieldset({ prefix, legend }: { prefix: 'origin' | 'desti
         </select>
       </label>
       <input type="hidden" name={typeField} value={type} />
-      <input type="hidden" name={f('Phone')} />
       <input type="hidden" name={f('Municipality')} />
 
       <label>
@@ -175,11 +174,13 @@ export function LocationFieldset({ prefix, legend }: { prefix: 'origin' | 'desti
             </div>
           )}
           <label><span>Dirección</span><input name={f('Address')} placeholder="Se autocompleta del centro" /></label>
+          <label><span>Teléfono</span><input name={f('Phone')} type="tel" autoComplete="tel" placeholder="Se autocompleta del centro" /></label>
         </>
       ) : (
         <>
           <input type="hidden" name={f('Name')} />
           <label><span>Dirección</span><input name={f('Address')} placeholder="Calle, número" /></label>
+          <label><span>Teléfono</span><input name={f('Phone')} type="tel" autoComplete="tel" placeholder="Teléfono de contacto" /></label>
         </>
       )}
 
