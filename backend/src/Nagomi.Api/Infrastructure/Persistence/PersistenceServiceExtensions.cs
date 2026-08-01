@@ -15,7 +15,9 @@ public static class PersistenceServiceExtensions
         var connectionString = configuration.GetConnectionString("Nagomi")
             ?? throw new InvalidOperationException("Connection string 'Nagomi' is required.");
 
-        services.AddDbContext<NagomiDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddDbContext<NagomiDbContext>(options => options
+            .UseNpgsql(connectionString)
+            .AddInterceptors(new UtcDateTimeOffsetSaveInterceptor()));
         services.AddScoped<INagomiDb>(provider => provider.GetRequiredService<NagomiDbContext>());
         services.AddScoped<IAuditHistoryQuery>(provider => provider.GetRequiredService<NagomiDbContext>());
         services.AddScoped<ITransportDb>(provider => provider.GetRequiredService<NagomiDbContext>());
