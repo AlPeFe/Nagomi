@@ -16,7 +16,20 @@ public sealed record TransportRequestSnapshot(
     string? ProviderVisibleNotes);
 
 public sealed record SubmitOneOffCommand(JourneySchedule Outbound, JourneySchedule? Return);
-public sealed record SubmitRecurringCommand(RecurrencePattern Recurrence);
+public sealed record WeekdayScheduleSubmission(
+    DayOfWeek DayOfWeek,
+    TimeOnly OutboundAppointmentTime,
+    TimeOnly? OutboundStartTime = null,
+    TimeOnly? OutboundPickupTime = null,
+    TimeOnly? ReturnPickupTime = null,
+    bool ReturnPickupNextDay = false,
+    bool ReturnPickupTimePending = false);
+public sealed record RecurrencePatternSubmission(
+    DateOnly StartDate,
+    DateOnly EndDate,
+    IReadOnlyList<WeekdayScheduleSubmission> WeekdaySchedules,
+    TimeSpan UtcOffset = default);
+public sealed record SubmitRecurringCommand(RecurrencePatternSubmission Recurrence);
 public sealed record UpdateRequestCommand(
     TransportRequestSnapshot Snapshot,
     bool PropagateToJourneys = false,
@@ -30,7 +43,7 @@ public sealed record CancelCommand(
     ChangeSource Source = ChangeSource.Nagomi,
     string Actor = "simulated-user",
     string? IdempotencyKey = null);
-public sealed record RecurrenceChangeCommand(RecurrencePattern Recurrence, bool OverwriteExceptions = false);
+public sealed record RecurrenceChangeCommand(RecurrencePatternSubmission Recurrence, bool OverwriteExceptions = false);
 public sealed record RecurrenceImpact(
     int Additions,
     int Cancellations,
@@ -65,6 +78,13 @@ internal static class TransportMapping
         source.Patient, source.Reason, source.DefaultOrigin, source.DefaultDestination,
         source.Requirements, source.ContractCode, source.ProviderId, source.PrivateNotes,
         source.ProviderVisibleNotes, source.ProviderReference);
+
+    internal static RecurrencePattern ToDomain(this RecurrencePatternSubmission source) =>
+        new(source.StartDate, source.EndDate,
+            source.WeekdaySchedules.Select(w => new WeekdaySchedule(
+                w.DayOfWeek, w.OutboundAppointmentTime, w.ReturnPickupTime,
+                w.OutboundStartTime, w.OutboundPickupTime, w.ReturnPickupNextDay, w.ReturnPickupTimePending)),
+            source.UtcOffset);
 
     internal static JourneyRecord ToRecord(this Journey source, Guid requestId) => new()
     {

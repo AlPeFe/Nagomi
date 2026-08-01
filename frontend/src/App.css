@@ -11,4 +11,15 @@
 .facility-option strong{display:block;color:var(--navy);font-size:.88rem}
 .facility-option span{display:block;color:var(--muted);font-size:.75rem;margin-top:.15rem}
 .locations-grid fieldset{position:relative}
+.recurrence-days{margin-top:1rem;border:1px solid var(--border,rgba(128,128,128,.25));border-radius:10px;overflow:hidden}
+.recurrence-days-head,.recurrence-day{display:grid;grid-template-columns:minmax(90px,1fr) 1.2fr 1fr 1.4fr;gap:.6rem;align-items:center;padding:.55rem .7rem}
+.recurrence-days-head{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;opacity:.6;background:rgba(128,128,128,.08)}
+.recurrence-day{border-top:1px solid var(--border,rgba(128,128,128,.15))}
+.recurrence-day strong{font-size:.85rem}
+.recurrence-day select,.recurrence-day input{padding:.35rem .45rem;font-size:.82rem}
+.return-options{display:flex;gap:.4rem;align-items:center}
+.return-options select{flex:1}
+.return-options input{width:6.5rem}
+.return-none{color:var(--muted,#888);font-size:.85rem}
+.recurrence-panel{margin-top:1rem}
 

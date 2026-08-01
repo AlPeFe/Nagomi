@@ -5,8 +5,15 @@ import { PageHeader } from '../components/States'
 import { LocationFieldset } from '../components/LocationFieldset'
 import type { JourneySchedule, RecurrencePattern, TransportRequestDraft, TransportRequestSubmission } from '../types'
 
-const weekdays = [['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'], ['thursday', 'Jueves'], ['friday', 'Viernes'], ['saturday', 'Sábado'], ['sunday', 'Domingo']]
+const weekdays = [['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'], ['thursday', 'Jueves'], ['friday', 'Viernes'], ['saturday', 'Sábado'], ['sunday', 'Domingo']] as const
 const dayNumbers: Record<string, number> = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 }
+
+type DayKey = (typeof weekdays)[number][0]
+interface DayConfig {
+  direction: 'outbound' | 'roundTrip'
+  appointmentTime: string
+  returnTime: string
+}
 
 function offsetDateTime(value: FormDataEntryValue | undefined) {
   if (!value) return undefined
@@ -19,14 +26,29 @@ function utcOffset() {
   return `${sign}${String(Math.floor(Math.abs(minutes) / 60)).padStart(2, '0')}:${String(Math.abs(minutes) % 60).padStart(2, '0')}:00`
 }
 
+const emptyDayConfig = (): DayConfig => ({ direction: 'outbound', appointmentTime: '', returnTime: '' })
+
 export function RequestFormPage() {
   const navigate = useNavigate()
   const [mode, setMode] = useState<'oneOff' | 'recurring'>('oneOff')
   const [roundTrip, setRoundTrip] = useState(false)
   const [oxygen, setOxygen] = useState(false)
-  const [selectedDays, setSelectedDays] = useState<string[]>([])
+  const [dayConfigs, setDayConfigs] = useState<Partial<Record<DayKey, DayConfig>>>({})
   const [saving, setSaving] = useState<'draft' | 'submit' | ''>('')
   const [message, setMessage] = useState('')
+
+  const selectedDays = Object.keys(dayConfigs) as DayKey[]
+  function toggleDay(day: DayKey, on: boolean) {
+    setDayConfigs((prev) => {
+      const next = { ...prev }
+      if (on) next[day] = next[day] ?? emptyDayConfig()
+      else delete next[day]
+      return next
+    })
+  }
+  function setDay(day: DayKey, patch: Partial<DayConfig>) {
+    setDayConfigs((prev) => ({ ...prev, [day]: { ...(prev[day] ?? emptyDayConfig()), ...patch } }))
+  }
 
   async function save(event: React.FormEvent<HTMLFormElement>, submit: boolean) {
     event.preventDefault(); setSaving(submit ? 'submit' : 'draft'); setMessage('')
@@ -47,7 +69,21 @@ export function RequestFormPage() {
       const pending = data.pickupTimePending === 'on'; const returnAt = pending ? `${String(data.appointmentAt).slice(0, 10)}T23:59:00${appointmentAt?.slice(-6)}` : offsetDateTime(data.returnPickupAt)
       submission = { kind: 'oneOff', outbound, return: roundTrip && returnAt ? { scheduledStartAt: returnAt, scheduledPickupAt: returnAt, pickupTimePending: pending } : undefined }
     } else {
-      const recurrence: RecurrencePattern = { startDate: String(data.recurrenceStart), endDate: String(data.recurrenceEnd), utcOffset: utcOffset(), weekdaySchedules: selectedDays.map((day) => ({ dayOfWeek: dayNumbers[day], outboundAppointmentTime: `${String(data.recurringAppointmentTime)}:00`, returnPickupTime: roundTrip && data.recurringReturnTime ? `${String(data.recurringReturnTime)}:00` : undefined, returnPickupNextDay: false, returnPickupTimePending: false })) }
+      const recurrence: RecurrencePattern = {
+        startDate: String(data.recurrenceStart), endDate: String(data.recurrenceEnd), utcOffset: utcOffset(),
+        weekdaySchedules: selectedDays.map((day) => {
+          const cfg = dayConfigs[day] ?? emptyDayConfig()
+          const hasReturn = cfg.direction === 'roundTrip'
+          const pending = hasReturn && !cfg.returnTime
+          return {
+            dayOfWeek: dayNumbers[day],
+            outboundAppointmentTime: cfg.appointmentTime ? `${cfg.appointmentTime}:00` : undefined!,
+            returnPickupTime: hasReturn ? (pending ? '23:59:00' : `${cfg.returnTime}:00`) : undefined,
+            returnPickupNextDay: false,
+            returnPickupTimePending: pending,
+          }
+        }),
+      }
       submission = { kind: 'recurring', recurrence }
     }
     try { const result = submit ? await api.submitRequest(draft, submission) : await api.saveDraft(draft); navigate(`/solicitudes/${result.id}`) }
@@ -72,7 +108,42 @@ export function RequestFormPage() {
       </div></section>
       <section className="form-section"><div className="section-number">04</div><div className="section-heading"><h2>Programación</h2><p>La ida se planifica por cita; la vuelta puede quedar con hora pendiente.</p></div><div>
         <div className="segmented" role="radiogroup" aria-label="Tipo de programación"><button type="button" aria-pressed={mode === 'oneOff'} onClick={() => setMode('oneOff')}>Una fecha</button><button type="button" aria-pressed={mode === 'recurring'} onClick={() => setMode('recurring')}>Recurrente</button></div>
-        {mode === 'oneOff' ? <div className="field-grid schedule-fields"><label><span>Fecha y hora de cita *</span><input name="appointmentAt" type="datetime-local" required /></label><label><span>Inicio previsto</span><input name="scheduledStartAt" type="datetime-local" /><small>Si se deja vacío, será una hora antes.</small></label><label className="check-line"><input type="checkbox" checked={roundTrip} onChange={(e) => setRoundTrip(e.target.checked)} /><span>Incluir vuelta</span></label>{roundTrip && <><label><span>Recogida de vuelta</span><input name="returnPickupAt" type="datetime-local" /></label><label className="check-line"><input name="pickupTimePending" type="checkbox" /><span>Hora de vuelta pendiente</span></label></>}</div> : <div className="recurrence-panel"><div className="field-grid"><label><span>Desde *</span><input name="recurrenceStart" type="date" required /></label><label><span>Hasta * (máximo 6 meses)</span><input name="recurrenceEnd" type="date" required /></label></div><fieldset className="weekday-picker"><legend>Días de servicio *</legend>{weekdays.map(([value, label]) => <label key={value}><input type="checkbox" aria-label={label} checked={selectedDays.includes(value)} onChange={(e) => setSelectedDays((days) => e.target.checked ? [...days, value] : days.filter((day) => day !== value))} /><span>{label.slice(0, 2)}</span><small>{label}</small></label>)}</fieldset><div className="field-grid"><label><span>Hora de cita *</span><input name="recurringAppointmentTime" type="time" required /></label><label className="check-line"><input type="checkbox" checked={roundTrip} onChange={(e) => setRoundTrip(e.target.checked)} /><span>Incluir vuelta recurrente</span></label>{roundTrip && <label><span>Recogida de vuelta</span><input name="recurringReturnTime" type="time" /></label>}</div></div>}
+        {mode === 'oneOff' ? <div className="field-grid schedule-fields"><label><span>Fecha y hora de cita *</span><input name="appointmentAt" type="datetime-local" required /></label><label><span>Inicio previsto</span><input name="scheduledStartAt" type="datetime-local" /><small>Si se deja vacío, será una hora antes.</small></label><label className="check-line"><input type="checkbox" checked={roundTrip} onChange={(e) => setRoundTrip(e.target.checked)} /><span>Incluir vuelta</span></label>{roundTrip && <><label><span>Recogida de vuelta</span><input name="returnPickupAt" type="datetime-local" /></label><label className="check-line"><input name="pickupTimePending" type="checkbox" /><span>Hora de vuelta pendiente</span></label></>}</div> : <div className="recurrence-panel"><div className="field-grid"><label><span>Desde *</span><input name="recurrenceStart" type="date" required /></label><label><span>Hasta * (máximo 6 meses)</span><input name="recurrenceEnd" type="date" required /></label></div>
+          <fieldset className="weekday-picker"><legend>Días de servicio *</legend>{weekdays.map(([value, label]) => <label key={value}><input type="checkbox" aria-label={label} checked={selectedDays.includes(value)} onChange={(e) => toggleDay(value, e.target.checked)} /><span>{label.slice(0, 2)}</span><small>{label}</small></label>)}</fieldset>
+          {selectedDays.length > 0 && (
+            <div className="recurrence-days">
+              <div className="recurrence-days-head">
+                <span>Día</span><span>Tipo</span><span>Hora de cita</span><span>Vuelta</span>
+              </div>
+              {selectedDays.map((day) => {
+                const cfg = dayConfigs[day] ?? emptyDayConfig()
+                const meta = weekdays.find(([v]) => v === day)!
+                return (
+                  <div className="recurrence-day" key={day}>
+                    <strong>{meta[1]}</strong>
+                    <select value={cfg.direction} aria-label={`Tipo ${meta[1]}`} onChange={(e) => setDay(day, { direction: e.target.value as 'outbound' | 'roundTrip' })}>
+                      <option value="outbound">Solo ida</option>
+                      <option value="roundTrip">Ida y vuelta</option>
+                    </select>
+                    <input type="time" aria-label={`Hora de cita ${meta[1]}`} value={cfg.appointmentTime} onChange={(e) => setDay(day, { appointmentTime: e.target.value })} />
+                    {cfg.direction === 'roundTrip' ? (
+                      <div className="return-options">
+                        <select aria-label={`Vuelta ${meta[1]}`} value={cfg.returnTime ? 'custom' : 'default'} onChange={(e) => {
+                          if (e.target.value === 'custom') setDay(day, { returnTime: cfg.returnTime || '12:00' })
+                          else setDay(day, { returnTime: '' })
+                        }}>
+                          <option value="default">Por defecto</option>
+                          <option value="custom">Hora específica</option>
+                        </select>
+                        {cfg.returnTime && <input type="time" aria-label={`Hora de vuelta ${meta[1]}`} value={cfg.returnTime} onChange={(e) => setDay(day, { returnTime: e.target.value })} />}
+                      </div>
+                    ) : <span className="return-none">—</span>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>}
       </div></section>
       <section className="form-section"><div className="section-number">05</div><div className="section-heading"><h2>Asignación y notas</h2><p>Las notas privadas nunca se comparten con el proveedor.</p></div><div className="field-grid"><label><span>Contrato *</span><select name="contract" required defaultValue=""><option value="" disabled>Selecciona un contrato</option><option value="CTR-MAD-01">CTR-MAD-01 · Transporte sanitario Madrid</option><option value="CTR-SIN-RUTA">Sin ruta activa</option></select></label><label><span>Proveedor</span><input name="provider" placeholder="Asignado por el contrato" readOnly /></label><label className="span-2"><span>Notas para el proveedor</span><textarea name="providerNotes" rows={3} /></label><label className="span-2"><span>Notas privadas</span><textarea name="privateNotes" rows={3} /></label></div></section>
       <div className="form-actions"><button className="button button-secondary" type="button" disabled={!!saving} onClick={(e) => { const form = e.currentTarget.form; if (form) void save({ preventDefault: () => undefined, currentTarget: form } as unknown as React.FormEvent<HTMLFormElement>, false) }}>{saving === 'draft' ? 'Guardando…' : 'Guardar borrador'}</button><button className="button button-accent" disabled={!!saving || (mode === 'recurring' && !selectedDays.length)}>{saving === 'submit' ? 'Enviando…' : 'Revisar y enviar solicitud'}</button></div>

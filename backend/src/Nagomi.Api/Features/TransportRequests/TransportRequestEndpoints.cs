@@ -100,8 +100,9 @@ public static class TransportRequestEndpoints
         try
         {
             var domain = request.ToDomain();
-            domain.SubmitRecurring(command.Recurrence);
-            request.Recurrence = command.Recurrence;
+            var pattern = command.Recurrence.ToDomain();
+            domain.SubmitRecurring(pattern);
+            request.Recurrence = pattern;
             Activate(request, domain, clock.GetUtcNow());
             foreach (var journey in request.JourneyRecords)
                 db.Add(journey);
@@ -166,7 +167,7 @@ public static class TransportRequestEndpoints
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return TypedResults.NotFound();
-        try { return TypedResults.Ok(BuildImpact(request, command.Recurrence)); }
+        try { return TypedResults.Ok(BuildImpact(request, command.Recurrence.ToDomain())); }
         catch (DomainValidationException exception) { return Validation(exception); }
     }
 
@@ -179,7 +180,7 @@ public static class TransportRequestEndpoints
         if (request.Status != TransportRequestStatus.Active) return TypedResults.Conflict("Recurrence can only change on active requests.");
         try
         {
-            var generated = Generate(request, command.Recurrence);
+            var generated = Generate(request, command.Recurrence.ToDomain());
             var generatedByKey = generated.ToDictionary(x => x.Key());
             var now = clock.GetUtcNow();
             foreach (var existing in request.JourneyRecords.Where(x => !x.Terminal()).ToArray())
@@ -198,7 +199,7 @@ public static class TransportRequestEndpoints
                 request.JourneyRecords.Add(journey);
                 db.Add(journey);
             }
-            request.Recurrence = command.Recurrence;
+            request.Recurrence = command.Recurrence.ToDomain();
             request.UpdatedAt = now;
             Audit(db, request.PublicId!, "Updated", ChangeSource.Nagomi, "simulated-user", now);
             await NotifyRequest(request, outbox, "TransportRequestUpdated", cancellationToken);

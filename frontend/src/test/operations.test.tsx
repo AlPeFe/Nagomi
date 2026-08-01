@@ -81,15 +81,17 @@ describe('solicitudes y navegación', () => {
     expect(body.patient).toMatchObject({ firstName: 'Ana', lastName: 'Martín' })
   })
 
-  it('permite configurar una recurrencia con días y vuelta', async () => {
+  it('permite configurar una recurrencia con días y vuelta por día', async () => {
     vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) =>
       String(input).includes('/reference-data/') ? json([]) : json(backendRequest)))
     const user = userEvent.setup(); renderAt('/solicitudes/nueva')
     await user.click(screen.getByRole('button', { name: 'Recurrente' }))
     expect(screen.getByLabelText('Desde *')).toBeRequired()
     await user.click(screen.getByLabelText('Lunes'))
-    await user.click(screen.getByLabelText('Incluir vuelta recurrente'))
-    expect(screen.getByLabelText('Recogida de vuelta')).toBeInTheDocument()
+    await user.click(screen.getByLabelText('Tipo Lunes'))
+    await user.selectOptions(screen.getByLabelText('Tipo Lunes'), 'roundTrip')
+    await user.selectOptions(screen.getByLabelText('Vuelta Lunes'), 'custom')
+    expect(screen.getByLabelText('Hora de vuelta Lunes')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Revisar y enviar solicitud' })).toBeEnabled()
   })
 
