@@ -73,7 +73,8 @@ describe('solicitudes y navegación', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar borrador' }))
     expect(await screen.findByRole('heading', { name: 'Solicitud sin enviar' })).toBeInTheDocument()
     expect(fetchMock.mock.calls.some((call) => String(call[0]).includes('/drafts'))).toBe(true)
-    const body = JSON.parse(String(fetchMock.mock.calls[0][1]?.body))
+    const draftCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/drafts') && call[1]?.method === 'POST')
+    const body = JSON.parse(String(draftCall?.[1]?.body))
     expect(body.patient).toMatchObject({ firstName: 'Ana', lastName: 'Martín' })
   })
 

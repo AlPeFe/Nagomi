@@ -128,6 +128,26 @@ function backendDraft(value: TransportRequestDraft) {
 function backendSchedule(value: JourneySchedule) { return value }
 
 export const api = {
+  async listAutonomousCommunities() {
+    return (await request<Array<{ code: string; name: string; parentCode?: string }>>('/reference-data/autonomous-communities'))
+  },
+  async listProvinces(autonomousCommunityCode?: string) {
+    const q = autonomousCommunityCode ? `?autonomousCommunityCode=${encodeURIComponent(autonomousCommunityCode)}` : ''
+    return (await request<Array<{ code: string; name: string; parentCode?: string }>>(`/reference-data/provinces${q}`))
+  },
+  async listMunicipalities(provinceCode?: string, query?: string) {
+    const params = new URLSearchParams()
+    if (provinceCode) params.set('provinceCode', provinceCode)
+    if (query) params.set('query', query)
+    const qs = params.toString()
+    return (await request<Array<{ code: string; name: string; parentCode?: string }>>(`/reference-data/municipalities${qs ? `?${qs}` : ''}`))
+  },
+  async searchHealthcareFacilities(query?: string, municipalityCode?: string, limit = 50) {
+    const params = new URLSearchParams({ limit: String(limit) })
+    if (query) params.set('query', query)
+    if (municipalityCode) params.set('municipalityCode', municipalityCode)
+    return (await request<Array<{ publicId: string; name: string; ccn?: string; codcnh?: string; officialAddressText?: string; phone?: string; address?: { municipalityCode?: string; provinceCode?: string; autonomousCommunityCode?: string; postalCode?: string } }>>(`/reference-data/healthcare-facilities?${params}`))
+  },
   async listJourneys(filters: JourneyFilters) {
     const params = new URLSearchParams()
     const names: Record<string, string> = { provider: 'providerId', contract: 'contractCode', reason: 'reasonCode', originMunicipality: 'originMunicipalityCode', destinationMunicipality: 'destinationMunicipalityCode', deliveryState: 'retrievalState' }
