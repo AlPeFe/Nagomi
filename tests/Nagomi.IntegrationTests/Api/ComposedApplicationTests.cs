@@ -62,6 +62,52 @@ public sealed class ComposedApplicationTests(NagomiApiFactory factory) : IClassF
     }
 
     [Fact]
+    public async Task Request_without_publishable_contract_stays_active_and_unpublished()
+    {
+        var snapshot = new TransportRequestSnapshot(
+            new PatientDetails("Ana", "Lopez", "DNI-SECRET", "CARD-SECRET", "600123123"),
+            new Nagomi.Api.Domain.TransportReasonSnapshot("CONSULT", "Consultation"),
+            new LocationSnapshot(LocationType.PrivateAddress, street: "Calle Mayor"),
+            new LocationSnapshot(LocationType.HealthcareFacility, "Hospital Central"),
+            new TransportRequirements(), null, null, null, null, "private", "provider note");
+        var response = await _client.PostAsJsonAsync("/api/transport-requests/drafts", snapshot);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var id = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        var appointment = new DateTimeOffset(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
+        var submit = await _client.PostAsJsonAsync($"/api/transport-requests/{id}/submit/one-off",
+            new SubmitOneOffCommand(JourneySchedule.Outbound(appointment, true), null));
+        submit.StatusCode.Should().Be(HttpStatusCode.OK);
+        var submitted = await submit.Content.ReadFromJsonAsync<JsonElement>();
+        submitted.GetProperty("status").GetInt32().Should().Be((int)TransportRequestStatus.Active);
+        var publicId = submitted.GetProperty("publicId").GetString();
+        publicId.Should().NotBeNullOrWhiteSpace();
+
+        var operationsResponse = await _client.GetAsync(
+            "/api/operations/journeys?from=2026-08-01&to=2026-08-01");
+        operationsResponse.EnsureSuccessStatusCode();
+        var rows = JsonDocument.Parse(await operationsResponse.Content.ReadAsStringAsync()).RootElement;
+        rows.EnumerateArray().Should().Contain(x => x.GetProperty("requestId").GetGuid() == id);
+    }
+
+    [Fact]
+    public async Task Operational_csv_export_respects_filters_and_excludes_sensitive_identifiers()
+    {
+        var draft = await CreateDraft();
+        var id = draft.GetProperty("id").GetGuid();
+        var appointment = new DateTimeOffset(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
+        var submit = await _client.PostAsJsonAsync($"/api/transport-requests/{id}/submit/one-off",
+            new SubmitOneOffCommand(JourneySchedule.Outbound(appointment, true), null));
+        submit.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var csv = await _client.GetStringAsync("/api/operations/journeys/export.csv?from=2026-08-01&to=2026-08-01");
+        csv.Should().Contain("Ana Lopez").And.Contain("Hospital Central")
+            .And.Contain("Operational time,Pending");
+        csv.Should().NotContain("DNI-SECRET").And.NotContain("CARD-SECRET")
+            .And.NotContain("documentNumber").And.NotContain("healthCardNumber");
+    }
+
+    [Fact]
     public async Task Journey_statuses_are_idempotent_and_out_of_order_events_do_not_regress_current_status()
     {
         var draft = await CreateDraft();
