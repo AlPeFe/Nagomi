@@ -1,9 +1,16 @@
 import type { DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, RecurrencePattern, Requirements, TransportRequest, TransportRequestDraft, TransportRequestSubmission } from './types'
-import { getToken } from './auth'
+import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
   status?: number
   constructor(message: string, status?: number) { super(message); this.status = status }
+}
+
+function handleUnauthorized() {
+  logout()
+  if (window.location.pathname !== '/login') {
+    window.location.assign('/login')
+  }
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -13,6 +20,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
     })
+    if (response.status === 401) {
+      handleUnauthorized()
+      throw new ApiError('La sesión ha caducado. Vuelve a entrar.', 401)
+    }
     if (!response.ok) {
       const problem = await response.json().catch(() => null) as { detail?: string; title?: string } | null
       throw new ApiError(problem?.detail ?? problem?.title ?? `La API respondió con el estado ${response.status}.`, response.status)

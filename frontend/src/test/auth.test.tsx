@@ -72,4 +72,16 @@ describe('autenticación', () => {
     expect(screen.getByRole('button', { name: /Crear/i })).toBeInTheDocument()
     expect(screen.getByText('Desactivado')).toBeInTheDocument()
   })
+
+  it('cierra la sesión al recibir 401 de la API', async () => {
+    localStorage.setItem('nagomi_token', 'expired-token')
+    sessionStorage.setItem('nagomi_roles', JSON.stringify(['admin']))
+    vi.stubGlobal('fetch', vi.fn(() =>
+      Promise.resolve(new Response(JSON.stringify({ title: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } }))))
+
+    renderAt('/trayectos')
+    await waitFor(() => {
+      expect(localStorage.getItem('nagomi_token')).toBeNull()
+    })
+  })
 })

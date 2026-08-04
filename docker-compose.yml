@@ -65,8 +65,8 @@ services:
       Authentication__ProviderIntegration__BootstrapClient__ProviderId: ${OAUTH_BOOTSTRAP_PROVIDER_ID:-00000000-0000-0000-0000-000000000000}
       Authentication__ProviderIntegration__BootstrapClient__Role: ${OAUTH_BOOTSTRAP_ROLE:-operator}
       Authentication__ProviderIntegration__BootstrapClient__Contracts__0: ${OAUTH_BOOTSTRAP_CONTRACT:-}
-      Authentication__Users__AdminEmail: ${NAGOMI_ADMIN_EMAIL:?Set NAGOMI_ADMIN_EMAIL in .env}
-      Authentication__Users__AdminPassword: ${NAGOMI_ADMIN_PASSWORD:?Set NAGOMI_ADMIN_PASSWORD in .env}
+      Authentication__Users__AdminEmail: ${NAGOMI_ADMIN_EMAIL:-admin@nagomi.local}
+      Authentication__Users__AdminPassword: ${NAGOMI_ADMIN_PASSWORD:-change-me-admin-123}
       SimulatedIdentity__UserIdentifier: ${SIMULATED_ACTOR_ID:?Set SIMULATED_ACTOR_ID in .env}
       SimulatedIdentity__RequestingOrganizationIdentifier: ${SIMULATED_ORGANIZATION_ID:?Set SIMULATED_ORGANIZATION_ID in .env}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}

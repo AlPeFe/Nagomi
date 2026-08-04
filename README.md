@@ -15,6 +15,16 @@ Nagomi records one-off and recurring transport requests, generates independently
 
 ## Run Locally
 
+```sh
+./nagomi.sh up
+```
+
+The first run creates `.env` from `.env.example` with random passwords, builds the
+stack (postgres, rabbitmq, backend, frontend) and starts it. Other commands:
+`./nagomi.sh down`, `./nagomi.sh status`, `./nagomi.sh logs`, `./nagomi.sh restart`.
+
+Manual equivalent:
+
 1. Create a local environment file:
 
    ```sh
@@ -38,7 +48,19 @@ Nagomi records one-off and recurring transport requests, generates independently
 
 5. Open `http://localhost:8080`.
 
-The backend exposes liveness at `/health`, readiness at `/ready`, and provider tokens at `/connect/token`.
+The backend exposes liveness at `/health`, readiness at `/ready`, and tokens at `/connect/token`.
+
+## Authentication
+
+- **Web users** authenticate with the OpenIddict password grant at `/connect/token`
+  (`grant_type=password`). The initial administrator is created on startup from
+  `NAGOMI_ADMIN_EMAIL` / `NAGOMI_ADMIN_PASSWORD` (defaults `admin@nagomi.local` /
+  `change-me-admin-123`). Change it before exposing the service.
+- **Roles**: `admin` manages users through `/api/admin/users` (list, create, update
+  role/active/password, delete); `default` works with the web normally without user
+  management access.
+- **Provider systems** authenticate with OpenIddict OAuth 2.0 client credentials
+  (see `Authentication__ProviderIntegration__*` in `.env.example`).
 
 ## Verify
 
