@@ -1,4 +1,7 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
+using Nagomi.Api.Features.EmergencyTransports;
 
 namespace Nagomi.Api.Features.TransportRequests;
 
@@ -7,14 +10,20 @@ public interface ITransportDb
     IQueryable<TransportRequestRecord> TransportRequests { get; }
     IQueryable<JourneyRecord> Journeys { get; }
     IQueryable<TransportAuditRecord> TransportAudit { get; }
+    IQueryable<EmergencyTransportRecord> EmergencyTransports { get; }
 
     void Add(TransportRequestRecord request);
     void Add(JourneyRecord journey);
     void Add(JourneyStatusRecord status);
     void Add(TransportAuditRecord audit);
+    void Add(EmergencyTransportRecord emergency);
     void Remove(TransportRequestRecord request);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
+
+/// <summary>Minimal, provider-safe projection of an integration notification for the request detail view.</summary>
+public sealed record ProviderDeliveryRecord(
+    Guid Id, string State, DateTimeOffset CreatedAt, DateTimeOffset? RetrievedAt, int Attempts);
 
 public sealed class TransportRequestRecord
 {
@@ -36,6 +45,9 @@ public sealed class TransportRequestRecord
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public List<JourneyRecord> JourneyRecords { get; set; } = [];
+
+    [NotMapped]
+    public List<ProviderDeliveryRecord>? Deliveries { get; set; }
 }
 
 public sealed class JourneyRecord

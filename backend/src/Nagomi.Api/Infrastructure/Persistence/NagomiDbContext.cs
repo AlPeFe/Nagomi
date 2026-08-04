@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nagomi.Api.Features.Audit;
+using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
@@ -20,6 +21,7 @@ public sealed class NagomiDbContext(DbContextOptions<NagomiDbContext> options)
     public DbSet<JourneyRecord> JourneyRecords => Set<JourneyRecord>();
     public DbSet<JourneyStatusRecord> JourneyStatusRecords => Set<JourneyStatusRecord>();
     public DbSet<TransportAuditRecord> TransportAuditRecords => Set<TransportAuditRecord>();
+    public DbSet<EmergencyTransportRecord> EmergencyTransportRecords => Set<EmergencyTransportRecord>();
     public DbSet<TransportProvider> TransportProviders => Set<TransportProvider>();
     public DbSet<TransportContract> TransportContracts => Set<TransportContract>();
     public DbSet<ProviderContractRoute> ProviderContractRoutes => Set<ProviderContractRoute>();
@@ -29,6 +31,7 @@ public sealed class NagomiDbContext(DbContextOptions<NagomiDbContext> options)
     IQueryable<TransportRequestRecord> ITransportDb.TransportRequests => TransportRequestRecords;
     IQueryable<JourneyRecord> ITransportDb.Journeys => JourneyRecords;
     IQueryable<TransportAuditRecord> ITransportDb.TransportAudit => TransportAuditRecords;
+    IQueryable<EmergencyTransportRecord> ITransportDb.EmergencyTransports => EmergencyTransportRecords;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +64,8 @@ public sealed class NagomiDbContext(DbContextOptions<NagomiDbContext> options)
     public void Add(JourneyStatusRecord status) => JourneyStatusRecords.Add(status);
 
     public void Add(TransportAuditRecord audit) => TransportAuditRecords.Add(audit);
+
+    public void Add(EmergencyTransportRecord emergency) => EmergencyTransportRecords.Add(emergency);
 
     public void Remove(TransportRequestRecord request) => TransportRequestRecords.Remove(request);
 

@@ -37,10 +37,20 @@ public static class TransportRequestEndpoints
     }
 
     private static async Task<Results<Ok<TransportRequestRecord>, NotFound>> Get(
-        Guid id, ITransportDb db, CancellationToken cancellationToken)
+        Guid id, ITransportDb db, IProviderIntegrationDb integrationDb, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
-        return request is null ? TypedResults.NotFound() : TypedResults.Ok(request);
+        if (request is null) return TypedResults.NotFound();
+        if (request.PublicId is not null)
+        {
+            request.Deliveries = await integrationDb.ProviderNotifications
+                .Where(x => x.EntityPublicId == request.PublicId)
+                .OrderBy(x => x.CreatedAt)
+                .Select(x => new ProviderDeliveryRecord(
+                    x.Id, x.State.ToString(), x.CreatedAt, x.RetrievedAt, x.FailedPublishAttempts))
+                .ToListAsync(cancellationToken);
+        }
+        return TypedResults.Ok(request);
     }
 
     private static async Task<Results<Ok<TransportRequestRecord>, NotFound, Conflict<string>>> UpdateDraft(

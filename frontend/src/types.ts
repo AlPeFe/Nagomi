@@ -114,6 +114,35 @@ export interface DeliveryRecord { id: string; state: DeliveryState; createdAt: s
 
 export interface ListResponse<T> { items: T[]; total?: number }
 
+export type EmergencyStatus = 'Active' | 'Completed' | 'Cancelled'
+
+export interface IncidentLocation {
+  latitude: number
+  longitude: number
+  address?: string
+  municipality?: string
+  notes?: string
+}
+
+export interface EmergencyTransport {
+  id: string
+  publicId: string
+  status: EmergencyStatus
+  reason: string
+  contactPhone?: string
+  incident: IncidentLocation
+  observations?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface EmergencyDraft {
+  reason: string
+  incident: IncidentLocation
+  contactPhone?: string
+  observations?: string
+}
+
 export interface JourneyFilters {
   from: string
   to: string

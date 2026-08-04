@@ -4,6 +4,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore.Query;
 using Nagomi.Api.Domain;
+using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.TransportRequests;
@@ -244,7 +245,9 @@ public sealed class TransportProviderResourceGatewayTests
         public IQueryable<TransportRequestRecord> TransportRequests => new AsyncEnumerable<TransportRequestRecord>(_requests);
         public IQueryable<JourneyRecord> Journeys => new AsyncEnumerable<JourneyRecord>(_requests.SelectMany(x => x.JourneyRecords));
         public IQueryable<TransportAuditRecord> TransportAudit => new AsyncEnumerable<TransportAuditRecord>(Audits);
+        public IQueryable<EmergencyTransportRecord> EmergencyTransports => new AsyncEnumerable<EmergencyTransportRecord>([]);
         public void Add(TransportRequestRecord request) => _requests.Add(request);
+        public void Add(EmergencyTransportRecord emergency) { }
         public void Add(JourneyRecord journey)
         {
             if (_requests.SelectMany(x => x.JourneyRecords).All(x => x.Id != journey.Id))

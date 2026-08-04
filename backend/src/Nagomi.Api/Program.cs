@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Features.Audit;
+using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.Operations;
 using Nagomi.Api.Features.ProviderIntegration;
@@ -48,6 +49,7 @@ app.MapTransportRequestEndpoints();
 app.MapJourneyEndpoints();
 app.MapOperationsEndpoints();
 app.MapAuditEndpoints();
+app.MapEmergencyTransportEndpoints();
 app.MapProviderIntegrationEndpoints();
 app.MapProviderAuthenticationAdministrationEndpoints();
 

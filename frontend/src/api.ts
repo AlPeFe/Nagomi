@@ -1,4 +1,4 @@
-import type { DeliveryState, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, RecurrencePattern, Requirements, TransportRequest, TransportRequestDraft, TransportRequestSubmission } from './types'
+import type { DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, RecurrencePattern, Requirements, TransportRequest, TransportRequestDraft, TransportRequestSubmission } from './types'
 
 export class ApiError extends Error {
   status?: number
@@ -54,8 +54,9 @@ type BackendRequest = {
   id: string; publicId?: string; status: number | TransportRequest['status']; patient?: { firstName?: string; lastName?: string; phone?: string }
   reason?: { description?: string }; defaultOrigin?: BackendLocation; defaultDestination?: BackendLocation; requirements?: BackendRequirements
   contractCode?: string; providerName?: string; privateNotes?: string; providerVisibleNotes?: string; recurrence?: RecurrencePattern
-  journeyRecords?: BackendJourney[]; updatedAt?: string
+  journeyRecords?: BackendJourney[]; updatedAt?: string; deliveries?: BackendDelivery[]
 }
+type BackendDelivery = { id: string; state: string; createdAt: string; retrievedAt?: string; attempts?: number }
 
 const journeyStatuses: JourneyStatus[] = ['Scheduled', 'Activated', 'EnRouteToOrigin', 'ArrivedAtOrigin', 'PatientOnBoard', 'EnRouteToDestination', 'ArrivedAtDestination', 'Completed', 'Cancelled']
 const requestStatuses: TransportRequest['status'][] = ['Draft', 'Active', 'Completed', 'Cancelled']
@@ -110,7 +111,14 @@ function mapRequest(value: BackendRequest): TransportRequest {
     origin: value.defaultOrigin ? mapLocation(value.defaultOrigin) : undefined, destination: value.defaultDestination ? mapLocation(value.defaultDestination) : undefined,
     privateNotes: value.privateNotes, providerNotes: value.providerVisibleNotes, recurring: value.recurrence,
     journeys: value.journeyRecords?.map((journey) => mapJourney(journey, value)), updatedAt: value.updatedAt,
+    deliveries: value.deliveries?.map((delivery) => ({ id: delivery.id, state: enumValue(delivery.state, deliveryStates, 'Pending'), createdAt: delivery.createdAt, retrievedAt: delivery.retrievedAt, attempts: delivery.attempts })),
   }
+}
+
+const emergencyStatuses: EmergencyStatus[] = ['Active', 'Completed', 'Cancelled']
+type BackendEmergency = Omit<EmergencyTransport, 'status'> & { status: number | EmergencyStatus }
+function mapEmergency(value: BackendEmergency): EmergencyTransport {
+  return { ...value, status: enumValue(value.status, emergencyStatuses, 'Active') }
 }
 
 function backendLocation(value?: LocationSnapshot) {
@@ -181,4 +189,8 @@ export const api = {
   applyRecurrence: (id: string, recurrence: RecurrencePattern, overwriteExceptions: boolean) => request<void>(`/transport-requests/${encodeURIComponent(id)}/recurrence/apply`, { method: 'POST', body: JSON.stringify({ recurrence, overwriteExceptions }) }),
   cancelRequest: (id: string) => request<void>(`/transport-requests/${encodeURIComponent(id)}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 0, cancellingParty: 0, source: 0, actor: 'simulated-user' }) }),
   addJourneyStatus: (id: string, status: JourneyStatus, occurredAt: string, idempotencyKey: string) => request<void>(`/journeys/${encodeURIComponent(id)}/statuses`, { method: 'POST', body: JSON.stringify({ status: journeyStatuses.indexOf(status), occurredAt, idempotencyKey, source: 0, actor: 'simulated-user' }) }),
+  async listEmergencies() { return (await request<BackendEmergency[]>('/emergency-transports')).map(mapEmergency) },
+  async getEmergency(id: string) { return mapEmergency(await request<BackendEmergency>(`/emergency-transports/${encodeURIComponent(id)}`)) },
+  async createEmergency(draft: EmergencyDraft) { return mapEmergency(await request<BackendEmergency>('/emergency-transports', { method: 'POST', body: JSON.stringify(draft) })) },
+  cancelEmergency: async (id: string) => mapEmergency(await request<BackendEmergency>(`/emergency-transports/${encodeURIComponent(id)}/cancel`, { method: 'POST' })),
 }

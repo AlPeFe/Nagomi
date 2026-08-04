@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Domain;
@@ -29,11 +30,13 @@ public sealed class NagomiApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IHostedService>();
             services.RemoveAll<ITransportDb>();
             services.RemoveAll<INagomiDb>();
+            services.RemoveAll<IProviderIntegrationDb>();
             services.RemoveAll<TimeProvider>();
             services.RemoveAll<IProviderOutbox>();
             services.AddSingleton<FakeTransportDb>();
             services.AddSingleton<ITransportDb>(provider => provider.GetRequiredService<FakeTransportDb>());
             services.AddSingleton<INagomiDb, FakeReferenceDb>();
+            services.AddSingleton<IProviderIntegrationDb, FakeProviderIntegrationDb>();
             services.AddSingleton<TimeProvider>(new FixedTimeProvider(
                 new DateTimeOffset(2026, 8, 1, 9, 0, 0, TimeSpan.Zero)));
             services.AddSingleton<IProviderOutbox, NoOpProviderOutbox>();
@@ -93,10 +96,12 @@ internal sealed class FakeTransportDb : ITransportDb
 {
     private readonly List<TransportRequestRecord> _requests = [];
     private readonly List<TransportAuditRecord> _audit = [];
+    private readonly List<EmergencyTransportRecord> _emergencies = [];
 
     public IQueryable<TransportRequestRecord> TransportRequests => _requests.AsAsyncQueryable();
     public IQueryable<JourneyRecord> Journeys => _requests.SelectMany(x => x.JourneyRecords).AsAsyncQueryable();
     public IQueryable<TransportAuditRecord> TransportAudit => _audit.AsAsyncQueryable();
+    public IQueryable<EmergencyTransportRecord> EmergencyTransports => _emergencies.AsAsyncQueryable();
 
     public void Add(TransportRequestRecord request) => _requests.Add(request);
     public void Add(JourneyRecord journey)
@@ -106,6 +111,7 @@ internal sealed class FakeTransportDb : ITransportDb
     }
     public void Add(JourneyStatusRecord status) { }
     public void Add(TransportAuditRecord audit) => _audit.Add(audit);
+    public void Add(EmergencyTransportRecord emergency) => _emergencies.Add(emergency);
     public void Remove(TransportRequestRecord request) => _requests.Remove(request);
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
 }
@@ -117,6 +123,17 @@ internal sealed class FakeReferenceDb : INagomiDb
     public DbSet<IneMunicipality> IneMunicipalities { get; } = new FakeDbSet<IneMunicipality>();
     public DbSet<TransportReason> TransportReasons { get; } = new FakeDbSet<TransportReason>();
     public DbSet<HealthcareFacility> HealthcareFacilities { get; } = new FakeDbSet<HealthcareFacility>();
+
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
+}
+
+internal sealed class FakeProviderIntegrationDb : IProviderIntegrationDb
+{
+    public DbSet<TransportProvider> TransportProviders { get; } = new FakeDbSet<TransportProvider>();
+    public DbSet<TransportContract> TransportContracts { get; } = new FakeDbSet<TransportContract>();
+    public DbSet<ProviderContractRoute> ProviderContractRoutes { get; } = new FakeDbSet<ProviderContractRoute>();
+    public DbSet<ProviderNotification> ProviderNotifications { get; } = new FakeDbSet<ProviderNotification>();
+    public DbSet<ProviderCommandReceipt> ProviderCommandReceipts { get; } = new FakeDbSet<ProviderCommandReceipt>();
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
 }

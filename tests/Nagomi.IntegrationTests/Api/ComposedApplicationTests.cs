@@ -108,6 +108,19 @@ public sealed class ComposedApplicationTests(NagomiApiFactory factory) : IClassF
     }
 
     [Fact]
+    public async Task Request_detail_includes_integration_deliveries_collection()
+    {
+        var draft = await CreateDraft();
+        var id = draft.GetProperty("id").GetGuid();
+        var appointment = new DateTimeOffset(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
+        await _client.PostAsJsonAsync($"/api/transport-requests/{id}/submit/one-off",
+            new SubmitOneOffCommand(JourneySchedule.Outbound(appointment, true), null));
+
+        var detail = await _client.GetFromJsonAsync<JsonElement>($"/api/transport-requests/{id}");
+        detail.GetProperty("deliveries").ValueKind.Should().Be(JsonValueKind.Array);
+    }
+
+    [Fact]
     public async Task Journey_statuses_are_idempotent_and_out_of_order_events_do_not_regress_current_status()
     {
         var draft = await CreateDraft();

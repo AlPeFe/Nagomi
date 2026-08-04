@@ -2,7 +2,7 @@
 
 Open-source patient transport coordination for small hospitals, clinics, nursing homes, and geriatric centers.
 
-Nagomi records one-off and recurring transport requests, generates independently managed journeys, tracks operational status events, and integrates contracted transport providers through minimal RabbitMQ notifications and authenticated REST APIs.
+Nagomi records one-off and recurring transport requests, generates independently managed journeys, tracks operational status events, integrates contracted transport providers through minimal RabbitMQ notifications and authenticated REST APIs, and registers geolocated emergency transports with a map-driven incident point.
 
 ## Stack
 

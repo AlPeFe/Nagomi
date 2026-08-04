@@ -1,4 +1,5 @@
 import { NavLink, Navigate, Route, Routes } from './router'
+import { EmergencyPage } from './pages/EmergencyPage'
 import { JourneyDetailPage } from './pages/JourneyDetailPage'
 import { JourneysPage } from './pages/JourneysPage'
 import { RequestDetailPage } from './pages/RequestDetailPage'
@@ -18,6 +19,7 @@ export default function App() {
         <nav aria-label="Navegación principal">
           <NavLink to="/trayectos">Operación</NavLink>
           <NavLink to="/solicitudes">Solicitudes</NavLink>
+          <NavLink to="/urgencias">Urgencias</NavLink>
         </nav>
         <NavLink className="button button-accent new-request" to="/solicitudes/nueva">Nueva solicitud</NavLink>
       </header>
@@ -29,6 +31,7 @@ export default function App() {
           <Route path="/solicitudes" element={<RequestsPage />} />
           <Route path="/solicitudes/nueva" element={<RequestFormPage />} />
           <Route path="/solicitudes/:requestId" element={<RequestDetailPage />} />
+          <Route path="/urgencias" element={<EmergencyPage />} />
           <Route path="*" element={<Navigate to="/trayectos" replace />} />
         </Routes>
       </main>
