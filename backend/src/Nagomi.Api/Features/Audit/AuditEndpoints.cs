@@ -36,6 +36,7 @@ public static class AuditEndpoints
         endpoints.MapGet(
                 "/api/audit/{entityType}/{entityIdentifier}",
                 GetHistoryAsync)
+            .RequireAuthorization(Nagomi.Api.Infrastructure.Authentication.UserAuthorizationPolicies.Web)
             .WithName("GetEntityAuditHistory")
             .WithTags("Audit");
 

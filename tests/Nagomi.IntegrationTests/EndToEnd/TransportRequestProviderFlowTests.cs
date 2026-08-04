@@ -160,7 +160,8 @@ public sealed class EndToEndAuthenticationHandler(
         {
             new Claim(ProviderClaimTypes.ProviderId, identity.ProviderId.ToString()),
             new Claim(ProviderClaimTypes.Contract, identity.ContractCode),
-            new Claim("client_id", identity.ClientId)
+            new Claim("client_id", identity.ClientId),
+            new Claim(ClaimTypes.Role, "admin")
         };
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, AuthenticationScheme));
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, AuthenticationScheme)));

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Nagomi.Api.Infrastructure.Authentication;
 
 namespace Nagomi.Api.Features.ReferenceData;
 
@@ -16,7 +17,7 @@ public static class ReferenceDataEndpoints
 
     public static IEndpointRouteBuilder MapReferenceDataEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/reference-data").WithTags("Reference data");
+        var group = endpoints.MapGroup("/api/reference-data").RequireAuthorization(UserAuthorizationPolicies.Web).WithTags("Reference data");
 
         group.MapGet("/autonomous-communities", GetAutonomousCommunities);
         group.MapGet("/provinces", GetProvinces);

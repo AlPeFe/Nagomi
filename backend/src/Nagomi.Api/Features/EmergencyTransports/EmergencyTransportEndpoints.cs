@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Infrastructure.Authentication;
 
 namespace Nagomi.Api.Features.EmergencyTransports;
 
@@ -22,7 +23,7 @@ public static class EmergencyTransportEndpoints
 {
     public static IEndpointRouteBuilder MapEmergencyTransportEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/emergency-transports").WithTags("Emergency transports");
+        var group = endpoints.MapGroup("/api/emergency-transports").RequireAuthorization(UserAuthorizationPolicies.Web).WithTags("Emergency transports");
         group.MapPost("", Create);
         group.MapGet("", List);
         group.MapGet("/{id:guid}", Get);

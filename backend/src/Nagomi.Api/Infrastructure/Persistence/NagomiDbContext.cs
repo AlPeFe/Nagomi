@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nagomi.Api.Features.Audit;
@@ -5,12 +7,17 @@ using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Infrastructure.Identity;
 
 namespace Nagomi.Api.Infrastructure.Persistence;
 
-public sealed class NagomiDbContext(DbContextOptions<NagomiDbContext> options)
-    : DbContext(options), INagomiDb, IAuditHistoryQuery, ITransportDb, IProviderIntegrationDb
+public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>, INagomiDb, IAuditHistoryQuery, ITransportDb, IProviderIntegrationDb
 {
+    public NagomiDbContext(DbContextOptions<NagomiDbContext> options)
+        : base(options)
+    {
+    }
+
     public DbSet<IneAutonomousCommunity> IneAutonomousCommunities => Set<IneAutonomousCommunity>();
     public DbSet<IneProvince> IneProvinces => Set<IneProvince>();
     public DbSet<IneMunicipality> IneMunicipalities => Set<IneMunicipality>();
@@ -35,6 +42,8 @@ public sealed class NagomiDbContext(DbContextOptions<NagomiDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(NagomiDbContext).Assembly,
             type => type.Namespace == typeof(NagomiDbContext).Namespace);

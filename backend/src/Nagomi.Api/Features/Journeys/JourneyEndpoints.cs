@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.ProviderIntegration;
+using Nagomi.Api.Infrastructure.Authentication;
 
 namespace Nagomi.Api.Features.Journeys;
 
@@ -32,7 +33,7 @@ public static class JourneyEndpoints
 {
     public static IEndpointRouteBuilder MapJourneyEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/journeys").WithTags("Journeys");
+        var group = endpoints.MapGroup("/api/journeys").RequireAuthorization(UserAuthorizationPolicies.Web).WithTags("Journeys");
         group.MapGet("/{id:guid}", Get);
         group.MapPut("/{id:guid}/snapshot", UpdateSnapshot);
         group.MapPost("/{id:guid}/cancel", Cancel);

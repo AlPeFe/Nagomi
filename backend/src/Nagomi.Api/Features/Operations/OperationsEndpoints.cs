@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Infrastructure.Authentication;
 
 namespace Nagomi.Api.Features.Operations;
 
@@ -47,7 +48,7 @@ public static class OperationsEndpoints
 {
     public static IEndpointRouteBuilder MapOperationsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/operations").WithTags("Operations");
+        var group = endpoints.MapGroup("/api/operations").RequireAuthorization(UserAuthorizationPolicies.Web).WithTags("Operations");
         group.MapGet("/journeys", List);
         group.MapGet("/journeys/export.csv", ExportCsv);
         group.MapGet("/requests", ListRequests);

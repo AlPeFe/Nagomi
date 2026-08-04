@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.ProviderIntegration;
+using Nagomi.Api.Infrastructure.Authentication;
 
 namespace Nagomi.Api.Features.TransportRequests;
 
@@ -10,7 +11,7 @@ public static class TransportRequestEndpoints
 {
     public static IEndpointRouteBuilder MapTransportRequestEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/transport-requests").WithTags("Transport requests");
+        var group = endpoints.MapGroup("/api/transport-requests").RequireAuthorization(UserAuthorizationPolicies.Web).WithTags("Transport requests");
         group.MapPost("/drafts", CreateDraft);
         group.MapGet("/{id:guid}", Get);
         group.MapPut("/{id:guid}/draft", UpdateDraft);

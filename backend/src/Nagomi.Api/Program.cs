@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict.Server.AspNetCore;
 using Nagomi.Api.Features.Audit;
 using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Journeys;
@@ -7,6 +9,7 @@ using Nagomi.Api.Features.Operations;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.UserAdministration;
 using Nagomi.Api.Infrastructure.Authentication;
 using Nagomi.Api.Infrastructure.Errors;
 using Nagomi.Api.Infrastructure.Identity;
@@ -21,6 +24,7 @@ builder.Services.AddNagomiTelemetry(builder.Configuration);
 builder.Services.AddSimulatedIdentity(builder.Configuration);
 builder.Services.AddReferenceData();
 builder.Services.AddProviderAuthentication(builder.Configuration, builder.Environment);
+builder.Services.AddUserAuthentication(builder.Configuration);
 builder.Services.AddProviderIntegration(builder.Configuration);
 builder.Services.AddScoped<IProviderResourceGateway, TransportProviderResourceGateway>();
 builder.Services.AddSingleton(TimeProvider.System);
@@ -50,6 +54,8 @@ app.MapJourneyEndpoints();
 app.MapOperationsEndpoints();
 app.MapAuditEndpoints();
 app.MapEmergencyTransportEndpoints();
+app.MapUserEndpoints();
+app.MapUserAdministrationEndpoints();
 app.MapProviderIntegrationEndpoints();
 app.MapProviderAuthenticationAdministrationEndpoints();
 
@@ -57,6 +63,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", app.Environment.IsDe
 {
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<NagomiDbContext>().Database.MigrateAsync();
+    await UserSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
 }
 
 await app.RunAsync();

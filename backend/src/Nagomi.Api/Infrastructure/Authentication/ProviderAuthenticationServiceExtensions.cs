@@ -17,8 +17,6 @@ public static class ProviderAuthenticationServiceExtensions
         services.Configure<ProviderAuthenticationOptions>(section);
 
         // OpenIddict's entity sets are added to the existing Nagomi model without owning its database registration.
-        services.AddDbContext<NagomiDbContext>(options => options.UseOpenIddict());
-
         services.AddOpenIddict()
             .AddCore(options => options.UseEntityFrameworkCore().UseDbContext<NagomiDbContext>())
             .AddServer(options =>
@@ -40,7 +38,7 @@ public static class ProviderAuthenticationServiceExtensions
             .AddValidation(options =>
             {
                 options.UseLocalServer();
-                options.EnableTokenEntryValidation();
+                options.AddAudiences("nagomi-api");
                 options.UseAspNetCore();
             });
 

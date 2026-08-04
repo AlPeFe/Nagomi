@@ -17,6 +17,7 @@ public static class PersistenceServiceExtensions
 
         services.AddDbContext<NagomiDbContext>(options => options
             .UseNpgsql(connectionString)
+            .UseOpenIddict()
             .AddInterceptors(new UtcDateTimeOffsetSaveInterceptor()));
         services.AddScoped<INagomiDb>(provider => provider.GetRequiredService<NagomiDbContext>());
         services.AddScoped<IAuditHistoryQuery>(provider => provider.GetRequiredService<NagomiDbContext>());

@@ -114,6 +114,11 @@ export function useNavigate() {
 }
 
 // eslint-disable-next-line react/only-export-components
+export function useLocation() {
+  return useRouter().location
+}
+
+// eslint-disable-next-line react/only-export-components
 export function useParams<T extends Record<string, string | undefined> = Record<string, string>>() {
   return useRouter().params as T
 }

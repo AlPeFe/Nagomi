@@ -2,6 +2,7 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.ProviderIntegration;
+using Nagomi.Api.Infrastructure.Authentication;
 
 namespace Nagomi.IntegrationTests.Api;
 
@@ -42,6 +44,14 @@ public sealed class NagomiApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IProviderOutbox, NoOpProviderOutbox>();
             services.ConfigureHttpJsonOptions(options =>
                 options.SerializerOptions.Converters.Add(new JourneyScheduleJsonConverter()));
+
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthenticationHandler.Scheme;
+                    options.DefaultChallengeScheme = TestAuthenticationHandler.Scheme;
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(
+                    TestAuthenticationHandler.Scheme, _ => { });
         });
     }
 }

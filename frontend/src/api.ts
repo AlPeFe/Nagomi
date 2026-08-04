@@ -1,4 +1,5 @@
 import type { DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, RecurrencePattern, Requirements, TransportRequest, TransportRequestDraft, TransportRequestSubmission } from './types'
+import { getToken } from './auth'
 
 export class ApiError extends Error {
   status?: number
@@ -7,9 +8,10 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
+    const token = getToken()
     const response = await fetch(`/api${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...init?.headers },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
     })
     if (!response.ok) {
       const problem = await response.json().catch(() => null) as { detail?: string; title?: string } | null
@@ -135,6 +137,15 @@ function backendDraft(value: TransportRequestDraft) {
 
 function backendSchedule(value: JourneySchedule) { return value }
 
+export type AdminUserRow = {
+  id: string
+  email: string
+  displayName?: string
+  roles: string[]
+  isActive: boolean
+  createdAt: string
+}
+
 export const api = {
   async listAutonomousCommunities() {
     return (await request<Array<{ code: string; name: string; parentCode?: string }>>('/reference-data/autonomous-communities'))
@@ -193,4 +204,16 @@ export const api = {
   async getEmergency(id: string) { return mapEmergency(await request<BackendEmergency>(`/emergency-transports/${encodeURIComponent(id)}`)) },
   async createEmergency(draft: EmergencyDraft) { return mapEmergency(await request<BackendEmergency>('/emergency-transports', { method: 'POST', body: JSON.stringify(draft) })) },
   cancelEmergency: async (id: string) => mapEmergency(await request<BackendEmergency>(`/emergency-transports/${encodeURIComponent(id)}/cancel`, { method: 'POST' })),
+  async listUsers() {
+    return await request<AdminUserRow[]>('/admin/users')
+  },
+  async createUser(email: string, password: string, role: string) {
+    return await request<AdminUserRow>('/admin/users', { method: 'POST', body: JSON.stringify({ email, password, role }) })
+  },
+  async updateUser(id: string, patch: { role?: string; isActive?: boolean; password?: string }) {
+    return await request<AdminUserRow>(`/admin/users/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(patch) })
+  },
+  async deleteUser(id: string) {
+    return await request<void>(`/admin/users/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  },
 }
