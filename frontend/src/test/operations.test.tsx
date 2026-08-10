@@ -111,4 +111,33 @@ describe('solicitudes y navegación', () => {
     expect(screen.getByRole('button', { name: 'Conservar excepciones' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sobrescribir excepciones' })).toBeInTheDocument()
   })
+
+  it('permite editar el patrón de recurrencia y previsualiza el impacto del patrón modificado', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes('/preview')) return json({ additions: 4, cancellations: 2, exceptions: 1 })
+      return json(backendRequest)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup(); renderAt('/solicitudes/request-1')
+    // El editor carga con el patrón existente (lunes marcado)
+    expect(await screen.findByLabelText('Lunes')).toBeChecked()
+    // Se añade el martes al patrón
+    await user.click(screen.getByLabelText('Martes'))
+    await user.click(screen.getByRole('button', { name: 'Previsualizar impacto' }))
+    expect(await screen.findByText('+4 altas')).toBeInTheDocument()
+    const previewCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/preview'))
+    const body = JSON.parse(String(previewCall?.[1]?.body))
+    expect(body.recurrence.weekdaySchedules).toHaveLength(2)
+  })
+
+  it('marca visualmente las parejas ida/vuelta de la misma solicitud', async () => {
+    const outbound = { ...operationsRow, journeyId: 'journey-0', journeyPublicId: 'TRA-2026-0041', direction: 0, operationalAt: '2026-07-29T08:00:00+02:00' }
+    vi.stubGlobal('fetch', vi.fn(() => json([outbound, operationsRow])))
+    renderAt('/trayectos')
+    expect(await screen.findByText('TRA-2026-0041')).toBeInTheDocument()
+    // Cada miembro de la pareja muestra el publicId de su contraparte
+    expect(screen.getByText('↕ TRA-2026-0042')).toBeInTheDocument()
+    expect(screen.getByText('↕ TRA-2026-0041')).toBeInTheDocument()
+  })
 })

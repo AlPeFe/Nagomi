@@ -64,18 +64,20 @@ export default function App() {
         )}
       </header>
       <main id="contenido">
-        <Routes>
-          <Route path="/" element={session ? <Navigate to="/trayectos" replace /> : <LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/trayectos" element={<RequireAuth><JourneysPage /></RequireAuth>} />
-          <Route path="/trayectos/:journeyId" element={<RequireAuth><JourneyDetailPage /></RequireAuth>} />
-          <Route path="/solicitudes" element={<RequireAuth><RequestsPage /></RequireAuth>} />
-          <Route path="/solicitudes/nueva" element={<RequireAuth><RequestFormPage /></RequireAuth>} />
-          <Route path="/solicitudes/:requestId" element={<RequireAuth><RequestDetailPage /></RequireAuth>} />
-          <Route path="/urgencias" element={<RequireAuth><EmergencyPage /></RequireAuth>} />
-          <Route path="/usuarios" element={<RequireAuth><RequireAdmin><UsersPage /></RequireAdmin></RequireAuth>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <div className="route-stage" key={location}>
+          <Routes>
+            <Route path="/" element={session ? <Navigate to="/trayectos" replace /> : <LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/trayectos" element={<RequireAuth><JourneysPage /></RequireAuth>} />
+            <Route path="/trayectos/:journeyId" element={<RequireAuth><JourneyDetailPage /></RequireAuth>} />
+            <Route path="/solicitudes" element={<RequireAuth><RequestsPage /></RequireAuth>} />
+            <Route path="/solicitudes/nueva" element={<RequireAuth><RequestFormPage /></RequireAuth>} />
+            <Route path="/solicitudes/:requestId" element={<RequireAuth><RequestDetailPage /></RequireAuth>} />
+            <Route path="/urgencias" element={<RequireAuth><EmergencyPage /></RequireAuth>} />
+            <Route path="/usuarios" element={<RequireAuth><RequireAdmin><UsersPage /></RequireAdmin></RequireAuth>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </main>
     </div>
   )
