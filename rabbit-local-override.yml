@@ -1,0 +1,12 @@
+# Override SOLO para desarrollo local: expone el management API de RabbitMQ
+# en localhost para poder inspeccionar/consumir colas desde el host.
+# RabbitMQ vive en la red "internal" (sin salida); Docker Desktop no enruta
+# puertos desde ahí, así que también se une a la red "edge".
+# Uso:  docker compose -f docker-compose.yml -f rabbit-local-override.yml up -d rabbitmq
+# Revertir (quitar el puerto):  docker compose -f docker-compose.yml up -d rabbitmq
+services:
+  rabbitmq:
+    ports:
+      - "127.0.0.1:15672:15672"
+    networks:
+      - edge
