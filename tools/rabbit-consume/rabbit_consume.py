@@ -28,6 +28,10 @@ USER = os.environ.get("RABBIT_USER", "nagomi")
 PASSWORD = os.environ.get("RABBIT_PASSWORD", "")
 VHOST = os.environ.get("RABBIT_VHOST", "nagomi")
 PORT = int(os.environ.get("PORT", "8095"))
+# Escucha en todas las interfaces para poder abrir la herramienta desde la LAN
+# (el management API de RabbitMQ sigue en loopback; el proxy mantiene las
+# credenciales fuera del navegador). Para solo loopback: BIND_ADDRESS=127.0.0.1
+BIND_ADDRESS = os.environ.get("BIND_ADDRESS", "0.0.0.0")
 
 PAGE = """<!doctype html>
 <html lang="es">
@@ -275,8 +279,8 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> None:
     if not PASSWORD:
         raise SystemExit("Falta RABBIT_PASSWORD (variable de entorno).")
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"RabbitMQ consume client → http://127.0.0.1:{PORT}")
+    server = ThreadingHTTPServer((BIND_ADDRESS, PORT), Handler)
+    print(f"RabbitMQ consume client → http://{BIND_ADDRESS}:{PORT}")
     print(f"Management API: {MGMT_URL}  vhost: {VHOST}  user: {USER}")
     server.serve_forever()
 

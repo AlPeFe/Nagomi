@@ -46,6 +46,22 @@ python tools/rabbit-consume/rabbit_consume.py
 
 Abre `http://127.0.0.1:8095`.
 
+## Acceso desde la LAN (móvil / otro PC)
+
+El proxy escucha en `0.0.0.0` por defecto, así que la herramienta es accesible
+desde la red local en `http://192.168.31.223:8095`. El management API de
+RabbitMQ sigue en loopback: el navegador de la LAN solo ve el proxy, nunca las
+credenciales.
+
+La primera vez hay que abrir el puerto en el Firewall de Windows (acepta el
+prompt de UAC):
+
+```sh
+powershell -NoProfile -Command "Start-Process powershell -Verb RunAs -Wait -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','C:\Users\alexlocal\projects\Nagomi\tools\rabbit-consume\firewall.ps1'"
+```
+
+Para restringir a loopback: `BIND_ADDRESS=127.0.0.1 python tools/rabbit-consume/rabbit_consume.py`.
+
 ## Configuración (variables de entorno)
 
 | Variable          | Default             | Descripción                          |
@@ -55,3 +71,4 @@ Abre `http://127.0.0.1:8095`.
 | `RABBIT_PASSWORD` | *(obligatoria)*     | Password de RabbitMQ                 |
 | `RABBIT_VHOST`    | `nagomi`            | Vhost por defecto                    |
 | `PORT`            | `8095`              | Puerto del cliente web               |
+| `BIND_ADDRESS`    | `0.0.0.0`           | Interfaz de escucha (`127.0.0.1` = solo local) |
