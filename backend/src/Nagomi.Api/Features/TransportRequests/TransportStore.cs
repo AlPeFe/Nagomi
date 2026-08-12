@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.EmergencyTransports;
+using Nagomi.Api.Features.Vehicles;
 
 namespace Nagomi.Api.Features.TransportRequests;
 
@@ -11,12 +12,14 @@ public interface ITransportDb
     IQueryable<JourneyRecord> Journeys { get; }
     IQueryable<TransportAuditRecord> TransportAudit { get; }
     IQueryable<EmergencyTransportRecord> EmergencyTransports { get; }
+    IQueryable<TransportVehicle> Vehicles { get; }
 
     void Add(TransportRequestRecord request);
     void Add(JourneyRecord journey);
     void Add(JourneyStatusRecord status);
     void Add(TransportAuditRecord audit);
     void Add(EmergencyTransportRecord emergency);
+    void Add(TransportVehicle vehicle);
     void Remove(TransportRequestRecord request);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
@@ -67,6 +70,8 @@ public sealed class JourneyRecord
     public string? ProviderReference { get; set; }
     public bool IsRecurrenceException { get; set; }
     public bool IsManuallyAdded { get; set; }
+    public Guid? VehicleId { get; set; }
+    public TransportVehicle? Vehicle { get; set; }
     public JourneyStatus CurrentStatus { get; set; } = JourneyStatus.Scheduled;
     public DateTimeOffset? ActualActivatedAt { get; set; }
     public DateTimeOffset? ActualArrivedAtOriginAt { get; set; }

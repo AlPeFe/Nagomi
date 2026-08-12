@@ -1,4 +1,4 @@
-import type { DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission } from './types'
+import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -55,7 +55,8 @@ type BackendSchedule = { appointmentAt?: string; scheduledStartAt: string; sched
 type BackendJourney = {
   id: string; transportRequestId: string; publicId: string; direction: number | Journey['direction']; origin: BackendLocation; destination: BackendLocation
   requirements: BackendRequirements; schedule: BackendSchedule; currentStatus: number | JourneyStatus; providerVisibleNotes?: string; providerReference?: string
-  externallyModified?: boolean; retrievalState?: string; currentCancellingParty?: number | string; statusHistory?: Array<Record<string, unknown>>
+  externallyModified?: boolean; retrievalState?: string; currentCancellingParty?: number | string; vehicleId?: string; vehicle?: { publicId?: string; name?: string }
+  statusHistory?: Array<Record<string, unknown>>
 }
 type OperationsRow = {
   journeyId: string; journeyPublicId: string; requestId: string; requestPublicId: string; operationalAt: string; pickupTimePending: boolean
@@ -101,7 +102,8 @@ function mapJourney(value: BackendJourney, parent?: BackendRequest): Journey {
     requirements: mapRequirements(value.requirements), status: enumValue(value.currentStatus, journeyStatuses, 'Scheduled'), provider: parent?.providerName,
     contract: parent?.contractCode, providerReference: value.providerReference, deliveryState: enumValue(value.retrievalState, deliveryStates, 'NotPublished'),
     externallyModified: value.externallyModified, cancelledBy: value.currentCancellingParty === 1 || value.currentCancellingParty === 'TransportProvider' ? 'Provider' : undefined,
-    notes: value.providerVisibleNotes, statusEvents: (value.statusHistory ?? []).map((event) => ({ id: String(event.id), status: enumValue(event.status as number | string, journeyStatuses, 'Scheduled'), occurredAt: String(event.occurredAt), recordedAt: event.recordedAt ? String(event.recordedAt) : undefined, actor: event.actor ? String(event.actor) : undefined, source: event.source === 1 || event.source === 'TransportProvider' ? 'Provider' : 'Nagomi', externalResourceCode: event.externalResourceCode ? String(event.externalResourceCode) : undefined })),
+    notes: value.providerVisibleNotes, vehicleId: value.vehicleId, vehicleName: value.vehicle?.name,
+    statusEvents: (value.statusHistory ?? []).map((event) => ({ id: String(event.id), status: enumValue(event.status as number | string, journeyStatuses, 'Scheduled'), occurredAt: String(event.occurredAt), recordedAt: event.recordedAt ? String(event.recordedAt) : undefined, actor: event.actor ? String(event.actor) : undefined, source: event.source === 1 || event.source === 'TransportProvider' ? 'Provider' : 'Nagomi', externalResourceCode: event.externalResourceCode ? String(event.externalResourceCode) : undefined, latitude: typeof event.latitude === 'number' ? event.latitude : event.latitude != null ? Number(event.latitude) : undefined, longitude: typeof event.longitude === 'number' ? event.longitude : event.longitude != null ? Number(event.longitude) : undefined })),
   }
 }
 
@@ -260,4 +262,16 @@ export const api = {
   },
   listQueueSnapshots: () => request<QueueSnapshot[]>('/queue'),
   peekQueue: (queueName: string, limit = 10) => request<QueueMessageSample[]>(`/queue/${encodeURIComponent(queueName)}/peek?limit=${limit}`),
+  listVehicles: () => request<Vehicle[]>('/admin/vehicles'),
+  async createVehicle(body: { name: string; externalCode?: string; isActive?: boolean }) {
+    return await request<Vehicle>('/admin/vehicles', { method: 'POST', body: JSON.stringify(body) })
+  },
+  async updateVehicle(id: string, body: { name: string; externalCode?: string; isActive?: boolean }) {
+    return await request<Vehicle>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) })
+  },
+  deleteVehicle: (id: string) => request<void>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  listCoordination: () => request<CoordinationRow[]>('/coordination'),
+  async assignJourneyVehicle(journeyId: string, vehicleId?: string) {
+    return await request<Vehicle | null>(`/journeys/${encodeURIComponent(journeyId)}/vehicle`, { method: 'PUT', body: JSON.stringify({ vehicleId }) })
+  },
 }

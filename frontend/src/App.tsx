@@ -10,6 +10,8 @@ import { RequestFormPage } from './pages/RequestFormPage'
 import { RequestsPage } from './pages/RequestsPage'
 import { TenantConfigPage } from './pages/TenantConfigPage'
 import { IdentityPage } from './pages/IdentityPage'
+import { CoordinationPage } from './pages/CoordinationPage'
+import { VehiclesPage } from './pages/VehiclesPage'
 import { isAuthenticated, logout } from './auth'
 import './App.css'
 
@@ -55,8 +57,10 @@ export default function App() {
           <>
             <nav aria-label="Navegación principal">
               <NavLink to="/trayectos">Operación</NavLink>
+              <NavLink to="/coordinacion">Coordinación</NavLink>
               <NavLink to="/solicitudes">Solicitudes</NavLink>
               <NavLink to="/urgencias">Urgencias</NavLink>
+              {roles.includes('admin') && <NavLink to="/vehiculos">Vehículos</NavLink>}
               {roles.includes('admin') && <NavLink to="/identidad">Identidad</NavLink>}
               {roles.includes('admin') && <NavLink to="/configuracion">Configuración</NavLink>}
             </nav>
@@ -72,6 +76,8 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/trayectos" element={<RequireAuth><JourneysPage /></RequireAuth>} />
             <Route path="/trayectos/:journeyId" element={<RequireAuth><JourneyDetailPage /></RequireAuth>} />
+            <Route path="/coordinacion" element={<RequireAuth><CoordinationPage /></RequireAuth>} />
+            <Route path="/vehiculos" element={<RequireAuth><RequireAdmin><VehiclesPage /></RequireAdmin></RequireAuth>} />
             <Route path="/solicitudes" element={<RequireAuth><RequestsPage /></RequireAuth>} />
             <Route path="/solicitudes/nueva" element={<RequireAuth><RequestFormPage /></RequireAuth>} />
             <Route path="/solicitudes/:requestId" element={<RequireAuth><RequestDetailPage /></RequireAuth>} />

@@ -8,6 +8,7 @@ using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.Vehicles;
 
 namespace Nagomi.UnitTests.ProviderIntegration;
 
@@ -193,6 +194,55 @@ public sealed class TransportProviderResourceGatewayTests
         db.SaveCount.Should().Be(1);
     }
 
+    [Fact]
+    public async Task List_journeys_filters_by_vehicle_and_excludes_other_providers()
+    {
+        var (gateway, db, _, journey, identity) = Fixture();
+        var providerId = identity.ProviderId;
+        var vehicle = new TransportVehicle
+        {
+            Id = Guid.NewGuid(), ProviderId = providerId, PublicId = "VHC-2026-000001",
+            Name = "Ambulancia 01", IsActive = true
+        };
+        db.Add(vehicle);
+        journey.VehicleId = vehicle.Id;
+
+        var all = await gateway.ListJourneysAsync(null, default);
+        var byVehicle = await gateway.ListJourneysAsync(vehicle.Id, default);
+
+        all.Should().HaveCount(1);
+        byVehicle.Should().HaveCount(1);
+        byVehicle.Single().ProviderId.Should().Be(providerId);
+    }
+
+    [Fact]
+    public async Task Assign_vehicle_requires_ownership_and_updates_journey()
+    {
+        var (gateway, db, _, journey, identity) = Fixture();
+        var providerId = identity.ProviderId;
+        var ownVehicle = new TransportVehicle
+        {
+            Id = Guid.NewGuid(), ProviderId = providerId, PublicId = "VHC-2026-000001", Name = "Propio", IsActive = true
+        };
+        var foreignVehicle = new TransportVehicle
+        {
+            Id = Guid.NewGuid(), ProviderId = Guid.NewGuid(), PublicId = "VHC-2026-000002", Name = "Ajeno", IsActive = true
+        };
+        db.Add(ownVehicle);
+        db.Add(foreignVehicle);
+
+        var foreign = await gateway.AssignJourneyVehicleAsync(journey.PublicId, foreignVehicle.Id, providerId, default);
+        foreign.StatusCode.Should().Be(404);
+
+        var assigned = await gateway.AssignJourneyVehicleAsync(journey.PublicId, ownVehicle.Id, providerId, default);
+        assigned.StatusCode.Should().Be(200);
+        journey.VehicleId.Should().Be(ownVehicle.Id);
+
+        var unassigned = await gateway.AssignJourneyVehicleAsync(journey.PublicId, null, providerId, default);
+        unassigned.StatusCode.Should().Be(200);
+        journey.VehicleId.Should().BeNull();
+    }
+
     private static (TransportProviderResourceGateway Gateway, TestTransportDb Db,
         TransportRequestRecord Request, JourneyRecord Journey, ProviderIdentity Identity) Fixture()
     {
@@ -241,13 +291,16 @@ public sealed class TransportProviderResourceGatewayTests
     private sealed class TestTransportDb(IEnumerable<TransportRequestRecord> requests) : ITransportDb
     {
         private readonly List<TransportRequestRecord> _requests = requests.ToList();
+        private readonly List<TransportVehicle> _vehicles = [];
         internal List<TransportAuditRecord> Audits { get; } = [];
         internal int SaveCount { get; private set; }
         public IQueryable<TransportRequestRecord> TransportRequests => new AsyncEnumerable<TransportRequestRecord>(_requests);
         public IQueryable<JourneyRecord> Journeys => new AsyncEnumerable<JourneyRecord>(_requests.SelectMany(x => x.JourneyRecords));
         public IQueryable<TransportAuditRecord> TransportAudit => new AsyncEnumerable<TransportAuditRecord>(Audits);
         public IQueryable<EmergencyTransportRecord> EmergencyTransports => new AsyncEnumerable<EmergencyTransportRecord>([]);
+        public IQueryable<TransportVehicle> Vehicles => new AsyncEnumerable<TransportVehicle>(_vehicles);
         public void Add(TransportRequestRecord request) => _requests.Add(request);
+        public void Add(TransportVehicle vehicle) => _vehicles.Add(vehicle);
         public void Add(EmergencyTransportRecord emergency) { }
         public void Add(JourneyRecord journey)
         {

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.DependencyInjection;
+using Nagomi.Api.Features.Vehicles;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Nagomi.Api.Features.EmergencyTransports;
@@ -141,13 +142,16 @@ internal sealed class FakeTransportDb : ITransportDb
     private readonly List<TransportRequestRecord> _requests = [];
     private readonly List<TransportAuditRecord> _audit = [];
     private readonly List<EmergencyTransportRecord> _emergencies = [];
+    private readonly List<TransportVehicle> _vehicles = [];
 
     public IQueryable<TransportRequestRecord> TransportRequests => _requests.AsAsyncQueryable();
     public IQueryable<JourneyRecord> Journeys => _requests.SelectMany(x => x.JourneyRecords).AsAsyncQueryable();
     public IQueryable<TransportAuditRecord> TransportAudit => _audit.AsAsyncQueryable();
     public IQueryable<EmergencyTransportRecord> EmergencyTransports => _emergencies.AsAsyncQueryable();
+    public IQueryable<TransportVehicle> Vehicles => _vehicles.AsAsyncQueryable();
 
     public void Add(TransportRequestRecord request) => _requests.Add(request);
+    public void Add(TransportVehicle vehicle) => _vehicles.Add(vehicle);
     public void Add(JourneyRecord journey)
     {
         if (_requests.SelectMany(x => x.JourneyRecords).All(x => x.Id != journey.Id))
@@ -180,6 +184,20 @@ internal sealed class FakeTenantDb : ITenantDb
 
 internal sealed class FakeProviderIntegrationDb : IProviderIntegrationDb
 {
+    public FakeProviderIntegrationDb()
+    {
+        // The tenant's self-execution provider is required so vehicle management (scoped to SELF)
+        // resolves a provider in the in-memory factory.
+        TransportProviders.Add(new TransportProvider
+        {
+            Id = Guid.Parse("99999999-0000-0000-0000-000000000001"),
+            Code = "SELF",
+            Name = "Propio (auto-proveedor)",
+            QueueName = "nagomi.self",
+            IsActive = true
+        });
+    }
+
     public DbSet<TransportProvider> TransportProviders { get; } = new FakeDbSet<TransportProvider>();
     public DbSet<TransportContract> TransportContracts { get; } = new FakeDbSet<TransportContract>();
     public DbSet<ProviderContractRoute> ProviderContractRoutes { get; } = new FakeDbSet<ProviderContractRoute>();

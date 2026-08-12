@@ -6,11 +6,14 @@ namespace Nagomi.Api.Features.ProviderIntegration;
 
 public sealed record ProviderResourceAuthorization(Guid ProviderId, string ContractCode);
 public sealed record ProviderResourceSnapshot(Guid ProviderId, string ContractCode, object Snapshot);
+public sealed record AssignVehiclePayload(Guid? VehicleId);
 
 public interface IProviderResourceGateway
 {
     Task<ProviderResourceSnapshot?> GetRequestAsync(string publicId, CancellationToken cancellationToken);
     Task<ProviderResourceSnapshot?> GetJourneyAsync(string publicId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ProviderResourceSnapshot>> ListJourneysAsync(Guid? vehicleId, CancellationToken cancellationToken);
+    Task<ProviderCommandResult> AssignJourneyVehicleAsync(string publicId, Guid? vehicleId, Guid providerId, CancellationToken cancellationToken);
     Task<ProviderResourceAuthorization?> GetRequestAuthorizationAsync(string publicId, CancellationToken cancellationToken);
     Task<ProviderResourceAuthorization?> GetJourneyAuthorizationAsync(string publicId, CancellationToken cancellationToken);
     Task<ProviderCommandResult> ExecuteAsync(
@@ -29,6 +32,8 @@ public static class ProviderEndpoints
         var provider = endpoints.MapGroup("/api/provider").WithTags("Provider integration").RequireAuthorization();
         provider.MapGet("/requests/{publicId}", GetRequestAsync);
         provider.MapGet("/journeys/{publicId}", GetJourneyAsync);
+        provider.MapGet("/journeys", ListJourneysAsync);
+        provider.MapPut("/journeys/{publicId}/vehicle", AssignJourneyVehicleAsync);
         provider.MapPut("/requests/{publicId}", ReplaceRequestAsync);
         provider.MapPut("/journeys/{publicId}", ReplaceJourneyAsync);
         provider.MapPost("/requests/{publicId}/journeys", AddExceptionalJourneyAsync);
@@ -112,6 +117,37 @@ public static class ProviderEndpoints
     {
         var resource = await gateway.GetJourneyAsync(publicId, cancellationToken);
         return await CompleteRetrievalAsync(resource, publicId, messageId, user, authorizer, tracker, cancellationToken);
+    }
+
+    public static async Task<IResult> ListJourneysAsync(
+        Guid? vehicleId, ClaimsPrincipal user, IProviderResourceGateway gateway,
+        CancellationToken cancellationToken)
+    {
+        var providerId = ResolveProviderId(user);
+        if (providerId is null) return TypedResults.Unauthorized();
+        var journeys = await gateway.ListJourneysAsync(vehicleId, cancellationToken);
+        var filtered = journeys.Where(x => x.ProviderId == providerId).ToArray();
+        return TypedResults.Ok(filtered.Select(x => x.Snapshot).ToArray());
+    }
+
+    public static async Task<IResult> AssignJourneyVehicleAsync(
+        string publicId, AssignVehiclePayload? payload, ClaimsPrincipal user, IProviderResourceGateway gateway,
+        IProviderAuthorizer authorizer, CancellationToken cancellationToken)
+    {
+        var resource = await gateway.GetJourneyAuthorizationAsync(publicId, cancellationToken);
+        if (resource is null) return TypedResults.NotFound();
+        var authorization = authorizer.Authorize(user, resource.ProviderId, resource.ContractCode);
+        if (!authorization.Succeeded) return AuthorizationFailure(authorization.Failure);
+
+        var result = await gateway.AssignJourneyVehicleAsync(
+            publicId, payload?.VehicleId, authorization.Identity!.ProviderId, cancellationToken);
+        return Results.Content(result.Body, "application/json", statusCode: result.StatusCode);
+    }
+
+    private static Guid? ResolveProviderId(ClaimsPrincipal user)
+    {
+        var value = user.FindFirstValue(ProviderClaimTypes.ProviderId);
+        return Guid.TryParse(value, out var providerId) ? providerId : null;
     }
 
     private static async Task<IResult> CompleteRetrievalAsync(

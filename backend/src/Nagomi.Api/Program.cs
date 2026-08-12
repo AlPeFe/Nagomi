@@ -12,6 +12,7 @@ using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Features.UserAdministration;
+using Nagomi.Api.Features.Vehicles;
 using Nagomi.Api.Infrastructure.Authentication;
 using Nagomi.Api.Infrastructure.Errors;
 using Nagomi.Api.Infrastructure.Identity;
@@ -63,6 +64,7 @@ app.MapProviderIntegrationEndpoints();
 app.MapProviderAuthenticationAdministrationEndpoints();
 app.MapTenantEndpoints();
 app.MapWebQueueEndpoints();
+app.MapVehicleEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", app.Environment.IsDevelopment()))
 {

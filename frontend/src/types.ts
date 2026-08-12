@@ -45,6 +45,8 @@ export interface Journey {
   deliveryState: DeliveryState
   externallyModified?: boolean
   cancelledBy?: 'Requester' | 'Provider'
+  vehicleId?: string
+  vehicleName?: string
   notes?: string
   statusEvents?: StatusEvent[]
   audit?: AuditEntry[]
@@ -110,9 +112,47 @@ export type TransportRequestSubmission =
   | { kind: 'oneOff'; outbound: JourneySchedule; return?: JourneySchedule }
   | { kind: 'recurring'; recurrence: RecurrencePattern }
 
-export interface StatusEvent { id: string; status: JourneyStatus; occurredAt: string; recordedAt?: string; actor?: string; source?: string; externalResourceCode?: string }
+export interface StatusEvent { id: string; status: JourneyStatus; occurredAt: string; recordedAt?: string; actor?: string; source?: string; externalResourceCode?: string; latitude?: number; longitude?: number }
 export interface AuditEntry { id: string; action: string; actor: string; source: string; occurredAt: string; changes?: string[] }
 export interface DeliveryRecord { id: string; state: DeliveryState; createdAt: string; retrievedAt?: string; attempts?: number }
+
+export interface Vehicle {
+  id: string
+  publicId: string
+  name: string
+  externalCode?: string
+  isActive: boolean
+  createdAt: string
+}
+
+export type JourneyDirection = 'Outbound' | 'Return'
+
+export interface StatusPoint {
+  id: string
+  status: JourneyStatus
+  occurredAt: string
+  actor?: string
+  externalResourceCode?: string
+  latitude?: number
+  longitude?: number
+}
+
+export interface CoordinationRow {
+  journeyId: string
+  journeyPublicId: string
+  requestId: string
+  requestPublicId: string
+  direction: JourneyDirection
+  operationalAt: string
+  patientName: string
+  origin: string
+  destination: string
+  status: JourneyStatus
+  vehicleId?: string
+  vehiclePublicId?: string
+  vehicleName?: string
+  statusPoints: StatusPoint[]
+}
 
 export interface ListResponse<T> { items: T[]; total?: number }
 

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.Vehicles;
 using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.Api.Infrastructure.Persistence;
@@ -124,10 +125,25 @@ internal sealed class JourneyRecordConfiguration : IEntityTypeConfiguration<Jour
         entity.OwnsOne(x => x.Destination, TransportRequestRecordConfiguration.ConfigureLocation);
         entity.OwnsOne(x => x.Requirements, TransportRequestRecordConfiguration.ConfigureRequirements);
         entity.OwnsOne(x => x.Schedule);
+        entity.HasOne(x => x.Vehicle).WithMany().HasForeignKey(x => x.VehicleId).OnDelete(DeleteBehavior.SetNull);
         entity.HasMany(x => x.StatusHistory)
             .WithOne()
             .HasForeignKey(x => x.JourneyId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class TransportVehicleConfiguration : IEntityTypeConfiguration<TransportVehicle>
+{
+    public void Configure(EntityTypeBuilder<TransportVehicle> entity)
+    {
+        entity.ToTable("vehicles");
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => x.PublicId).IsUnique();
+        entity.HasIndex(x => new { x.ProviderId, x.IsActive });
+        entity.Property(x => x.PublicId).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        entity.Property(x => x.ExternalCode).HasMaxLength(200);
     }
 }
 

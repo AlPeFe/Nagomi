@@ -31,6 +31,58 @@ public sealed class TransportProviderResourceGateway(ITransportDb db, IPublicIdG
         return Snapshot(request, journey);
     }
 
+    public async Task<IReadOnlyList<ProviderResourceSnapshot>> ListJourneysAsync(
+        Guid? vehicleId, CancellationToken cancellationToken)
+    {
+        var journeys = db.Journeys.AsNoTracking().Include(x => x.StatusHistory)
+            .Where(x => x.CurrentStatus != JourneyStatus.Completed && x.CurrentStatus != JourneyStatus.Cancelled);
+        if (vehicleId.HasValue)
+            journeys = journeys.Where(x => x.VehicleId == vehicleId);
+
+        var values = await journeys.ToListAsync(cancellationToken);
+        if (values.Count == 0) return [];
+
+        var requestIds = values.Select(x => x.TransportRequestId).Distinct().ToArray();
+        var requests = await db.TransportRequests.AsNoTracking()
+            .Where(x => requestIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        return values
+            .Where(j => requests.TryGetValue(j.TransportRequestId, out var r) && Authorization(r) is not null)
+            .Select(j => Snapshot(requests[j.TransportRequestId], j)!)
+            .ToArray();
+    }
+
+    public async Task<ProviderCommandResult> AssignJourneyVehicleAsync(
+        string publicId, Guid? vehicleId, Guid providerId, CancellationToken cancellationToken)
+    {
+        var journey = await db.Journeys.Include(x => x.Vehicle)
+            .SingleOrDefaultAsync(x => x.PublicId == publicId, cancellationToken);
+        if (journey is null) return Error(404, "Journey not found.");
+        var request = await db.TransportRequests.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == journey.TransportRequestId, cancellationToken);
+        if (request is null || request.ProviderId != providerId)
+            return Error(403, "The provider is not authorized for this resource.");
+        if (journey.Terminal()) return Error(409, "Completed and cancelled journeys cannot be reassigned.");
+
+        if (vehicleId.HasValue)
+        {
+            var vehicle = await db.Vehicles.SingleOrDefaultAsync(
+                x => x.Id == vehicleId.Value && x.ProviderId == providerId, cancellationToken);
+            if (vehicle is null) return Error(404, "Vehicle not found or not owned by this provider.");
+            journey.VehicleId = vehicle.Id;
+            journey.Vehicle = vehicle;
+        }
+        else
+        {
+            journey.VehicleId = null;
+            journey.Vehicle = null;
+        }
+
+        journey.ExternallyModified = true;
+        await db.SaveChangesAsync(cancellationToken);
+        return Success(journey);
+    }
+
     public async Task<ProviderResourceAuthorization?> GetRequestAuthorizationAsync(
         string publicId, CancellationToken cancellationToken)
     {

@@ -8,6 +8,7 @@ using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Tenant;
+using Nagomi.Api.Features.Vehicles;
 using Nagomi.Api.Infrastructure.Identity;
 
 namespace Nagomi.Api.Infrastructure.Persistence;
@@ -37,11 +38,13 @@ public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, Applica
     public DbSet<ProviderCommandReceipt> ProviderCommandReceipts => Set<ProviderCommandReceipt>();
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
     public DbSet<TransportClient> TransportClients => Set<TransportClient>();
+    public DbSet<TransportVehicle> Vehicles => Set<TransportVehicle>();
 
     IQueryable<TransportRequestRecord> ITransportDb.TransportRequests => TransportRequestRecords;
     IQueryable<JourneyRecord> ITransportDb.Journeys => JourneyRecords;
     IQueryable<TransportAuditRecord> ITransportDb.TransportAudit => TransportAuditRecords;
     IQueryable<EmergencyTransportRecord> ITransportDb.EmergencyTransports => EmergencyTransportRecords;
+    IQueryable<TransportVehicle> ITransportDb.Vehicles => Vehicles;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +81,8 @@ public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, Applica
     public void Add(TransportAuditRecord audit) => TransportAuditRecords.Add(audit);
 
     public void Add(EmergencyTransportRecord emergency) => EmergencyTransportRecords.Add(emergency);
+
+    public void Add(TransportVehicle vehicle) => Vehicles.Add(vehicle);
 
     public void Remove(TransportRequestRecord request) => TransportRequestRecords.Remove(request);
 

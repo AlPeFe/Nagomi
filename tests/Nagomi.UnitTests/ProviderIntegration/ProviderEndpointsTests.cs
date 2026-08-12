@@ -62,6 +62,8 @@ public sealed class ProviderEndpointsTests
         public Task<ProviderResourceSnapshot?> GetJourneyAsync(string publicId, CancellationToken cancellationToken) => Task.FromResult<ProviderResourceSnapshot?>(snapshot);
         public Task<ProviderResourceAuthorization?> GetRequestAuthorizationAsync(string publicId, CancellationToken cancellationToken) => Task.FromResult<ProviderResourceAuthorization?>(new(snapshot.ProviderId, snapshot.ContractCode));
         public Task<ProviderResourceAuthorization?> GetJourneyAuthorizationAsync(string publicId, CancellationToken cancellationToken) => Task.FromResult<ProviderResourceAuthorization?>(new(snapshot.ProviderId, snapshot.ContractCode));
+        public Task<IReadOnlyList<ProviderResourceSnapshot>> ListJourneysAsync(Guid? vehicleId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<ProviderResourceSnapshot>>([snapshot]);
+        public Task<ProviderCommandResult> AssignJourneyVehicleAsync(string publicId, Guid? vehicleId, Guid providerId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<ProviderCommandResult> ExecuteAsync(string commandType, string entityPublicId, JsonElement payload, ProviderIdentity provider, DateTimeOffset acceptedAt, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }
