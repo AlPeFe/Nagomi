@@ -263,10 +263,10 @@ export const api = {
   listQueueSnapshots: () => request<QueueSnapshot[]>('/queue'),
   peekQueue: (queueName: string, limit = 10) => request<QueueMessageSample[]>(`/queue/${encodeURIComponent(queueName)}/peek?limit=${limit}`),
   listVehicles: () => request<Vehicle[]>('/admin/vehicles'),
-  async createVehicle(body: { name: string; externalCode?: string; isActive?: boolean }) {
+  async createVehicle(body: { name: string; code?: string; externalCode?: string; isActive?: boolean }) {
     return await request<Vehicle>('/admin/vehicles', { method: 'POST', body: JSON.stringify(body) })
   },
-  async updateVehicle(id: string, body: { name: string; externalCode?: string; isActive?: boolean }) {
+  async updateVehicle(id: string, body: { name: string; code?: string; externalCode?: string; isActive?: boolean }) {
     return await request<Vehicle>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) })
   },
   deleteVehicle: (id: string) => request<void>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'DELETE' }),

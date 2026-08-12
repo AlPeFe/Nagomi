@@ -12,10 +12,11 @@
 .emergency-list{display:grid;gap:.75rem}
 .emergency-card{background:white;border:1px solid var(--line)}
 .emergency-card.is-selected{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-light)}
-.emergency-card-main{width:100%;display:grid;grid-template-columns:180px 1fr 1.2fr auto;gap:1rem;align-items:center;padding:1rem;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--ink)}
+.emergency-card-main{width:100%;display:grid;grid-template-columns:minmax(150px,auto) 1fr 1.2fr auto;gap:1rem;align-items:center;padding:1rem;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--ink)}
 .emergency-card-main:hover{background:var(--wash)}
 .emergency-card-main div span,.emergency-card-main div small{display:block}
 .emergency-card-main div small{color:var(--muted)}
+.emergency-card-main strong{word-break:break-word;overflow-wrap:anywhere}
 .emergency-reason{font-weight:800}
 .emergency-location{color:var(--muted);font-size:.85rem}
 .status-pill{font-size:.7rem;text-transform:uppercase;font-weight:800;padding:.3rem .5rem;border-radius:3px;background:#e5efef;color:#276b69}
@@ -62,6 +63,12 @@
 .form-row{display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap}
 .form-row .field{flex:1;min-width:180px}
 .card{background:white;border:1px solid var(--line);padding:1.25rem}
+/* Config/tenant page cards: a plain stacked card, NOT the request-form's 3-col grid
+   (form-section sets grid-template-columns:45px 220px 1fr; using it here made section
+   headings overlap the action toolbar and stretched the "Nuevo cliente" button wide). */
+.config-card{background:white;border:1px solid var(--line);padding:1.25rem;margin-bottom:1.25rem}
+.config-card .section-heading{margin-bottom:.85rem}
+.config-card .table-toolbar{margin-bottom:.6rem}
 .create-user{margin-bottom:1.5rem;border-top:3px solid var(--teal)}
 .create-user h2{margin:0 0 1rem;font-size:1.05rem}
 .table-wrap{overflow-x:auto;padding:0}
@@ -142,9 +149,11 @@
 .inline-form{display:flex;gap:1rem;align-items:flex-end;margin-bottom:1.2rem;flex-wrap:wrap}
 .inline-form label{display:flex;flex-direction:column;gap:.25rem;font-size:.75rem;color:#64748b}
 .inline-form input{padding:.5rem;border:1px solid var(--border,#d8dee4);border-radius:6px;min-width:200px}
+.vehicle-form .inline-actions{display:flex;gap:.5rem;align-items:center}
 .card-list{display:flex;flex-direction:column;gap:.6rem}
-.list-row{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border,#d8dee4);border-radius:8px;padding:.8rem 1rem}
+.list-row{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border,#d8dee4);border-radius:8px;padding:.8rem 1rem;gap:1rem}
 .list-row div{display:flex;flex-direction:column}
 .list-row span{font-size:.75rem;color:#64748b}
+.list-row .list-actions{flex-direction:row;gap:.4rem}
 
 @media(max-width:900px){.coordination-board{grid-template-columns:1fr}}

@@ -34,7 +34,7 @@ public sealed record VehicleResponse(
     bool IsActive,
     DateTimeOffset CreatedAt);
 
-public sealed record UpsertVehicleCommand(string Name, string? ExternalCode, bool IsActive = true);
+public sealed record UpsertVehicleCommand(string Name, string? ExternalCode, string? Code = null, bool IsActive = true);
 
 internal static class VehicleMapping
 {

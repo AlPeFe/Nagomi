@@ -119,7 +119,7 @@ export function TenantConfigPage() {
 
       {loading ? <p className="muted">Cargando configuración…</p> : (
         <>
-          <section className="card form-section">
+          <section className="config-card">
             <div className="section-heading"><h2>Capacidades operativas</h2><p>Puedes habilitar varias a la vez. Definen qué se puede hacer en esta instalación.</p></div>
             <div className="capability-grid">
               <label className="capability-check">
@@ -137,7 +137,7 @@ export function TenantConfigPage() {
             </div>
           </section>
 
-          <section className="card form-section">
+          <section className="config-card">
             <div className="section-heading"><h2>Clientes facturables</h2><p>Organizaciones o particulares a los que se factura un traslado. No tienen integración ni cola.</p></div>
             <div className="table-toolbar">
               <button className="button button-accent" onClick={openCreate}>Nuevo cliente</button>
@@ -180,7 +180,7 @@ export function TenantConfigPage() {
             </div>
           </section>
 
-          <section className="card form-section">
+          <section className="config-card">
             <div className="section-heading"><h2>Colas de RabbitMQ</h2><p>Estado actual de las colas de los proveedores y vista previa no destructiva de los mensajes publicados.</p></div>
             <div className="table-wrap">
               <table className="table">

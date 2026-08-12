@@ -58,6 +58,26 @@ public sealed class VehicleTests(NagomiApiFactory factory) : IClassFixture<Nagom
     }
 
     [Fact]
+    public async Task Create_vehicle_with_custom_internal_code()
+    {
+        var response = await _client.PostAsJsonAsync("/api/admin/vehicles",
+            new UpsertVehicleCommand("Ambulancia 02", "AMB-02", "AMB-02"));
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var vehicle = await response.Content.ReadFromJsonAsync<JsonElement>();
+        vehicle.GetProperty("publicId").GetString().Should().Be("AMB-02");
+    }
+
+    [Fact]
+    public async Task Create_vehicle_rejects_duplicate_internal_code()
+    {
+        await _client.PostAsJsonAsync("/api/admin/vehicles",
+            new UpsertVehicleCommand("Ambulancia 03", "AMB-03", "DUP-01"));
+        var second = await _client.PostAsJsonAsync("/api/admin/vehicles",
+            new UpsertVehicleCommand("Ambulancia 04", "AMB-04", "DUP-01"));
+        second.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Coordination_requires_web_auth()
     {
         var response = await _client.GetAsync("/api/coordination");

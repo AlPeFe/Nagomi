@@ -80,10 +80,17 @@ public static class VehicleEndpoints
         if (string.IsNullOrWhiteSpace(command.Name))
             return ValidationProblem("Vehicle name is required.");
 
+        var code = VehicleMapping.Clean(command.Code);
+        if (!string.IsNullOrWhiteSpace(code) && await db.Vehicles.AnyAsync(
+                x => x.PublicId == code, cancellationToken))
+            return ValidationProblem($"Ya existe un vehículo con el código interno '{code}'.");
+
         var vehicle = new TransportVehicle
         {
             ProviderId = providerId.Value,
-            PublicId = await ids.NextAsync("VHC", cancellationToken),
+            PublicId = string.IsNullOrWhiteSpace(code)
+                ? await ids.NextAsync("VHC", cancellationToken)
+                : code,
             Name = command.Name.Trim(),
             ExternalCode = VehicleMapping.Clean(command.ExternalCode),
             IsActive = command.IsActive,
@@ -107,7 +114,14 @@ public static class VehicleEndpoints
         if (string.IsNullOrWhiteSpace(command.Name))
             return ValidationProblem("Vehicle name is required.");
 
+        var code = VehicleMapping.Clean(command.Code);
+        if (!string.IsNullOrWhiteSpace(code) && await db.Vehicles.AnyAsync(
+                x => x.PublicId == code && x.Id != vehicle.Id, cancellationToken))
+            return ValidationProblem($"Ya existe un vehículo con el código interno '{code}'.");
+
         vehicle.Name = command.Name.Trim();
+        if (!string.IsNullOrWhiteSpace(code))
+            vehicle.PublicId = code;
         vehicle.ExternalCode = VehicleMapping.Clean(command.ExternalCode);
         vehicle.IsActive = command.IsActive;
         vehicle.UpdatedAt = clock.GetUtcNow();
