@@ -107,10 +107,16 @@ public static class UserAdministrationEndpoints
 
         if (!string.IsNullOrWhiteSpace(command.Password))
         {
-            var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
-            var passwordResult = await userManager.ResetPasswordAsync(user, resetToken, command.Password);
-            if (!passwordResult.Succeeded)
-                return IdentityErrors(passwordResult);
+            // RemovePasswordAsync/AddPasswordAsync avoid the two-factor token provider that
+            // GeneratePasswordResetTokenAsync/ResetPasswordAsync require (not registered here),
+            // which otherwise throws NotSupportedException -> 500 on every admin password reset.
+            if (await userManager.HasPasswordAsync(user))
+            {
+                var removeResult = await userManager.RemovePasswordAsync(user);
+                if (!removeResult.Succeeded) return IdentityErrors(removeResult);
+            }
+            var addResult = await userManager.AddPasswordAsync(user, command.Password);
+            if (!addResult.Succeeded) return IdentityErrors(addResult);
         }
 
         if (!string.IsNullOrWhiteSpace(command.Role))
