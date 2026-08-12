@@ -27,11 +27,13 @@ public static class TransportRequestEndpoints
     }
 
     private static async Task<Created<TransportRequestRecord>> CreateDraft(
-        TransportRequestSnapshot snapshot, ITransportDb db, TimeProvider clock, CancellationToken cancellationToken)
+        TransportRequestSnapshot snapshot, ITransportDb db, IProviderIntegrationDb integrationDb,
+        TimeProvider clock, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         var record = new TransportRequestRecord { CreatedAt = now, UpdatedAt = now };
         record.Apply(snapshot, provider: false);
+        await ResolveSelfProviderAsync(record, integrationDb, cancellationToken);
         db.Add(record);
         Audit(db, record.Id.ToString(), "Created", ChangeSource.Nagomi, "simulated-user", now);
         await db.SaveChangesAsync(cancellationToken);
@@ -56,12 +58,14 @@ public static class TransportRequestEndpoints
     }
 
     private static async Task<Results<Ok<TransportRequestRecord>, NotFound, Conflict<string>>> UpdateDraft(
-        Guid id, TransportRequestSnapshot snapshot, ITransportDb db, TimeProvider clock, CancellationToken cancellationToken)
+        Guid id, TransportRequestSnapshot snapshot, ITransportDb db, IProviderIntegrationDb integrationDb,
+        TimeProvider clock, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return TypedResults.NotFound();
         if (request.Status != TransportRequestStatus.Draft) return TypedResults.Conflict("Only drafts can use the draft update endpoint.");
         request.Apply(snapshot, provider: false);
+        await ResolveSelfProviderAsync(request, integrationDb, cancellationToken);
         request.UpdatedAt = clock.GetUtcNow();
         Audit(db, id.ToString(), "Updated", ChangeSource.Nagomi, "simulated-user", request.UpdatedAt);
         await db.SaveChangesAsync(cancellationToken);
@@ -129,14 +133,16 @@ public static class TransportRequestEndpoints
     }
 
     private static async Task<IResult> UpdateSnapshot(
-        Guid id, UpdateRequestCommand command, ITransportDb db, IProviderOutbox outbox,
-        TimeProvider clock, CancellationToken cancellationToken)
+        Guid id, UpdateRequestCommand command, ITransportDb db, IProviderIntegrationDb integrationDb,
+        IProviderOutbox outbox, TimeProvider clock, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return TypedResults.NotFound();
         if (request.Status == TransportRequestStatus.Draft) return TypedResults.Conflict("Use the draft endpoint before submission.");
         var provider = command.Source == ChangeSource.TransportProvider;
         request.Apply(command.Snapshot, provider);
+        if (!provider)
+            await ResolveSelfProviderAsync(request, integrationDb, cancellationToken);
         request.UpdatedAt = clock.GetUtcNow();
         if (command.PropagateToJourneys && !provider)
         {
@@ -299,6 +305,28 @@ public static class TransportRequestEndpoints
             ? Task.FromResult<ProviderNotification?>(null)
             : outbox.AddAsync(request.ContractCode, messageType, IntegrationEntityType.TransportRequest,
                 request.PublicId, $"/api/provider/requests/{request.PublicId}", Guid.NewGuid(), cancellationToken);
+
+    /// <summary>
+    /// When a web request is created with the SELF contract (own execution) and no provider was
+    /// supplied, resolve the auto-provider SELF so the request belongs to the tenant's own fleet
+    /// (appears on the coordination board and can be assigned a vehicle).
+    /// </summary>
+    private static async Task ResolveSelfProviderAsync(
+        TransportRequestRecord request, IProviderIntegrationDb integrationDb, CancellationToken cancellationToken)
+    {
+        if (!string.Equals(request.ContractCode, "SELF", StringComparison.OrdinalIgnoreCase)
+            || request.ProviderId is not null || request.ProviderName is not null)
+            return;
+        var provider = await integrationDb.TransportProviders.AsNoTracking()
+            .Where(x => x.Code == "SELF")
+            .Select(x => new { x.Id, x.Name })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (provider is not null)
+        {
+            request.ProviderId = provider.Id;
+            request.ProviderName = provider.Name;
+        }
+    }
 }
 
 internal static class JourneyCancellation
