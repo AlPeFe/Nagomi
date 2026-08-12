@@ -160,7 +160,7 @@ public static class VehicleEndpoints
         var joined = journeys.Join(requests, j => j.TransportRequestId, r => r.Id, (j, r) => new { j, r })
             .Where(x => x.j.CurrentStatus != JourneyStatus.Completed && x.j.CurrentStatus != JourneyStatus.Cancelled);
         if (providerId.HasValue)
-            joined = joined.Where(x => x.r.ProviderId == providerId);
+            joined = joined.Where(x => x.r.ProviderId == providerId || x.r.ProviderId == null);
 
         var values = await joined.ToListAsync(cancellationToken);
         var rows = values.Select(x => new CoordinationRow(

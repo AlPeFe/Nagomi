@@ -37,11 +37,15 @@ export function RequestFormPage() {
   const [saving, setSaving] = useState<'draft' | 'submit' | ''>('')
   const [message, setMessage] = useState('')
   const [clients, setClients] = useState<TransportClient[]>([])
+  const [executesSelf, setExecutesSelf] = useState(false)
 
   useEffect(() => {
     api.listClients()
       .then((list) => setClients(Array.isArray(list) ? list : []))
       .catch(() => setClients([]))
+    api.getCapabilities()
+      .then((caps) => setExecutesSelf(!!caps?.executesTransports))
+      .catch(() => setExecutesSelf(false))
   }, [])
 
   const selectedDays = Object.keys(dayConfigs) as DayKey[]
@@ -67,7 +71,7 @@ export function RequestFormPage() {
       reason: data.reason ? { code: String(data.reason), description: String(data.reason) } : undefined,
       defaultOrigin: data.originName ? location('origin') : undefined, defaultDestination: data.destinationName ? location('destination') : undefined,
       requirements: { mobility: String(data.mobility) as 'Autonomous' | 'Wheelchair' | 'Stretcher', oxygen, oxygenConcentration: data.oxygenConcentration ? Number(data.oxygenConcentration) : undefined, oxygenFlow: data.oxygenFlow ? Number(data.oxygenFlow) : undefined, companion: data.companion === 'on', medicalStaff: data.medicalStaff === 'on', isolation: data.isolation === 'on', bariatric: data.bariatric === 'on', stairsAssistance: data.stairsAssistance === 'on' },
-      contractCode: String(data.contract ?? '') || undefined, clientId: String(data.client ?? '') || undefined, providerName: String(data.provider ?? '') || undefined, privateNotes: String(data.privateNotes ?? '') || undefined, providerVisibleNotes: String(data.providerNotes ?? '') || undefined,
+      contractCode: executesSelf ? 'SELF' : undefined, clientId: String(data.client ?? '') || undefined, providerName: undefined, privateNotes: String(data.privateNotes ?? '') || undefined, providerVisibleNotes: String(data.providerNotes ?? '') || undefined,
     }
     const appointmentAt = offsetDateTime(data.appointmentAt); const startAt = offsetDateTime(data.scheduledStartAt) ?? (appointmentAt ? new Date(new Date(appointmentAt).getTime() - 3_600_000).toISOString() : undefined)
     const outbound: JourneySchedule = { appointmentAt, scheduledStartAt: startAt || undefined, pickupTimePending: false }
@@ -152,7 +156,7 @@ export function RequestFormPage() {
           )}
         </div>}
       </div></section>
-      <section className="form-section"><div className="section-number">05</div><div className="section-heading"><h2>Facturación y ejecución</h2><p>El cliente facturable es a quién se factura el traslado (p. ej. una mutua que te llama por teléfono). El contrato decide quién lo ejecuta; si lo ejecutas tú, se usa tu contrato propio por defecto.</p></div><div className="field-grid"><label><span>Cliente facturable</span><select name="client" defaultValue=""><option value="">Yo mismo (sin cliente)</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><small>Organización o particular al que se factura. Opcional: si se deja vacío, se factura a ti mismo.</small></label><label><span>Contrato (ejecución)</span><select name="contract" defaultValue=""><option value="">Mi contrato por defecto (propio)</option><option value="CTR-MAD-01">CTR-MAD-01 · Transporte sanitario Madrid</option><option value="CTR-SIN-RUTA">Sin ruta activa</option><option value="SELF">SELF · Traslados propios</option></select><small>Solo si lo ejecuta un sistema externo (proveedor). Para ejecución propia, déjalo vacío.</small></label><label><span>Proveedor</span><input name="provider" placeholder="Asignado por el contrato" readOnly /></label><label className="span-2"><span>Notas para el proveedor</span><textarea name="providerNotes" rows={3} /></label><label className="span-2"><span>Notas privadas</span><textarea name="privateNotes" rows={3} /></label></div></section>
+      <section className="form-section"><div className="section-number">05</div><div className="section-heading"><h2>Facturación y notas</h2><p>Elige a quién se factura el traslado. La ejecución se asigna a tu contrato propio por defecto.</p></div><div className="field-grid"><label><span>Cliente facturable</span><select name="client" defaultValue=""><option value="">Yo mismo (sin cliente)</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><small>Organización o particular al que se factura. Opcional: si se deja vacío, se factura a ti mismo.</small></label><label className="span-2"><span>Notas para el proveedor</span><textarea name="providerNotes" rows={3} /></label><label className="span-2"><span>Notas privadas</span><textarea name="privateNotes" rows={3} /></label></div></section>
       <div className="form-actions"><button className="button button-secondary" type="button" disabled={!!saving} onClick={(e) => { const form = e.currentTarget.form; if (form) void save({ preventDefault: () => undefined, currentTarget: form } as unknown as React.FormEvent<HTMLFormElement>, false) }}>{saving === 'draft' ? 'Guardando…' : 'Guardar borrador'}</button><button className="button button-accent" disabled={!!saving || (mode === 'recurring' && !selectedDays.length)}>{saving === 'submit' ? 'Enviando…' : 'Revisar y enviar solicitud'}</button></div>
     </form>
   </div>
