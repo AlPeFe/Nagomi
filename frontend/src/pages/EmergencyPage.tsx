@@ -3,10 +3,12 @@ import { api } from '../api'
 import { IncidentMap } from '../components/IncidentMap'
 import { geocodeAddress } from '../geocode'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
-import type { EmergencyTransport } from '../types'
+import type { EmergencyStatus, EmergencyTransport } from '../types'
 import { formatDateTime } from '../utils'
 
 const statusLabel: Record<string, string> = { Active: 'Activa', Completed: 'Completada', Cancelled: 'Cancelada' }
+
+type Tab = 'active' | 'history'
 
 export function EmergencyPage() {
   const [records, setRecords] = useState<EmergencyTransport[]>([])
@@ -15,6 +17,10 @@ export function EmergencyPage() {
   const [message, setMessage] = useState('')
   const [creating, setCreating] = useState(false)
   const [selectedId, setSelectedId] = useState<string>()
+  const [tab, setTab] = useState<Tab>('active')
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [fromFilter, setFromFilter] = useState('')
+  const [toFilter, setToFilter] = useState('')
 
   const [reason, setReason] = useState('')
   const [contactPhone, setContactPhone] = useState('')
@@ -25,7 +31,16 @@ export function EmergencyPage() {
 
   async function load() {
     try {
-      setRecords(await api.listEmergencies())
+      setLoading(true)
+      if (tab === 'active') {
+        setRecords(await api.listEmergencies({ status: 'Active' }))
+      } else {
+        const filters: { status?: EmergencyStatus; from?: string; to?: string } = {}
+        if (statusFilter) filters.status = statusFilter as EmergencyStatus
+        if (fromFilter) filters.from = `${fromFilter}T00:00:00Z`
+        if (toFilter) filters.to = `${toFilter}T23:59:59Z`
+        setRecords(await api.listEmergencies(filters))
+      }
       setError('')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Error desconocido.')
@@ -34,7 +49,7 @@ export function EmergencyPage() {
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => { void load() }, [tab])
 
   function resetForm() {
     setReason(''); setContactPhone(''); setObservations(''); setAddressQuery(''); setIncident(undefined)
@@ -51,7 +66,7 @@ export function EmergencyPage() {
         contactPhone: contactPhone.trim() || undefined,
         observations: observations.trim() || undefined,
       })
-      setRecords(await api.listEmergencies())
+      setRecords(await api.listEmergencies({ status: 'Active' }))
       setSelectedId(created.id)
       resetForm()
       setCreating(false)
@@ -74,7 +89,7 @@ export function EmergencyPage() {
 
   async function cancel(id: string) {
     if (!window.confirm('¿Cancelar esta urgencia?')) return
-    try { await api.cancelEmergency(id); setRecords(await api.listEmergencies()) }
+    try { await api.cancelEmergency(id); setRecords(await api.listEmergencies({ status: 'Active' })) }
     catch (caught) { setMessage(caught instanceof Error ? caught.message : 'No se pudo cancelar.') }
   }
 
@@ -102,7 +117,21 @@ export function EmergencyPage() {
       </form>
     </section>}
 
-    {loading ? <LoadingState label="Cargando urgencias" /> : error ? <ErrorState message={error} retry={() => void load()} /> : records.length === 0 ? <EmptyState title="No hay urgencias registradas" message="Crea la primera para geolocalizar el punto de incidencia." /> : (
+    <div className="tabs" role="tablist" aria-label="Filtro de urgencias">
+      <button className={`tab ${tab === 'active' ? 'active' : ''}`} role="tab" aria-selected={tab === 'active'} onClick={() => setTab('active')}>Activas</button>
+      <button className={`tab ${tab === 'history' ? 'active' : ''}`} role="tab" aria-selected={tab === 'history'} onClick={() => setTab('history')}>Historial</button>
+    </div>
+
+    {tab === 'history' && (
+      <form className="filter-panel emergency-filters" onSubmit={(event) => { event.preventDefault(); void load() }}>
+        <label><span>Estado</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">Todos</option><option value="Active">Activa</option><option value="Completed">Completada</option><option value="Cancelled">Cancelada</option></select></label>
+        <label><span>Desde</span><input type="date" value={fromFilter} onChange={(e) => setFromFilter(e.target.value)} /></label>
+        <label><span>Hasta</span><input type="date" value={toFilter} onChange={(e) => setToFilter(e.target.value)} /></label>
+        <button className="button button-accent" type="submit">Filtrar</button>
+      </form>
+    )}
+
+    {loading ? <LoadingState label="Cargando urgencias" /> : error ? <ErrorState message={error} retry={() => void load()} /> : records.length === 0 ? <EmptyState title={tab === 'active' ? 'No hay urgencias activas' : 'No hay urgencias en este historial'} message={tab === 'active' ? 'Crea la primera para geolocalizar el punto de incidencia.' : 'Ajusta los filtros para ver más registros.'} /> : (
       <div className="emergency-list">
         {records.map((record) => (
           <article key={record.id} className={`emergency-card ${record.id === selectedId ? 'is-selected' : ''}`}>

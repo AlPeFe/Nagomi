@@ -74,7 +74,7 @@ export interface TransportRequest {
 
 export interface JourneySchedule {
   appointmentAt?: string
-  scheduledStartAt: string
+  scheduledStartAt?: string
   scheduledPickupAt?: string
   pickupTimePending: boolean
 }

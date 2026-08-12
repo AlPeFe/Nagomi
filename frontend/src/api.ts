@@ -225,7 +225,14 @@ export const api = {
   applyRecurrence: (id: string, recurrence: RecurrencePattern, overwriteExceptions: boolean) => request<void>(`/transport-requests/${encodeURIComponent(id)}/recurrence/apply`, { method: 'POST', body: JSON.stringify({ recurrence, overwriteExceptions }) }),
   cancelRequest: (id: string) => request<void>(`/transport-requests/${encodeURIComponent(id)}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 0, cancellingParty: 0, source: 0, actor: 'simulated-user' }) }),
   addJourneyStatus: (id: string, status: JourneyStatus, occurredAt: string, idempotencyKey: string) => request<void>(`/journeys/${encodeURIComponent(id)}/statuses`, { method: 'POST', body: JSON.stringify({ status: journeyStatuses.indexOf(status), occurredAt, idempotencyKey, source: 0, actor: 'simulated-user' }) }),
-  async listEmergencies() { return (await request<BackendEmergency[]>('/emergency-transports')).map(mapEmergency) },
+  async listEmergencies(filters: { status?: EmergencyStatus; from?: string; to?: string } = {}) {
+    const params = new URLSearchParams()
+    if (filters.status) params.set('status', filters.status)
+    if (filters.from) params.set('from', filters.from)
+    if (filters.to) params.set('to', filters.to)
+    const qs = params.toString()
+    return (await request<BackendEmergency[]>(`/emergency-transports${qs ? `?${qs}` : ''}`)).map(mapEmergency)
+  },
   async getEmergency(id: string) { return mapEmergency(await request<BackendEmergency>(`/emergency-transports/${encodeURIComponent(id)}`)) },
   async createEmergency(draft: EmergencyDraft) { return mapEmergency(await request<BackendEmergency>('/emergency-transports', { method: 'POST', body: JSON.stringify(draft) })) },
   cancelEmergency: async (id: string) => mapEmergency(await request<BackendEmergency>(`/emergency-transports/${encodeURIComponent(id)}/cancel`, { method: 'POST' })),

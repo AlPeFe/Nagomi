@@ -63,11 +63,14 @@ public static class EmergencyTransportEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<EmergencyTransportRecord>>> List(
+        EmergencyTransportStatus? status, DateTimeOffset? from, DateTimeOffset? to,
         ITransportDb db, CancellationToken cancellationToken)
     {
-        var records = await db.EmergencyTransports.AsNoTracking()
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync(cancellationToken);
+        var query = db.EmergencyTransports.AsNoTracking();
+        if (status.HasValue) query = query.Where(x => x.Status == status);
+        if (from.HasValue) query = query.Where(x => x.CreatedAt >= from.Value);
+        if (to.HasValue) query = query.Where(x => x.CreatedAt <= to.Value);
+        var records = await query.OrderByDescending(x => x.CreatedAt).ToListAsync(cancellationToken);
         return TypedResults.Ok<IReadOnlyList<EmergencyTransportRecord>>(records);
     }
 

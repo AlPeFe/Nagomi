@@ -17,9 +17,15 @@ using Nagomi.Api.Infrastructure.Authentication;
 using Nagomi.Api.Infrastructure.Errors;
 using Nagomi.Api.Infrastructure.Identity;
 using Nagomi.Api.Infrastructure.Persistence;
+using Nagomi.Api.Infrastructure.Serialization;
 using Nagomi.Api.Infrastructure.Telemetry;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JourneyScheduleConverter());
+});
 
 builder.Services.AddNagomiPersistence(builder.Configuration);
 builder.Services.AddNagomiProblemDetails();
