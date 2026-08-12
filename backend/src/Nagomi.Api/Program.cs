@@ -4,11 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using OpenIddict.Server.AspNetCore;
 using Nagomi.Api.Features.Audit;
 using Nagomi.Api.Features.EmergencyTransports;
+using Nagomi.Api.Features.IdentityAdministration;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.Operations;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Features.UserAdministration;
 using Nagomi.Api.Infrastructure.Authentication;
 using Nagomi.Api.Infrastructure.Errors;
@@ -56,14 +58,18 @@ app.MapAuditEndpoints();
 app.MapEmergencyTransportEndpoints();
 app.MapUserEndpoints();
 app.MapUserAdministrationEndpoints();
+app.MapIdentityAdministrationEndpoints();
 app.MapProviderIntegrationEndpoints();
 app.MapProviderAuthenticationAdministrationEndpoints();
+app.MapTenantEndpoints();
+app.MapWebQueueEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", app.Environment.IsDevelopment()))
 {
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<NagomiDbContext>().Database.MigrateAsync();
     await UserSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
+    await TenantSeeder.SeedAsync(scope.ServiceProvider);
 }
 
 await app.RunAsync();

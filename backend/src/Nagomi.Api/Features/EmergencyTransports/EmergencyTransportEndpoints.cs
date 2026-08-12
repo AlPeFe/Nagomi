@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Infrastructure.Authentication;
+using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.Api.Features.EmergencyTransports;
 
@@ -35,6 +36,7 @@ public static class EmergencyTransportEndpoints
         CreateEmergencyTransportCommand command,
         ITransportDb db,
         TimeProvider clock,
+        IPublicIdGenerator ids,
         CancellationToken cancellationToken)
     {
         try
@@ -48,6 +50,7 @@ public static class EmergencyTransportEndpoints
                 command.Incident.Notes);
             var record = EmergencyTransportRecord.Create(
                 command.Reason, incident, command.ContactPhone, command.Observations, now);
+            record.PublicId = await ids.NextAsync("EMG", cancellationToken);
             db.Add(record);
             Audit(db, record.PublicId, "Created", ChangeSource.Nagomi, "simulated-user", now);
             await db.SaveChangesAsync(cancellationToken);

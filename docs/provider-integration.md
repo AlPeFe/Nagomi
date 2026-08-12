@@ -50,3 +50,16 @@ Propagate the Nagomi correlation/message identifier in the API's supported corre
 Nagomi persists publishable changes in a transactional outbox, so application changes remain committed while RabbitMQ is unavailable. Publication is retried five times at one-minute intervals before the notification becomes dead. Delivery is at least once, so duplicate notifications are normal and must be harmless.
 
 Operators monitor pending, dead, and published-but-unretrieved notifications. For dead or unreceived work, an operator manually republishes a new notification with a new `messageId`; it points to the current REST snapshot. Providers must not replay an old cached payload. If REST is temporarily unavailable, leave the Rabbit delivery unacknowledged or retry retrieval according to the agreed queue policy. Repeated authorization failure requires credential/contract correction, not blind retries.
+
+## Self-execution (auto-provider)
+
+When the tenant capability **Execute transports** is enabled, Nagomi registers itself as a provider with code `SELF`, queue `nagomi.self` and contract `SELF`. A request routed to contract `SELF` is published to the tenant's own queue exactly like it would be to an external provider's queue. This is the "run my own transports" mode: the deployment can consume its own queue to fulfil the work internally, while `clientId` still controls who gets invoiced independently of `contractCode`. See `tenant-capabilities.md` for the full picture and the capability endpoints.
+
+## Viewing what is published in a queue
+
+From the web administration panel (Configuration → Queues) operators can inspect what sits in each provider queue **without consuming it**:
+
+- `GET /api/queue` — per-provider snapshot: queue name, ready message count, connected consumers.
+- `GET /api/queue/{queue}/peek?limit=N` — up to `N` **distinct** messages with metadata (`entityPublicId`, `contractCode`, `messageType`) and full body. Non-destructive: messages are requeued and not lost.
+
+This is the recommended way to confirm a request was actually published, debug redelivery, or watch the auto-provider queue receive `SELF` contracts.

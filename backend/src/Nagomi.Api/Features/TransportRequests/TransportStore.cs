@@ -36,6 +36,8 @@ public sealed class TransportRequestRecord
     public LocationSnapshot? DefaultDestination { get; set; }
     public TransportRequirements Requirements { get; set; } = new();
     public string? ContractCode { get; set; }
+    public Guid? ClientId { get; set; }
+    public string? ClientName { get; set; }
     public Guid? ProviderId { get; set; }
     public string? ProviderName { get; set; }
     public string? ProviderReference { get; set; }

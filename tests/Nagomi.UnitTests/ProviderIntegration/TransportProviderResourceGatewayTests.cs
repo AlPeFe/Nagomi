@@ -54,6 +54,7 @@ public sealed class TransportProviderResourceGatewayTests
             Private("New destination"),
             new TransportRequirements(MobilityType.Wheelchair),
             "OTHER-CONTRACT",
+            null, null,
             Guid.NewGuid(),
             "Other provider",
             " REF-2 ",

@@ -1,4 +1,4 @@
-import type { DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, RecurrencePattern, Requirements, TransportRequest, TransportRequestDraft, TransportRequestSubmission } from './types'
+import type { DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -157,6 +157,18 @@ export type AdminUserRow = {
   createdAt: string
 }
 
+export type ApiClientRow = {
+  clientId: string
+  displayName?: string
+  isConfidential: boolean
+  permissions: string[]
+}
+
+export type ApiClientSecretResponse = {
+  clientId: string
+  clientSecret: string
+}
+
 export const api = {
   async listAutonomousCommunities() {
     return (await request<Array<{ code: string; name: string; parentCode?: string }>>('/reference-data/autonomous-communities'))
@@ -227,4 +239,25 @@ export const api = {
   async deleteUser(id: string) {
     return await request<void>(`/admin/users/${encodeURIComponent(id)}`, { method: 'DELETE' })
   },
+  listApiClients: () => request<ApiClientRow[]>('/admin/identity/clients'),
+  async createApiClient(clientId: string, displayName?: string) {
+    return await request<ApiClientSecretResponse>('/admin/identity/clients', { method: 'POST', body: JSON.stringify({ clientId, displayName }) })
+  },
+  async rotateApiClientSecret(clientId: string, clientSecret?: string) {
+    return await request<ApiClientSecretResponse>(`/admin/identity/clients/${encodeURIComponent(clientId)}/rotate-secret`, { method: 'POST', body: JSON.stringify({ clientSecret }) })
+  },
+  async deleteApiClient(clientId: string) {
+    return await request<void>(`/admin/identity/clients/${encodeURIComponent(clientId)}`, { method: 'DELETE' })
+  },
+  getCapabilities: () => request<TenantCapabilities>('/admin/tenant/capabilities'),
+  updateCapabilities: (body: TenantCapabilities) => request<TenantCapabilities>('/admin/tenant/capabilities', { method: 'PUT', body: JSON.stringify(body) }),
+  listClients: (includeInactive = false) => request<TransportClient[]>(`/admin/tenant/clients${includeInactive ? '?includeInactive=true' : ''}`),
+  async createClient(body: Omit<TransportClient, 'id' | 'publicId' | 'isActive' | 'createdAt'> & { isActive?: boolean }) {
+    return await request<TransportClient>('/admin/tenant/clients', { method: 'POST', body: JSON.stringify(body) })
+  },
+  async updateClient(id: string, body: Omit<TransportClient, 'id' | 'publicId' | 'createdAt'>) {
+    return await request<TransportClient>(`/admin/tenant/clients/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) })
+  },
+  listQueueSnapshots: () => request<QueueSnapshot[]>('/queue'),
+  peekQueue: (queueName: string, limit = 10) => request<QueueMessageSample[]>(`/queue/${encodeURIComponent(queueName)}/peek?limit=${limit}`),
 }

@@ -48,7 +48,7 @@ tests/
   Nagomi.UnitTests/        # sin infraestructura, rápidos
   Nagomi.IntegrationTests/ # Testcontainers (Postgres+Rabbit) + WebApplicationFactory in-memory
 openspec/specs/            # specs activas por área
-docs/                      # deployment.md, provider-integration.md, este fichero
+docs/                      # deployment.md, provider-integration.md, tenant-capabilities.md, este fichero
 tools/rabbit-consume/      # cliente web de consumo de colas (dev)
 nagomi.sh                  # up|down|status|logs|restart del stack
 ```
@@ -197,7 +197,9 @@ Sección `ProviderIntegration:RabbitMq` (appsettings o env `ProviderIntegration_
 ### 4.6 Consumir como proveedor (qué hay que implementar)
 
 Patrón recomendado (está documentado en `docs/provider-integration.md` y es el
-que los tests de integración validan):
+que los tests de integración validan). El modo auto-proveedor (el tenant se
+ejecuta sus propios traslados con contrato/cola `SELF`) y la inspección de colas
+desde el panel se explican en `docs/tenant-capabilities.md`:
 
 1. Conexión durable, **manual ack**, heartbeat, reconnect con backoff
    exponencial; credenciales dedicadas por proveedor restringidas a su vhost/cola.

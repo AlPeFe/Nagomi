@@ -66,10 +66,11 @@ describe('autenticación', () => {
       return json([])
     }))
 
-    renderAt('/usuarios')
+    renderAt('/identidad')
     expect(await screen.findByText('admin@nagomi.local')).toBeInTheDocument()
     expect(screen.getByText('op@nagomi.local')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Crear/i })).toBeInTheDocument()
+    expect(screen.getByText('Identidad y acceso')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Crear' })).toBeInTheDocument()
     expect(screen.getByText('Desactivado')).toBeInTheDocument()
   })
 

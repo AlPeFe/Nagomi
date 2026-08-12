@@ -8,7 +8,8 @@ import { LoginPage } from './pages/LoginPage'
 import { RequestDetailPage } from './pages/RequestDetailPage'
 import { RequestFormPage } from './pages/RequestFormPage'
 import { RequestsPage } from './pages/RequestsPage'
-import { UsersPage } from './pages/UsersPage'
+import { TenantConfigPage } from './pages/TenantConfigPage'
+import { IdentityPage } from './pages/IdentityPage'
 import { isAuthenticated, logout } from './auth'
 import './App.css'
 
@@ -56,7 +57,8 @@ export default function App() {
               <NavLink to="/trayectos">Operación</NavLink>
               <NavLink to="/solicitudes">Solicitudes</NavLink>
               <NavLink to="/urgencias">Urgencias</NavLink>
-              {roles.includes('admin') && <NavLink to="/usuarios">Usuarios</NavLink>}
+              {roles.includes('admin') && <NavLink to="/identidad">Identidad</NavLink>}
+              {roles.includes('admin') && <NavLink to="/configuracion">Configuración</NavLink>}
             </nav>
             <NavLink className="button button-accent new-request" to="/solicitudes/nueva">Nueva solicitud</NavLink>
             <button className="button button-small logout-button" onClick={handleLogout}>Salir</button>
@@ -74,7 +76,8 @@ export default function App() {
             <Route path="/solicitudes/nueva" element={<RequireAuth><RequestFormPage /></RequireAuth>} />
             <Route path="/solicitudes/:requestId" element={<RequireAuth><RequestDetailPage /></RequireAuth>} />
             <Route path="/urgencias" element={<RequireAuth><EmergencyPage /></RequireAuth>} />
-            <Route path="/usuarios" element={<RequireAuth><RequireAdmin><UsersPage /></RequireAdmin></RequireAuth>} />
+            <Route path="/identidad" element={<RequireAuth><RequireAdmin><IdentityPage /></RequireAdmin></RequireAuth>} />
+            <Route path="/configuracion" element={<RequireAuth><RequireAdmin><TenantConfigPage /></RequireAdmin></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

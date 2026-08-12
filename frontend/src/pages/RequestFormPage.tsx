@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from '../router'
 import { api } from '../api'
 import { PageHeader } from '../components/States'
 import { LocationFieldset } from '../components/LocationFieldset'
-import type { JourneySchedule, RecurrencePattern, TransportRequestDraft, TransportRequestSubmission } from '../types'
+import type { JourneySchedule, RecurrencePattern, TransportClient, TransportRequestDraft, TransportRequestSubmission } from '../types'
 
 const weekdays = [['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'], ['thursday', 'Jueves'], ['friday', 'Viernes'], ['saturday', 'Sábado'], ['sunday', 'Domingo']] as const
 const dayNumbers: Record<string, number> = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 }
@@ -36,6 +36,13 @@ export function RequestFormPage() {
   const [dayConfigs, setDayConfigs] = useState<Partial<Record<DayKey, DayConfig>>>({})
   const [saving, setSaving] = useState<'draft' | 'submit' | ''>('')
   const [message, setMessage] = useState('')
+  const [clients, setClients] = useState<TransportClient[]>([])
+
+  useEffect(() => {
+    api.listClients()
+      .then((list) => setClients(Array.isArray(list) ? list : []))
+      .catch(() => setClients([]))
+  }, [])
 
   const selectedDays = Object.keys(dayConfigs) as DayKey[]
   function toggleDay(day: DayKey, on: boolean) {
@@ -60,7 +67,7 @@ export function RequestFormPage() {
       reason: data.reason ? { code: String(data.reason), description: String(data.reason) } : undefined,
       defaultOrigin: data.originName ? location('origin') : undefined, defaultDestination: data.destinationName ? location('destination') : undefined,
       requirements: { mobility: String(data.mobility) as 'Autonomous' | 'Wheelchair' | 'Stretcher', oxygen, oxygenConcentration: data.oxygenConcentration ? Number(data.oxygenConcentration) : undefined, oxygenFlow: data.oxygenFlow ? Number(data.oxygenFlow) : undefined, companion: data.companion === 'on', medicalStaff: data.medicalStaff === 'on', isolation: data.isolation === 'on', bariatric: data.bariatric === 'on', stairsAssistance: data.stairsAssistance === 'on' },
-      contractCode: String(data.contract ?? '') || undefined, providerName: String(data.provider ?? '') || undefined, privateNotes: String(data.privateNotes ?? '') || undefined, providerVisibleNotes: String(data.providerNotes ?? '') || undefined,
+      contractCode: String(data.contract ?? '') || undefined, clientId: String(data.client ?? '') || undefined, providerName: String(data.provider ?? '') || undefined, privateNotes: String(data.privateNotes ?? '') || undefined, providerVisibleNotes: String(data.providerNotes ?? '') || undefined,
     }
     const appointmentAt = offsetDateTime(data.appointmentAt); const startAt = offsetDateTime(data.scheduledStartAt) ?? (appointmentAt ? new Date(new Date(appointmentAt).getTime() - 3_600_000).toISOString() : '')
     const outbound: JourneySchedule = { appointmentAt, scheduledStartAt: startAt, pickupTimePending: false }
@@ -145,7 +152,7 @@ export function RequestFormPage() {
           )}
         </div>}
       </div></section>
-      <section className="form-section"><div className="section-number">05</div><div className="section-heading"><h2>Asignación y notas</h2><p>Las notas privadas nunca se comparten con el proveedor.</p></div><div className="field-grid"><label><span>Contrato *</span><select name="contract" required defaultValue=""><option value="" disabled>Selecciona un contrato</option><option value="CTR-MAD-01">CTR-MAD-01 · Transporte sanitario Madrid</option><option value="CTR-SIN-RUTA">Sin ruta activa</option></select></label><label><span>Proveedor</span><input name="provider" placeholder="Asignado por el contrato" readOnly /></label><label className="span-2"><span>Notas para el proveedor</span><textarea name="providerNotes" rows={3} /></label><label className="span-2"><span>Notas privadas</span><textarea name="privateNotes" rows={3} /></label></div></section>
+      <section className="form-section"><div className="section-number">05</div><div className="section-heading"><h2>Asignación y notas</h2><p>El contrato decide quién ejecuta; el cliente a quién se factura. Si no eliges cliente, te facturas a ti mismo.</p></div><div className="field-grid"><label><span>Cliente facturable</span><select name="client" defaultValue=""><option value="">Sin cliente (yo mismo)</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><small>Organización o particular al que se factura.</small></label><label><span>Contrato *</span><select name="contract" required defaultValue=""><option value="" disabled>Selecciona un contrato</option><option value="CTR-MAD-01">CTR-MAD-01 · Transporte sanitario Madrid</option><option value="CTR-SIN-RUTA">Sin ruta activa</option><option value="SELF">SELF · Traslados propios</option></select></label><label><span>Proveedor</span><input name="provider" placeholder="Asignado por el contrato" readOnly /></label><label className="span-2"><span>Notas para el proveedor</span><textarea name="providerNotes" rows={3} /></label><label className="span-2"><span>Notas privadas</span><textarea name="privateNotes" rows={3} /></label></div></section>
       <div className="form-actions"><button className="button button-secondary" type="button" disabled={!!saving} onClick={(e) => { const form = e.currentTarget.form; if (form) void save({ preventDefault: () => undefined, currentTarget: form } as unknown as React.FormEvent<HTMLFormElement>, false) }}>{saving === 'draft' ? 'Guardando…' : 'Guardar borrador'}</button><button className="button button-accent" disabled={!!saving || (mode === 'recurring' && !selectedDays.length)}>{saving === 'submit' ? 'Enviando…' : 'Revisar y enviar solicitud'}</button></div>
     </form>
   </div>

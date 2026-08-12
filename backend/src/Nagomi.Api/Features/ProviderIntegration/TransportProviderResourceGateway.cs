@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.Api.Features.ProviderIntegration;
 
-public sealed class TransportProviderResourceGateway(ITransportDb db) : IProviderResourceGateway
+public sealed class TransportProviderResourceGateway(ITransportDb db, IPublicIdGenerator? publicIds = null) : IProviderResourceGateway
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -150,7 +151,9 @@ public sealed class TransportProviderResourceGateway(ITransportDb db) : IProvide
         var journey = new JourneyRecord
         {
             TransportRequestId = request.Id,
-            PublicId = $"JRN-{Guid.NewGuid():N}".ToUpperInvariant(),
+            PublicId = publicIds is null
+                ? $"JRN-{Guid.NewGuid():N}".ToUpperInvariant()
+                : await publicIds.NextAsync("JRN", cancellationToken),
             Direction = command.Direction,
             ServiceDate = command.ServiceDate,
             Origin = command.Origin.Copy(),

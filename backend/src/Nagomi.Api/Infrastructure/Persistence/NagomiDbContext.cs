@@ -7,11 +7,12 @@ using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Infrastructure.Identity;
 
 namespace Nagomi.Api.Infrastructure.Persistence;
 
-public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>, INagomiDb, IAuditHistoryQuery, ITransportDb, IProviderIntegrationDb
+public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>, INagomiDb, IAuditHistoryQuery, ITransportDb, IProviderIntegrationDb, ITenantDb
 {
     public NagomiDbContext(DbContextOptions<NagomiDbContext> options)
         : base(options)
@@ -34,6 +35,8 @@ public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, Applica
     public DbSet<ProviderContractRoute> ProviderContractRoutes => Set<ProviderContractRoute>();
     public DbSet<ProviderNotification> ProviderNotifications => Set<ProviderNotification>();
     public DbSet<ProviderCommandReceipt> ProviderCommandReceipts => Set<ProviderCommandReceipt>();
+    public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
+    public DbSet<TransportClient> TransportClients => Set<TransportClient>();
 
     IQueryable<TransportRequestRecord> ITransportDb.TransportRequests => TransportRequestRecords;
     IQueryable<JourneyRecord> ITransportDb.Journeys => JourneyRecords;

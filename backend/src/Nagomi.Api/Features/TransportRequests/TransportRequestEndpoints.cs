@@ -4,6 +4,7 @@ using Nagomi.Api.Domain;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Infrastructure.Authentication;
+using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.Api.Features.TransportRequests;
 
@@ -81,7 +82,7 @@ public static class TransportRequestEndpoints
 
     private static async Task<IResult> SubmitOneOff(
         Guid id, SubmitOneOffCommand command, ITransportDb db, IProviderOutbox outbox,
-        TimeProvider clock, CancellationToken cancellationToken)
+        TimeProvider clock, IPublicIdGenerator ids, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return TypedResults.NotFound();
@@ -91,6 +92,7 @@ public static class TransportRequestEndpoints
             var domain = request.ToDomain();
             domain.SubmitOneOff(command.Outbound, command.Return);
             Activate(request, domain, clock.GetUtcNow());
+            await AssignPublicIds(request, ids, cancellationToken);
             foreach (var journey in request.JourneyRecords)
                 db.Add(journey);
             Audit(db, request.PublicId!, "Submitted", ChangeSource.Nagomi, "simulated-user", request.UpdatedAt);
@@ -103,7 +105,7 @@ public static class TransportRequestEndpoints
 
     private static async Task<IResult> SubmitRecurring(
         Guid id, SubmitRecurringCommand command, ITransportDb db, IProviderOutbox outbox,
-        TimeProvider clock, CancellationToken cancellationToken)
+        TimeProvider clock, IPublicIdGenerator ids, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return TypedResults.NotFound();
@@ -115,6 +117,7 @@ public static class TransportRequestEndpoints
             domain.SubmitRecurring(pattern);
             request.Recurrence = pattern;
             Activate(request, domain, clock.GetUtcNow());
+            await AssignPublicIds(request, ids, cancellationToken);
             foreach (var journey in request.JourneyRecords)
                 db.Add(journey);
             Audit(db, request.PublicId!, "Submitted", ChangeSource.Nagomi, "simulated-user", request.UpdatedAt);
@@ -184,7 +187,7 @@ public static class TransportRequestEndpoints
 
     private static async Task<IResult> ApplyRecurrence(
         Guid id, RecurrenceChangeCommand command, ITransportDb db, IProviderOutbox outbox,
-        TimeProvider clock, CancellationToken cancellationToken)
+        TimeProvider clock, IPublicIdGenerator ids, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return TypedResults.NotFound();
@@ -205,7 +208,14 @@ public static class TransportRequestEndpoints
                     Replace(existing, replacement);
                 generatedByKey.Remove(existing.Key());
             }
-            foreach (var journey in generatedByKey.Values)
+            var additions = generatedByKey.Values.ToList();
+            if (additions.Count > 0)
+            {
+                var journeyIds = await ids.NextBatchAsync("JRN", additions.Count, cancellationToken);
+                for (var i = 0; i < additions.Count; i++)
+                    additions[i].PublicId = journeyIds[i];
+            }
+            foreach (var journey in additions)
             {
                 request.JourneyRecords.Add(journey);
                 db.Add(journey);
@@ -222,6 +232,17 @@ public static class TransportRequestEndpoints
 
     private static IQueryable<TransportRequestRecord> Requests(ITransportDb db) =>
         db.TransportRequests.Include(x => x.JourneyRecords).ThenInclude(x => x.StatusHistory);
+
+    private static async Task AssignPublicIds(
+        TransportRequestRecord request, IPublicIdGenerator ids, CancellationToken cancellationToken)
+    {
+        request.PublicId = await ids.NextAsync("REQ", cancellationToken);
+        var journeys = request.JourneyRecords.ToList();
+        if (journeys.Count == 0) return;
+        var journeyIds = await ids.NextBatchAsync("JRN", journeys.Count, cancellationToken);
+        for (var i = 0; i < journeys.Count; i++)
+            journeys[i].PublicId = journeyIds[i];
+    }
 
     private static void Activate(TransportRequestRecord target, TransportRequest source, DateTimeOffset now)
     {

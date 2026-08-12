@@ -9,6 +9,8 @@ public sealed record TransportRequestSnapshot(
     LocationSnapshot? DefaultDestination,
     TransportRequirements? Requirements,
     string? ContractCode,
+    Guid? ClientId,
+    string? ClientName,
     Guid? ProviderId,
     string? ProviderName,
     string? ProviderReference,
@@ -62,6 +64,8 @@ internal static class TransportMapping
             target.Patient = source.Patient;
             target.Reason = source.Reason;
             target.ContractCode = Clean(source.ContractCode);
+            target.ClientId = source.ClientId;
+            target.ClientName = Clean(source.ClientName);
             target.ProviderId = source.ProviderId;
             target.ProviderName = Clean(source.ProviderName);
             target.PrivateNotes = Clean(source.PrivateNotes);
@@ -76,7 +80,8 @@ internal static class TransportMapping
 
     internal static TransportRequest ToDomain(this TransportRequestRecord source) => new(
         source.Patient, source.Reason, source.DefaultOrigin, source.DefaultDestination,
-        source.Requirements, source.ContractCode, source.ProviderId, source.PrivateNotes,
+        source.Requirements, source.ContractCode, source.ClientId, source.ClientName,
+        source.ProviderId, source.PrivateNotes,
         source.ProviderVisibleNotes, source.ProviderReference);
 
     internal static RecurrencePattern ToDomain(this RecurrencePatternSubmission source) =>

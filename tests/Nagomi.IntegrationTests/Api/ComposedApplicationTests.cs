@@ -69,7 +69,7 @@ public sealed class ComposedApplicationTests(NagomiApiFactory factory) : IClassF
             new Nagomi.Api.Domain.TransportReasonSnapshot("CONSULT", "Consultation"),
             new LocationSnapshot(LocationType.PrivateAddress, street: "Calle Mayor"),
             new LocationSnapshot(LocationType.HealthcareFacility, "Hospital Central"),
-            new TransportRequirements(), null, null, null, null, "private", "provider note");
+            new TransportRequirements(), null, null, null, null, null, null, "private", "provider note");
         var response = await _client.PostAsJsonAsync("/api/transport-requests/drafts", snapshot);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var id = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
@@ -172,7 +172,7 @@ public sealed class ComposedApplicationTests(NagomiApiFactory factory) : IClassF
             new Nagomi.Api.Domain.TransportReasonSnapshot("CONSULT", "Consultation"),
             new LocationSnapshot(LocationType.PrivateAddress, street: "Calle Mayor"),
             new LocationSnapshot(LocationType.HealthcareFacility, "Hospital Central"),
-            new TransportRequirements(), "CONTRACT-1", null, null, null, "private", "provider note");
+            new TransportRequirements(), "CONTRACT-1", null, null, null, null, null, "private", "provider note");
         var response = await _client.PostAsJsonAsync("/api/transport-requests/drafts", snapshot);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         return await response.Content.ReadFromJsonAsync<JsonElement>();

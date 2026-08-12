@@ -17,12 +17,15 @@ public static class ProviderIntegrationServices
                         ProviderClaimTypes.Operator, ProviderClaimTypes.Administrator));
         });
         services.Configure<ProviderRabbitMqOptions>(configuration.GetSection(ProviderRabbitMqOptions.SectionName));
+        services.Configure<AutoProviderOptions>(configuration.GetSection(AutoProviderOptions.SectionName));
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IProviderAuthorizer, OpenIddictClaimsProviderAuthorizer>();
         services.AddScoped<IProviderOutbox, ProviderOutbox>();
         services.AddScoped<INotificationRetrievalTracker, NotificationRetrievalTracker>();
         services.AddScoped<IProviderCommandIdempotency, ProviderCommandIdempotency>();
         services.AddSingleton<IProviderNotificationPublisher, RabbitMqProviderNotificationPublisher>();
+        services.AddScoped<IAutoProviderProvisioner, AutoProviderProvisioner>();
+        services.AddScoped<IProviderQueueInspector, RabbitMqProviderQueueInspector>();
         services.AddHostedService<ProviderOutboxWorker>();
         return services;
     }

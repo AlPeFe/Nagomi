@@ -3,6 +3,8 @@ using Nagomi.Api.Features.Audit;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.Tenant;
+using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.Api.Infrastructure.Persistence;
 
@@ -23,6 +25,8 @@ public static class PersistenceServiceExtensions
         services.AddScoped<IAuditHistoryQuery>(provider => provider.GetRequiredService<NagomiDbContext>());
         services.AddScoped<ITransportDb>(provider => provider.GetRequiredService<NagomiDbContext>());
         services.AddScoped<IProviderIntegrationDb>(provider => provider.GetRequiredService<NagomiDbContext>());
+        services.AddScoped<ITenantDb>(provider => provider.GetRequiredService<NagomiDbContext>());
+        services.AddScoped<IPublicIdGenerator, PostgresPublicIdGenerator>();
         return services;
     }
 }

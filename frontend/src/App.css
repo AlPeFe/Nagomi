@@ -89,3 +89,28 @@
 .landing-feature h2{margin:0 0 .5rem;font-size:1.05rem;color:var(--navy)}
 .landing-feature p{margin:0;color:var(--muted);font-size:.9rem}
 @media(max-width:720px){.landing-features{grid-template-columns:1fr}}
+.capability-grid{display:grid;gap:.75rem;grid-column:2/-1}
+.capability-check{flex-direction:row;align-items:flex-start;gap:.8rem;padding:.9rem 1rem;border:1px solid var(--line);border-radius:6px;background:var(--wash);cursor:pointer}
+.capability-check input{width:18px;min-height:auto;margin-top:.15rem;accent-color:var(--teal)}
+.capability-text strong,.capability-text small{display:block}
+.capability-text small{color:var(--muted);font-weight:400;font-size:.75rem}
+.client-editor{grid-column:2/-1;background:var(--wash);border:1px solid var(--line);padding:1rem;display:grid;gap:.75rem}
+.client-editor h3{margin:0 0 .5rem}
+.form-row{display:flex;gap:.85rem;flex-wrap:wrap}
+.form-row .field{flex:1 1 220px}
+.form-row .field.span-2{flex-basis:100%}
+.table-toolbar{grid-column:2/-1;display:flex;justify-content:flex-end;margin-bottom:.5rem}
+.table-wrap{grid-column:2/-1;background:white;border:1px solid var(--line);overflow-x:auto}
+.table{width:100%;border-collapse:collapse;font-size:.82rem}
+.table th{text-align:left;background:#e8eff0;color:#48616c;text-transform:uppercase;letter-spacing:.07em;font-size:.66rem;padding:.65rem .75rem;border-bottom:1px solid #c6d3d6}
+.table td{padding:.7rem;border-bottom:1px solid #e1e8e9;vertical-align:top}
+.table tr:hover td{background:#f8fbfb}
+.actions-cell{display:flex;gap:.4rem;flex-wrap:wrap}
+.queue-peek{grid-column:2/-1;background:var(--wash);border:1px solid var(--line);padding:1rem;display:grid;gap:.6rem}
+.queue-peek h3{margin:0}
+.queue-message{background:white;border:1px solid var(--line);border-radius:4px;padding:.6rem .8rem}
+.queue-message summary{cursor:pointer;display:flex;gap:.6rem;align-items:center}
+.queue-message pre{max-height:220px;overflow:auto;font-size:.72rem;background:#0f2326;color:#cfe8e8;padding:.7rem;border-radius:4px;white-space:pre-wrap;word-break:break-all}
+@media(max-width:640px){.capability-grid,.client-editor,.table-toolbar,.table-wrap,.queue-peek{grid-column:1}}
+.alert-info{background:#e7f0fb;color:#1b4f8a;border-left:4px solid var(--blue,#2d6fae);margin-bottom:.8rem}
+.secret-box{font-family:ui-monospace,Consolas,monospace;font-size:.82rem;background:var(--bg,#f4f6f8);border:1px solid var(--border,#d8dee4);border-radius:6px;padding:.6rem .8rem;margin:.6rem 0;white-space:pre-wrap;word-break:break-all;color:#1b4f8a}

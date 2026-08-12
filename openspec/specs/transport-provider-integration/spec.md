@@ -11,6 +11,20 @@ Nagomi SHALL maintain transport providers and predefined transport contracts. Ea
 - **WHEN** a submitted request has no active provider route
 - **THEN** the system stores the active request and exposes it as not published
 
+### Requirement: Self-execution via auto-provider
+When the tenant enables `ExecutesTransports`, Nagomi SHALL register the tenant as its own transport provider (an "auto-provider") with an active contract and queue. A transport routed to that own contract SHALL publish its notification to the tenant's own queue, allowing the same installation to originate and execute the transport. The tenant SHALL NOT require an external contract to route a transport it executes itself.
+
+#### Scenario: Route to own contract
+- **WHEN** a transport is submitted with the tenant's own contract
+- **THEN** the notification is published to the tenant's own provider queue
+
+### Requirement: Web queue visibility
+An authenticated web user SHALL be able to inspect the current state of provider queues (message count and consumers) and peek non-destructively at the messages they hold. Inspection SHALL NOT consume or alter queued messages.
+
+#### Scenario: Inspect provider queue
+- **WHEN** a web user opens the queue view for an active provider
+- **THEN** the system reports the queue message count and returns a non-destructive preview of its messages
+
 ### Requirement: Durable independent publication
 Committing a submitted request or Nagomi-originated publishable change SHALL persist its integration notification atomically with domain changes. Failure to publish SHALL NOT roll back or reject the domain operation.
 

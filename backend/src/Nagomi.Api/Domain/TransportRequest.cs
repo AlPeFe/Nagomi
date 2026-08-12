@@ -13,6 +13,8 @@ public sealed class TransportRequest
     public LocationSnapshot? DefaultDestination { get; private set; }
     public TransportRequirements Requirements { get; private set; } = new();
     public string? ContractCode { get; private set; }
+    public Guid? ClientId { get; private set; }
+    public string? ClientName { get; private set; }
     public Guid? ProviderId { get; private set; }
     public string? ProviderReference { get; private set; }
     public string? PrivateNotes { get; private set; }
@@ -32,6 +34,8 @@ public sealed class TransportRequest
         LocationSnapshot? defaultDestination = null,
         TransportRequirements? requirements = null,
         string? contractCode = null,
+        Guid? clientId = null,
+        string? clientName = null,
         Guid? providerId = null,
         string? privateNotes = null,
         string? providerVisibleNotes = null,
@@ -43,6 +47,8 @@ public sealed class TransportRequest
         DefaultDestination = defaultDestination?.Copy();
         Requirements = (requirements ?? new TransportRequirements()).Copy();
         ContractCode = Clean(contractCode);
+        ClientId = clientId;
+        ClientName = Clean(clientName);
         ProviderId = providerId;
         PrivateNotes = Clean(privateNotes);
         ProviderVisibleNotes = Clean(providerVisibleNotes);

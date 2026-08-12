@@ -184,7 +184,7 @@ public sealed class TransportRequestProviderFlowTests(TransportRequestProviderFl
             new TransportReasonSnapshot("CONSULT", "Consultation"),
             new LocationSnapshot(LocationType.PrivateAddress, street: "Calle Mayor 1", municipality: "Madrid"),
             new LocationSnapshot(LocationType.HealthcareFacility, "Hospital Central", municipality: "Madrid"),
-            new TransportRequirements(), fixture.ContractCode, fixture.ProviderId,
+            new TransportRequirements(), fixture.ContractCode, null, null, fixture.ProviderId,
             "E2E Ambulance Provider", null, "private clinical note", "provider-visible note");
 
         var createResponse = await client.PostAsJsonAsync("/api/transport-requests/drafts", draftSnapshot);

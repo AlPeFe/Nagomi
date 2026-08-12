@@ -52,6 +52,7 @@ public static class ProviderEndpoints
             .RequireAuthorization(ProviderAuthorizationPolicies.Operations);
         operations.MapGet("/notifications", ProviderOperationsEndpoints.QueryAsync);
         operations.MapPost("/notifications/{id:guid}/republish", ProviderOperationsEndpoints.RepublishAsync);
+
         return endpoints;
     }
 

@@ -15,6 +15,7 @@ internal static class ProviderClientProperties
     public const string ProviderId = "nagomi:provider_id";
     public const string Role = "nagomi:role";
     public const string Contracts = "nagomi:contracts";
+    public const string ApiConsumer = "nagomi_api_consumer";
 }
 
 internal sealed class ProviderClientCredentialsHandler(IOpenIddictApplicationManager applications)
@@ -29,6 +30,25 @@ internal sealed class ProviderClientCredentialsHandler(IOpenIddictApplicationMan
         var application = await applications.FindByClientIdAsync(clientId, context.CancellationToken)
             ?? throw new InvalidOperationException("The authenticated OpenIddict application no longer exists.");
         var properties = await applications.GetPropertiesAsync(application, context.CancellationToken);
+
+        // Machine-to-machine API consumers (managed in the central identity system)
+        // are confidential clients without a provider binding: issue a generic
+        // principal so they can authenticate, but grant no provider-specific claims.
+        if (properties.TryGetValue(ProviderClientProperties.ApiConsumer, out var marker)
+            && marker.ValueKind == JsonValueKind.True)
+        {
+            var consumerIdentity = new ClaimsIdentity("OpenIddict.Server");
+            consumerIdentity.AddClaim(new Claim(Claims.Subject, clientId));
+            consumerIdentity.AddClaim(new Claim(Claims.ClientId, clientId));
+            var consumerPrincipal = new ClaimsPrincipal(consumerIdentity);
+            consumerPrincipal.SetDestinations(claim => claim.Type switch
+            {
+                Claims.Subject or Claims.ClientId => [Destinations.AccessToken],
+                _ => []
+            });
+            context.SignIn(consumerPrincipal);
+            return;
+        }
 
         var providerId = GetRequiredString(properties, ProviderClientProperties.ProviderId);
         var role = GetRequiredString(properties, ProviderClientProperties.Role);

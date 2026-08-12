@@ -17,7 +17,9 @@ using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.ProviderIntegration;
+using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Infrastructure.Authentication;
+using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.IntegrationTests.Api;
 
@@ -33,14 +35,18 @@ public sealed class NagomiApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<ITransportDb>();
             services.RemoveAll<INagomiDb>();
             services.RemoveAll<IProviderIntegrationDb>();
+            services.RemoveAll<ITenantDb>();
             services.RemoveAll<TimeProvider>();
             services.RemoveAll<IProviderOutbox>();
+            services.RemoveAll<IPublicIdGenerator>();
             services.AddSingleton<FakeTransportDb>();
             services.AddSingleton<ITransportDb>(provider => provider.GetRequiredService<FakeTransportDb>());
             services.AddSingleton<INagomiDb, FakeReferenceDb>();
             services.AddSingleton<IProviderIntegrationDb, FakeProviderIntegrationDb>();
+            services.AddSingleton<ITenantDb, FakeTenantDb>();
             services.AddSingleton<TimeProvider>(new FixedTimeProvider(
                 new DateTimeOffset(2026, 8, 1, 9, 0, 0, TimeSpan.Zero)));
+            services.AddSingleton<IPublicIdGenerator, FakePublicIdGenerator>();
             services.AddSingleton<IProviderOutbox, NoOpProviderOutbox>();
             services.ConfigureHttpJsonOptions(options =>
                 options.SerializerOptions.Converters.Add(new JourneyScheduleJsonConverter()));
@@ -102,6 +108,34 @@ internal sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     public override DateTimeOffset GetUtcNow() => now;
 }
 
+internal sealed class FakePublicIdGenerator : IPublicIdGenerator
+{
+    private readonly Dictionary<string, long> _counters = [];
+    private readonly object _gate = new();
+
+    public Task<string> NextAsync(string prefix, CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
+        {
+            _counters.TryGetValue(prefix, out var current);
+            _counters[prefix] = current + 1;
+            return Task.FromResult($"{prefix}-2026-{(current + 1):000000}");
+        }
+    }
+
+    public Task<IReadOnlyList<string>> NextBatchAsync(string prefix, int count, CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
+        {
+            _counters.TryGetValue(prefix, out var current);
+            _counters[prefix] = current + count;
+            return Task.FromResult<IReadOnlyList<string>>(Enumerable.Range(1, count)
+                .Select(i => $"{prefix}-2026-{(current + i):000000}")
+                .ToArray());
+        }
+    }
+}
+
 internal sealed class FakeTransportDb : ITransportDb
 {
     private readonly List<TransportRequestRecord> _requests = [];
@@ -134,6 +168,13 @@ internal sealed class FakeReferenceDb : INagomiDb
     public DbSet<TransportReason> TransportReasons { get; } = new FakeDbSet<TransportReason>();
     public DbSet<HealthcareFacility> HealthcareFacilities { get; } = new FakeDbSet<HealthcareFacility>();
 
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
+}
+
+internal sealed class FakeTenantDb : ITenantDb
+{
+    public DbSet<TenantSettings> TenantSettings { get; } = new FakeDbSet<TenantSettings>();
+    public DbSet<TransportClient> TransportClients { get; } = new FakeDbSet<TransportClient>();
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
 }
 

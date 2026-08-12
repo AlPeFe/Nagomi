@@ -2,8 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.Api.Infrastructure.Persistence;
+
+internal sealed class PublicIdCounterConfiguration : IEntityTypeConfiguration<PublicIdCounter>
+{
+    public void Configure(EntityTypeBuilder<PublicIdCounter> entity)
+    {
+        entity.ToTable("public_id_counters");
+        entity.HasKey(x => new { x.Prefix, x.Year });
+        entity.Property(x => x.Prefix).HasColumnName("prefix").HasMaxLength(8);
+        entity.Property(x => x.Year).HasColumnName("year");
+        entity.Property(x => x.LastValue).HasColumnName("last_value");
+    }
+}
 
 internal sealed class TransportRequestRecordConfiguration : IEntityTypeConfiguration<TransportRequestRecord>
 {
@@ -15,6 +28,7 @@ internal sealed class TransportRequestRecordConfiguration : IEntityTypeConfigura
         entity.Property(x => x.PublicId).HasMaxLength(40);
         entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
         entity.Property(x => x.ContractCode).HasMaxLength(100);
+        entity.Property(x => x.ClientName).HasMaxLength(250);
         entity.Property(x => x.ProviderName).HasMaxLength(200);
         entity.Property(x => x.ProviderReference).HasMaxLength(200);
         entity.Property(x => x.PrivateNotes).HasMaxLength(4000);

@@ -99,6 +99,8 @@ export interface TransportRequestDraft {
   defaultDestination?: LocationSnapshot
   requirements: Requirements
   contractCode?: string
+  clientId?: string
+  clientName?: string
   providerName?: string
   privateNotes?: string
   providerVisibleNotes?: string
@@ -155,4 +157,46 @@ export interface JourneyFilters {
   destinationMunicipality: string
   deliveryState: string
   search: string
+}
+
+export interface TenantCapabilities {
+  publishesRequests: boolean
+  executesTransports: boolean
+  handlesEmergencies: boolean
+}
+
+export interface TransportClient {
+  id: string
+  publicId: string
+  name: string
+  taxId?: string
+  contactPerson?: string
+  phone?: string
+  email?: string
+  address?: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface QueueSnapshot {
+  providerId: string
+  providerCode: string
+  providerName: string
+  queueName: string
+  messages: number
+  messagesReady: number
+  messagesUnacknowledged: number
+  consumers: number
+  error?: string
+}
+
+export interface QueueMessageSample {
+  deliveryTag: number
+  messageId: string
+  messageType: string
+  entityPublicId?: string
+  contractCode?: string
+  redelivered: boolean
+  body: string
+  timestamp?: string
 }
