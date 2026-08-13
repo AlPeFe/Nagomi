@@ -23,12 +23,18 @@ public static class ReferenceDataEndpoints
         group.MapGet("/provinces", GetProvinces);
         group.MapGet("/municipalities", GetMunicipalities);
         group.MapGet("/transport-reasons", GetTransportReasons);
-        group.MapPost("/transport-reasons", CreateTransportReason);
-        group.MapPut("/transport-reasons/{id:guid}", UpdateTransportReason);
         group.MapGet("/healthcare-facilities", SearchHealthcareFacilities);
         group.MapGet("/healthcare-facilities/resolve", ResolveHealthcareFacility);
-        group.MapPost("/healthcare-facilities", CreateManualHealthcareFacility);
-        ReferenceDataImportEndpoints.Map(group);
+
+        // Writes to reference data (reasons, manual facilities, bulk INE/CNH imports)
+        // are administration actions and must not be available to regular web users.
+        var admin = endpoints.MapGroup("/api/admin/reference-data")
+            .RequireAuthorization(UserAuthorizationPolicies.Admin)
+            .WithTags("Reference data administration");
+        admin.MapPost("/transport-reasons", CreateTransportReason);
+        admin.MapPut("/transport-reasons/{id:guid}", UpdateTransportReason);
+        admin.MapPost("/healthcare-facilities", CreateManualHealthcareFacility);
+        ReferenceDataImportEndpoints.Map(admin);
 
         return endpoints;
     }

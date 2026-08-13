@@ -153,7 +153,7 @@ public sealed class ComposedApplicationTests(NagomiApiFactory factory) : IClassF
             "  Clinica Norte  ", "Mayor", "7", null, null, null, null, null, "28001",
             "28079", "28", "13", "+34 900 000 000", "manual", 40.42m, -3.70m);
 
-        var response = await _client.PostAsJsonAsync("/api/reference-data/healthcare-facilities", request);
+        var response = await _client.PostAsJsonAsync("/api/admin/reference-data/healthcare-facilities", request);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await response.Content.ReadFromJsonAsync<JsonElement>();
         created.GetProperty("name").GetString().Should().Be("Clinica Norte");

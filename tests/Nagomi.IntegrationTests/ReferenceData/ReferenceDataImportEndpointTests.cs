@@ -19,8 +19,8 @@ public sealed class ReferenceDataImportEndpointTests(NagomiApiFactory factory) :
             new IneImportRow("91", "Import Community", "91", "Import Province", "91001", "Import Town")
         };
 
-        var first = await _client.PostAsJsonAsync("/api/reference-data/imports/ine", rows);
-        var second = await _client.PostAsJsonAsync("/api/reference-data/imports/ine", rows);
+        var first = await _client.PostAsJsonAsync("/api/admin/reference-data/imports/ine", rows);
+        var second = await _client.PostAsJsonAsync("/api/admin/reference-data/imports/ine", rows);
 
         first.StatusCode.Should().Be(HttpStatusCode.OK);
         (await first.Content.ReadFromJsonAsync<ImportResult>()).Should().Be(new ImportResult(3, 0, 0));
@@ -36,7 +36,7 @@ public sealed class ReferenceDataImportEndpointTests(NagomiApiFactory factory) :
             """;
         using var content = new StringContent(row + "\n", Encoding.UTF8, "application/x-ndjson");
 
-        var response = await _client.PostAsync("/api/reference-data/imports/ine", content);
+        var response = await _client.PostAsync("/api/admin/reference-data/imports/ine", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         (await response.Content.ReadFromJsonAsync<ImportResult>()).Should().Be(new ImportResult(3, 0, 0));
@@ -62,11 +62,11 @@ public sealed class ReferenceDataImportEndpointTests(NagomiApiFactory factory) :
     {
         using var xlsx = new ByteArrayContent([0x50, 0x4b, 0x03, 0x04]);
         xlsx.Headers.ContentType = new("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        var xlsxResponse = await _client.PostAsync("/api/reference-data/imports/cnh", xlsx);
+        var xlsxResponse = await _client.PostAsync("/api/admin/reference-data/imports/cnh", xlsx);
 
         using var oversized = new ByteArrayContent(new byte[16 * 1024 * 1024 + 1]);
         oversized.Headers.ContentType = new("text/csv");
-        var oversizedResponse = await _client.PostAsync("/api/reference-data/imports/cnh", oversized);
+        var oversizedResponse = await _client.PostAsync("/api/admin/reference-data/imports/cnh", oversized);
 
         xlsxResponse.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
         oversizedResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -74,6 +74,6 @@ public sealed class ReferenceDataImportEndpointTests(NagomiApiFactory factory) :
 
     private Task<HttpResponseMessage> PostCsv(string csv) =>
         _client.PostAsync(
-            "/api/reference-data/imports/cnh",
+            "/api/admin/reference-data/imports/cnh",
             new StringContent(csv, Encoding.UTF8, "text/csv"));
 }
