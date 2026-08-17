@@ -77,7 +77,10 @@ npm run build
 ## Documentation
 
 - [`Product.md.md`](Product.md.md): product vision and scope
+- [`docs/user-guide.md`](docs/user-guide.md): user manual and technical guide
+  (functionality by module, workflows, working on the code, deployment)
 - [`docs/deployment.md`](docs/deployment.md): deployment, migrations, imports, backups, and recovery
+- [`docs/development-guide.md`](docs/development-guide.md): technical development guide (architecture, RabbitMQ, outbox, tooling)
 - [`docs/provider-integration.md`](docs/provider-integration.md): OAuth, RabbitMQ, REST, idempotency, and failure handling
 - [`openspec/specs/`](openspec/specs/): behavioral specifications
 

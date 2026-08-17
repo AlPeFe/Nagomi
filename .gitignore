@@ -31,3 +31,6 @@ backups/
 imports/
 *.dump
 *.sql
+
+# Android companion app (separate MAUI project, not part of this repo)
+android-app/
