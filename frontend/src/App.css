@@ -100,6 +100,31 @@
 .landing-feature h2{margin:0 0 .5rem;font-size:1.05rem;color:var(--navy)}
 .landing-feature p{margin:0;color:var(--muted);font-size:.9rem}
 @media(max-width:720px){.landing-features{grid-template-columns:1fr}}
+.button-landing-ghost{background:transparent;color:white;border:1px solid #5f8f97}
+.button-landing-ghost:hover{background:rgba(255,255,255,.08)}
+.landing-section{background:white;padding:4rem 1rem;border-bottom:1px solid var(--line)}
+.landing-section-inner{max-width:1100px;margin:0 auto}
+.landing-section h2{font-size:1.5rem;margin-bottom:2rem;color:var(--navy)}
+.landing-section .eyebrow{margin-bottom:.4rem}
+.landing-grid{display:grid;gap:1.2rem}
+.landing-grid-3{grid-template-columns:repeat(3,1fr)}
+.landing-grid-4{grid-template-columns:repeat(4,1fr)}
+.landing-card{background:var(--wash);border:1px solid var(--line);border-radius:8px;padding:1.4rem;border-top:3px solid var(--teal)}
+.landing-card h3{margin:0 0 .45rem;font-size:1rem;color:var(--navy)}
+.landing-card p{margin:0;color:var(--muted);font-size:.9rem}
+.landing-feature-icon{font-size:1.5rem;display:block;margin-bottom:.6rem}
+.landing-step{background:white;border:1px solid var(--line);border-radius:8px;padding:1.4rem}
+.landing-step-n{font-size:.78rem;font-weight:800;color:var(--teal);letter-spacing:.12em}
+.landing-step h3{margin:.3rem 0 .45rem;font-size:1rem;color:var(--navy)}
+.landing-step p{margin:0;color:var(--muted);font-size:.9rem}
+.landing-cta{background:linear-gradient(135deg,var(--navy) 0%,#0d2a38 55%,#123f4d 100%);color:white;padding:4rem 1rem;text-align:center}
+.landing-cta-inner{max-width:640px;margin:0 auto}
+.landing-cta h2{color:white;margin-bottom:.6rem}
+.landing-cta p{color:#bcd3da;margin-bottom:1.6rem}
+.landing-footer{max-width:1100px;margin:0 auto;padding:1.6rem 1rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;color:var(--muted);font-size:.85rem}
+.landing-footer a{color:var(--teal);text-decoration:none}
+@media(max-width:900px){.landing-grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.landing-grid-3,.landing-grid-4{grid-template-columns:1fr}.landing-footer{flex-direction:column;gap:.4rem;text-align:center}}
 .capability-grid{display:grid;gap:.75rem;grid-column:2/-1}
 .capability-check{flex-direction:row;align-items:flex-start;gap:.8rem;padding:.9rem 1rem;border:1px solid var(--line);border-radius:6px;background:var(--wash);cursor:pointer}
 .capability-check input{width:18px;min-height:auto;margin-top:.15rem;accent-color:var(--teal)}
@@ -161,3 +186,21 @@
 .list-row .list-actions{flex-direction:row;gap:.4rem}
 
 @media(max-width:900px){.coordination-board{grid-template-columns:1fr}}
+
+/* ---- Help chat (floating widget) ---- */
+.help-chat{position:fixed;right:1.25rem;bottom:1.25rem;z-index:60;display:flex;flex-direction:column;align-items:flex-end;gap:.6rem}
+.help-chat-fab{width:3.4rem;height:3.4rem;border-radius:50%;border:none;background:var(--orange);color:#fff;font-size:1.5rem;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;transition:transform .15s ease}
+.help-chat-fab:hover{transform:translateY(-2px)}
+.help-chat-panel{width:min(340px,calc(100vw - 2rem));background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;animation:route-in .22s ease}
+.help-chat-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem .9rem;background:var(--navy);color:#fff}
+.help-chat-header strong{font-size:.95rem}
+.help-chat-body{display:flex;flex-direction:column;gap:.5rem;padding:.8rem;max-height:320px;overflow-y:auto;background:var(--wash)}
+.help-chat-empty{margin:auto;font-size:.9rem;text-align:center}
+.help-chat-bubble{max-width:85%;padding:.5rem .7rem;border-radius:10px;font-size:.9rem;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.help-chat-user{align-self:flex-end;background:var(--teal);color:#fff;border-bottom-right-radius:2px}
+.help-chat-assistant{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:2px}
+.help-chat-typing{color:var(--muted);font-style:italic}
+.help-chat-error{margin:0}
+.help-chat-form{display:flex;gap:.4rem;padding:.6rem;border-top:1px solid var(--line)}
+.help-chat-form input{flex:1;padding:.5rem .6rem;border:1px solid var(--line);border-radius:6px;min-width:0}
+@media(prefers-reduced-motion:reduce){.help-chat-panel{animation:none}}

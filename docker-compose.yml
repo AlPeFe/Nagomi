@@ -67,6 +67,11 @@ services:
       Authentication__ProviderIntegration__BootstrapClient__Contracts__0: ${OAUTH_BOOTSTRAP_CONTRACT:-}
       Authentication__Users__AdminEmail: ${NAGOMI_ADMIN_EMAIL:-admin@nagomi.local}
       Authentication__Users__AdminPassword: ${NAGOMI_ADMIN_PASSWORD:-change-me-admin-123}
+      HelpChat__Enabled: ${HELPCHAT_ENABLED:-false}
+      HelpChat__BaseUrl: ${HELPCHAT_BASE_URL:-}
+      HelpChat__ApiKey: ${HELPCHAT_API_KEY:-}
+      HelpChat__Model: ${HELPCHAT_MODEL:-}
+      HelpChat__SystemPrompt: ${HELPCHAT_SYSTEM_PROMPT:-}
       SimulatedIdentity__UserIdentifier: ${SIMULATED_ACTOR_ID:?Set SIMULATED_ACTOR_ID in .env}
       SimulatedIdentity__RequestingOrganizationIdentifier: ${SIMULATED_ORGANIZATION_ID:?Set SIMULATED_ORGANIZATION_ID in .env}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}

@@ -240,3 +240,18 @@ export interface QueueMessageSample {
   body: string
   timestamp?: string
 }
+
+export interface HelpChatStatus {
+  enabled: boolean
+}
+
+export type HelpChatRole = 'user' | 'assistant' | 'system'
+
+export interface HelpChatMessage {
+  role: HelpChatRole
+  content: string
+}
+
+export interface HelpChatReply {
+  reply: string
+}

@@ -12,6 +12,7 @@ import { TenantConfigPage } from './pages/TenantConfigPage'
 import { IdentityPage } from './pages/IdentityPage'
 import { CoordinationPage } from './pages/CoordinationPage'
 import { VehiclesPage } from './pages/VehiclesPage'
+import { HelpChatWidget } from './components/HelpChatWidget'
 import { isAuthenticated, logout } from './auth'
 import './App.css'
 
@@ -88,6 +89,7 @@ export default function App() {
           </Routes>
         </div>
       </main>
+      {session && <HelpChatWidget />}
     </div>
   )
 }

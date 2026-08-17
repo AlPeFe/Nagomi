@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OpenIddict.Server.AspNetCore;
 using Nagomi.Api.Features.Audit;
 using Nagomi.Api.Features.EmergencyTransports;
+using Nagomi.Api.Features.HelpChat;
 using Nagomi.Api.Features.IdentityAdministration;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.Operations;
@@ -35,6 +36,9 @@ builder.Services.AddReferenceData();
 builder.Services.AddProviderAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddUserAuthentication(builder.Configuration);
 builder.Services.AddProviderIntegration(builder.Configuration);
+builder.Services.Configure<HelpChatOptions>(builder.Configuration.GetSection(HelpChatOptions.SectionName));
+builder.Services.AddHttpClient(HelpChatEndpoints.HttpClientName).ConfigurePrimaryHttpMessageHandler(static () =>
+    new HttpClientHandler { AllowAutoRedirect = true });
 builder.Services.AddScoped<IProviderResourceGateway, TransportProviderResourceGateway>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHealthChecks().AddDbContextCheck<NagomiDbContext>();
@@ -71,6 +75,7 @@ app.MapProviderAuthenticationAdministrationEndpoints();
 app.MapTenantEndpoints();
 app.MapWebQueueEndpoints();
 app.MapVehicleEndpoints();
+app.MapHelpChatEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", app.Environment.IsDevelopment()))
 {

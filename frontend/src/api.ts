@@ -1,4 +1,4 @@
-import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle } from './types'
+import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -281,4 +281,6 @@ export const api = {
   async assignJourneyVehicle(journeyId: string, vehicleId?: string) {
     return await request<Vehicle | null>(`/journeys/${encodeURIComponent(journeyId)}/vehicle`, { method: 'PUT', body: JSON.stringify({ vehicleId }) })
   },
+  getHelpChatStatus: () => request<HelpChatStatus>('/help-chat/status'),
+  sendHelpChatMessage: (message: string, history: HelpChatMessage[]) => request<HelpChatReply>('/help-chat/messages', { method: 'POST', body: JSON.stringify({ message, history }) }),
 }
