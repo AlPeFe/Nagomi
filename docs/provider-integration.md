@@ -1,5 +1,9 @@
 # Provider integration
 
+> **¿Eres una empresa de transporte que se integra con una instalación Nagomi?**
+> Sigue la guía práctica paso a paso en `docs/provider-onboarding.md`. Este documento
+> es la referencia técnica del contrato.
+
 Nagomi uses RabbitMQ only as an at-least-once change signal. Authenticated REST is the canonical contract for reading current data and submitting changes. Provider access is limited to the contracts assigned to that provider.
 
 ## OAuth 2.0 client credentials
