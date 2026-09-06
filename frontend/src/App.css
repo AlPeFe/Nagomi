@@ -167,6 +167,8 @@
 .vehicle-picker{display:flex;flex-direction:column;gap:.25rem;font-size:.75rem;color:#64748b}
 .vehicle-picker select{padding:.4rem;border:1px solid var(--border,#d8dee4);border-radius:6px;background:#fff;font-size:.85rem}
 .driver-input{padding:.4rem;border:1px solid var(--border,#d8dee4);border-radius:6px;background:#fff;font-size:.85rem;color:#1e293b}
+.fleet-map-panel{height:380px;border:1px solid var(--border,#d8dee4);border-radius:10px;overflow:hidden;margin-bottom:1.25rem}
+.fleet-map-empty{height:120px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.85rem;border:1px dashed var(--border,#d8dee4);border-radius:10px;margin-bottom:1.25rem}
 .coordination-card footer{font-size:.82rem}
 .empty-hint{color:#94a3b8;font-size:.85rem}
 

@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useState } from 'react'
 import { Link } from '../router'
 import { api } from '../api'
+import { FleetMap } from '../components/FleetMap'
 import { StatusMap } from '../components/StatusMap'
 import { StatusBadge } from '../components/Badges'
 import { ErrorState, LoadingState, PageHeader } from '../components/States'
@@ -73,7 +74,8 @@ export function CoordinationPage() {
   if (error && rows.length === 0) return <div className="page wide-page"><ErrorState message={error} retry={() => void load()} /></div>
 
   return <div className="page wide-page">
-    <PageHeader eyebrow="Coordinación de flota" title="Panel de coordinación" description="Asigna vehículos a los trayectos y sigue su estado. Actualización automática cada 30 segundos." actions={<span className="refresh-note">{refreshedAt ? `Actualizado ${refreshedAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : 'Sin actualizar'}</span>} />
+    <PageHeader eyebrow="Coordinación de flota" title="Panel de coordinación" description="Sigue la flota en el mapa, asigna vehículos y conductor, y consulta el estado de cada trayecto. Actualización automática cada 30 segundos." actions={<span className="refresh-note">{refreshedAt ? `Actualizado ${refreshedAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : 'Sin actualizar'}</span>} />
+    <FleetMap rows={rows} className="fleet-map-panel" />
     <div className="coordination-board">
       {bands.map((band) => {
         const items = rows.filter((row) => bucketOf(row, today) === band.key)
