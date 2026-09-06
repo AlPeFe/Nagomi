@@ -10,6 +10,8 @@ public sealed class HelpChatOptions
     public string? ApiKey { get; set; }
     public string? Model { get; set; }
     public string? SystemPrompt { get; set; }
+    /// <summary>Send Nagomi's domain tools to the model (function calling). Default true.</summary>
+    public bool EnableTools { get; set; } = true;
 
     public bool IsConfigured =>
         Enabled &&
