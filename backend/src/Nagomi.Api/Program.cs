@@ -8,6 +8,7 @@ using Nagomi.Api.Features.HelpChat;
 using Nagomi.Api.Features.IdentityAdministration;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.Operations;
+using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
@@ -75,6 +76,7 @@ app.MapProviderAuthenticationAdministrationEndpoints();
 app.MapTenantEndpoints();
 app.MapWebQueueEndpoints();
 app.MapVehicleEndpoints();
+app.MapPatientEndpoints();
 app.MapHelpChatEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", app.Environment.IsDevelopment()))

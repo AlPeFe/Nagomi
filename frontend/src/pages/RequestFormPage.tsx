@@ -97,7 +97,13 @@ export function RequestFormPage() {
       }
       submission = { kind: 'recurring', recurrence }
     }
-    try { const result = submit ? await api.submitRequest(draft, submission) : await api.saveDraft(draft); navigate(`/solicitudes/${result.id}`) }
+    try {
+      // Auto-fill the patient directory (idempotent): only on submit, only when the form
+      // carries patient identity, and never blocking the request itself.
+      if (submit && (draft.patient?.firstName || draft.patient?.lastName || draft.patient?.documentNumber)) {
+        try { await api.ensurePatient(draft.patient) } catch { /* best-effort */ }
+      }
+      const result = submit ? await api.submitRequest(draft, submission) : await api.saveDraft(draft); navigate(`/solicitudes/${result.id}`) }
     catch (e) { setMessage(e instanceof Error ? e.message : 'No se pudo guardar la solicitud.') }
     finally { setSaving('') }
   }

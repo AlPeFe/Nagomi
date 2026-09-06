@@ -1,4 +1,4 @@
-import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle } from './types'
+import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -277,6 +277,16 @@ export const api = {
     return await request<Vehicle>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) })
   },
   deleteVehicle: (id: string) => request<void>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  listPatients: (search?: string, includeInactive = false) => request<Patient[]>(`/admin/patients${search ? `?search=${encodeURIComponent(search)}` : ''}${includeInactive ? `${search ? '&' : '?'}includeInactive=true` : ''}`),
+  searchPatients: (q: string, limit = 10) => request<Patient[]>(`/patients/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  async createPatient(body: PatientInput) {
+    return await request<Patient>('/admin/patients', { method: 'POST', body: JSON.stringify(body) })
+  },
+  async updatePatient(id: string, body: PatientInput) {
+    return await request<Patient>(`/admin/patients/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) })
+  },
+  deletePatient: (id: string) => request<void>(`/admin/patients/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  ensurePatient: (body: PatientInput) => request<Patient>('/patients/ensure', { method: 'POST', body: JSON.stringify(body) }),
   listCoordination: () => request<CoordinationRow[]>('/coordination'),
   async assignJourneyVehicle(journeyId: string, vehicleId?: string) {
     return await request<Vehicle | null>(`/journeys/${encodeURIComponent(journeyId)}/vehicle`, { method: 'PUT', body: JSON.stringify({ vehicleId }) })

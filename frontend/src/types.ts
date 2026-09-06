@@ -125,6 +125,28 @@ export interface Vehicle {
   createdAt: string
 }
 
+export interface Patient {
+  id: string
+  publicId: string
+  firstName?: string
+  lastName?: string
+  documentNumber?: string
+  healthCardNumber?: string
+  phone?: string
+  notes?: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface PatientInput {
+  firstName?: string
+  lastName?: string
+  documentNumber?: string
+  healthCardNumber?: string
+  phone?: string
+  notes?: string
+}
+
 export type JourneyDirection = 'Outbound' | 'Return'
 
 export interface StatusPoint {

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Query;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Journeys;
+using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Vehicles;
@@ -292,6 +293,7 @@ public sealed class TransportProviderResourceGatewayTests
     {
         private readonly List<TransportRequestRecord> _requests = requests.ToList();
         private readonly List<TransportVehicle> _vehicles = [];
+        private readonly List<Patient> _patients = [];
         internal List<TransportAuditRecord> Audits { get; } = [];
         internal int SaveCount { get; private set; }
         public IQueryable<TransportRequestRecord> TransportRequests => new AsyncEnumerable<TransportRequestRecord>(_requests);
@@ -299,8 +301,10 @@ public sealed class TransportProviderResourceGatewayTests
         public IQueryable<TransportAuditRecord> TransportAudit => new AsyncEnumerable<TransportAuditRecord>(Audits);
         public IQueryable<EmergencyTransportRecord> EmergencyTransports => new AsyncEnumerable<EmergencyTransportRecord>([]);
         public IQueryable<TransportVehicle> Vehicles => new AsyncEnumerable<TransportVehicle>(_vehicles);
+        public IQueryable<Patient> Patients => new AsyncEnumerable<Patient>(_patients);
         public void Add(TransportRequestRecord request) => _requests.Add(request);
         public void Add(TransportVehicle vehicle) => _vehicles.Add(vehicle);
+        public void Add(Patient patient) => _patients.Add(patient);
         public void Add(EmergencyTransportRecord emergency) { }
         public void Add(JourneyRecord journey)
         {

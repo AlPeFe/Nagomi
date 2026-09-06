@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Nagomi.Api.Domain;
+using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Vehicles;
 using Nagomi.Api.Infrastructure.PublicIds;
@@ -144,6 +145,25 @@ internal sealed class TransportVehicleConfiguration : IEntityTypeConfiguration<T
         entity.Property(x => x.PublicId).HasMaxLength(40).IsRequired();
         entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
         entity.Property(x => x.ExternalCode).HasMaxLength(200);
+    }
+}
+
+internal sealed class PatientConfiguration : IEntityTypeConfiguration<Patient>
+{
+    public void Configure(EntityTypeBuilder<Patient> entity)
+    {
+        entity.ToTable("patients");
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => x.PublicId).IsUnique();
+        entity.HasIndex(x => x.DocumentNumber).IsUnique();
+        entity.HasIndex(x => new { x.IsActive, x.LastName, x.FirstName });
+        entity.Property(x => x.PublicId).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.FirstName).HasMaxLength(200);
+        entity.Property(x => x.LastName).HasMaxLength(200);
+        entity.Property(x => x.DocumentNumber).HasMaxLength(40);
+        entity.Property(x => x.HealthCardNumber).HasMaxLength(60);
+        entity.Property(x => x.Phone).HasMaxLength(30);
+        entity.Property(x => x.Notes).HasMaxLength(1000);
     }
 }
 

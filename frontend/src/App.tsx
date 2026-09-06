@@ -12,6 +12,7 @@ import { TenantConfigPage } from './pages/TenantConfigPage'
 import { IdentityPage } from './pages/IdentityPage'
 import { CoordinationPage } from './pages/CoordinationPage'
 import { VehiclesPage } from './pages/VehiclesPage'
+import { PatientsPage } from './pages/PatientsPage'
 import { HelpChatWidget } from './components/HelpChatWidget'
 import { isAuthenticated, logout } from './auth'
 import './App.css'
@@ -62,6 +63,7 @@ export default function App() {
               <NavLink to="/solicitudes">Solicitudes</NavLink>
               <NavLink to="/urgencias">Urgencias</NavLink>
               {roles.includes('admin') && <NavLink to="/vehiculos">Vehículos</NavLink>}
+              {roles.includes('admin') && <NavLink to="/pacientes">Pacientes</NavLink>}
               {roles.includes('admin') && <NavLink to="/identidad">Identidad</NavLink>}
               {roles.includes('admin') && <NavLink to="/configuracion">Configuración</NavLink>}
             </nav>
@@ -79,6 +81,7 @@ export default function App() {
             <Route path="/trayectos/:journeyId" element={<RequireAuth><JourneyDetailPage /></RequireAuth>} />
             <Route path="/coordinacion" element={<RequireAuth><CoordinationPage /></RequireAuth>} />
             <Route path="/vehiculos" element={<RequireAuth><RequireAdmin><VehiclesPage /></RequireAdmin></RequireAuth>} />
+            <Route path="/pacientes" element={<RequireAuth><RequireAdmin><PatientsPage /></RequireAdmin></RequireAuth>} />
             <Route path="/solicitudes" element={<RequireAuth><RequestsPage /></RequireAuth>} />
             <Route path="/solicitudes/nueva" element={<RequireAuth><RequestFormPage /></RequireAuth>} />
             <Route path="/solicitudes/:requestId" element={<RequireAuth><RequestDetailPage /></RequireAuth>} />

@@ -14,6 +14,7 @@ using Nagomi.Api.Features.Vehicles;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Nagomi.Api.Features.EmergencyTransports;
+using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ReferenceData;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Domain;
@@ -143,15 +144,18 @@ internal sealed class FakeTransportDb : ITransportDb
     private readonly List<TransportAuditRecord> _audit = [];
     private readonly List<EmergencyTransportRecord> _emergencies = [];
     private readonly List<TransportVehicle> _vehicles = [];
+    private readonly List<Patient> _patients = [];
 
     public IQueryable<TransportRequestRecord> TransportRequests => _requests.AsAsyncQueryable();
     public IQueryable<JourneyRecord> Journeys => _requests.SelectMany(x => x.JourneyRecords).AsAsyncQueryable();
     public IQueryable<TransportAuditRecord> TransportAudit => _audit.AsAsyncQueryable();
     public IQueryable<EmergencyTransportRecord> EmergencyTransports => _emergencies.AsAsyncQueryable();
     public IQueryable<TransportVehicle> Vehicles => _vehicles.AsAsyncQueryable();
+    public IQueryable<Patient> Patients => _patients.AsAsyncQueryable();
 
     public void Add(TransportRequestRecord request) => _requests.Add(request);
     public void Add(TransportVehicle vehicle) => _vehicles.Add(vehicle);
+    public void Add(Patient patient) => _patients.Add(patient);
     public void Add(JourneyRecord journey)
     {
         if (_requests.SelectMany(x => x.JourneyRecords).All(x => x.Id != journey.Id))
