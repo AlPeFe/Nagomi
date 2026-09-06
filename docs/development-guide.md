@@ -390,3 +390,23 @@ cd frontend && npm ci && npm run build && npm run lint && npm test -- --run
 - **Enums en JSON = números** en el backend; los tests API los leen con `GetInt32()`.
 - **Tests de integración con tipos ambiguos** (`TransportReasonSnapshot` existe
   en Domain y Features.ReferenceData) → calificar con namespace completo.
+
+## 12. IA: MCP server y asistente con tools
+
+Nagomi expone su dominio por **MCP streamable HTTP** en `/mcp` y el chat de
+ayuda (HelpChat) usa las **mismas tools** vía function calling.
+
+- **MCP** (`Features/Mcp/NagomiMcpTools.cs`): 6 tools read-only en español
+  (`buscar_pacientes`, `consultar_paciente`, `buscar_solicitudes`,
+  `consultar_solicitud`, `listar_coordinacion`, `buscar_vehiculos`).
+  Autenticación: Bearer de OpenIddict con rol web (cualquier usuario
+  autenticado). Stack: `ModelContextProtocol.AspNetCore` 2.2.0 →
+  `AddMcpServer().WithHttpTransport().WithTools<NagomiMcpTools>()` +
+  `MapMcp("/mcp")`. nginx proxya `/mcp` con `proxy_buffering off` y timeouts
+  largos (SSE). Probe: `scripts/nagomi_e2e_mcp.py`.
+- **Asistente** (`Features/HelpChat/HelpChatTools.cs`): envía las mismas tools
+  al proveedor OpenAI-compatible; si el modelo pide una tool se ejecuta en el
+  backend y el resultado vuelve al modelo (loop, máx 4). Si el proveedor
+  rechaza `tools` (400), degrada a chat plano. Config: `HelpChatOptions.EnableTools`.
+- **Pitfall**: no usar un `JsonElement` fuera del `using` de su
+  `JsonDocument` (ObjectDisposedException intermitente) — `.Clone()` dentro.
