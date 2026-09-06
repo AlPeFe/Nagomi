@@ -215,3 +215,41 @@
 .landing-card:hover,.landing-step:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(16,45,61,.08)}
 .coordination-card:hover{box-shadow:0 4px 14px rgba(16,45,61,.08)}
 @media(prefers-reduced-motion:reduce){.button,.landing-card,.landing-step,.coordination-card,.list-row{transition:none}.button:not(:disabled):hover,.landing-card:hover,.landing-step:hover,.coordination-card:hover{transform:none;box-shadow:none}}
+
+/* ---- Mobile nav (off-canvas drawer, <768px) ---- */
+.mobile-menu-button{display:none}
+@media(max-width:767px){
+  .topbar{padding:.5rem .75rem;gap:.5rem}
+  .topbar nav{display:none}              /* desktop nav hidden on phones */
+  .new-request{display:none}             /* primary CTA moves into the drawer */
+  .mobile-menu-button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:transparent;border:1px solid #4d6b75;border-radius:8px;color:#c9d9de;cursor:pointer}
+  .mobile-scrim{position:fixed;inset:0;background:rgba(8,20,26,.55);z-index:90;backdrop-filter:blur(2px)}
+  .mobile-drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,84vw);background:var(--navy);color:white;z-index:95;display:flex;flex-direction:column;transform:translateX(-105%);transition:transform .22s cubic-bezier(.22,.61,.36,1);box-shadow:4px 0 24px rgba(0,0,0,.25);overflow-y:auto}
+  .mobile-drawer.open{transform:translateX(0)}
+  .mobile-drawer-head{display:flex;align-items:center;gap:.65rem;padding:1rem;border-bottom:1px solid #25485a;margin-bottom:.4rem}
+  .mobile-drawer a{color:#c9d9de;text-decoration:none;font-weight:700;padding:.85rem 1rem;display:flex;align-items:center;gap:.6rem;border-left:3px solid transparent;min-height:46px}
+  .mobile-drawer a.active{color:white;border-left-color:#65c6c0;background:#173f50}
+  .mobile-drawer-actions{margin-top:auto;padding:1rem;border-top:1px solid #25485a;display:flex;flex-direction:column;gap:.6rem}
+  .mobile-drawer-actions .button{width:100%;min-height:46px}
+
+  /* Fleet map + coordination cards on phones */
+  .fleet-map-panel{height:230px}
+  .coordination-card{padding:.9rem}
+
+  /* Help chat becomes a full-screen sheet on phones */
+  .help-chat:has(.help-chat-panel){position:fixed;inset:0;z-index:70;align-items:stretch;gap:0}
+  .help-chat-panel{width:100%;height:100%;border-radius:0;border:0}
+  .help-chat-body{max-height:none;flex:1}
+  .help-chat:has(.help-chat-panel) .help-chat-fab{display:none}
+
+  /* Landing vertical rhythm on phones */
+  .landing-hero{padding:3rem 1rem 2.5rem}
+  .landing-cta{padding:2.5rem 1rem}
+  .page-header h1{font-size:1.5rem}
+
+  /* Touch targets: comfortable taps on small screens */
+  input,select,textarea,.button{min-height:44px}
+  .button{font-size:.95rem}
+  .inline-form{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.mobile-drawer{transition:none}}
