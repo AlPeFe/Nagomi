@@ -7,6 +7,7 @@ using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.HelpChat;
 using Nagomi.Api.Features.IdentityAdministration;
 using Nagomi.Api.Features.Journeys;
+using Nagomi.Api.Features.Mcp;
 using Nagomi.Api.Features.Operations;
 using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ProviderIntegration;
@@ -41,6 +42,8 @@ builder.Services.AddProviderIntegration(builder.Configuration);
 builder.Services.Configure<HelpChatOptions>(builder.Configuration.GetSection(HelpChatOptions.SectionName));
 builder.Services.AddHttpClient(HelpChatEndpoints.HttpClientName).ConfigurePrimaryHttpMessageHandler(static () =>
     new HttpClientHandler { AllowAutoRedirect = true });
+builder.Services.AddMcpServer().WithHttpTransport().WithTools<NagomiMcpTools>();
+builder.Services.AddScoped<NagomiMcpTools>();
 builder.Services.AddScoped<IProviderResourceGateway, TransportProviderResourceGateway>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHealthChecks().AddDbContextCheck<NagomiDbContext>();
@@ -79,6 +82,8 @@ app.MapWebQueueEndpoints();
 app.MapVehicleEndpoints();
 app.MapPatientEndpoints();
 app.MapHelpChatEndpoints();
+app.MapMcp("/mcp")
+    .RequireAuthorization(UserAuthorizationPolicies.Web);
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", app.Environment.IsDevelopment()))
 {
