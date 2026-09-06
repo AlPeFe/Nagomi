@@ -1,4 +1,4 @@
-import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle } from './types'
+import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle, VehicleType } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -270,10 +270,10 @@ export const api = {
   listQueueSnapshots: () => request<QueueSnapshot[]>('/queue'),
   peekQueue: (queueName: string, limit = 10) => request<QueueMessageSample[]>(`/queue/${encodeURIComponent(queueName)}/peek?limit=${limit}`),
   listVehicles: () => request<Vehicle[]>('/admin/vehicles'),
-  async createVehicle(body: { name: string; code?: string; externalCode?: string; isActive?: boolean }) {
+  async createVehicle(body: { name: string; code?: string; externalCode?: string; vehicleType?: VehicleType; isActive?: boolean }) {
     return await request<Vehicle>('/admin/vehicles', { method: 'POST', body: JSON.stringify(body) })
   },
-  async updateVehicle(id: string, body: { name: string; code?: string; externalCode?: string; isActive?: boolean }) {
+  async updateVehicle(id: string, body: { name: string; code?: string; externalCode?: string; vehicleType?: VehicleType; isActive?: boolean }) {
     return await request<Vehicle>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) })
   },
   deleteVehicle: (id: string) => request<void>(`/admin/vehicles/${encodeURIComponent(id)}`, { method: 'DELETE' }),
@@ -290,6 +290,9 @@ export const api = {
   listCoordination: () => request<CoordinationRow[]>('/coordination'),
   async assignJourneyVehicle(journeyId: string, vehicleId?: string) {
     return await request<Vehicle | null>(`/journeys/${encodeURIComponent(journeyId)}/vehicle`, { method: 'PUT', body: JSON.stringify({ vehicleId }) })
+  },
+  async assignJourneyDriver(journeyId: string, driverName?: string) {
+    return await request<string | null>(`/journeys/${encodeURIComponent(journeyId)}/driver`, { method: 'PUT', body: JSON.stringify({ driverName }) })
   },
   getHelpChatStatus: () => request<HelpChatStatus>('/help-chat/status'),
   sendHelpChatMessage: (message: string, history: HelpChatMessage[]) => request<HelpChatReply>('/help-chat/messages', { method: 'POST', body: JSON.stringify({ message, history }) }),

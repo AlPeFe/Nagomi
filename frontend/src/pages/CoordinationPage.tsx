@@ -4,8 +4,26 @@ import { api } from '../api'
 import { StatusMap } from '../components/StatusMap'
 import { StatusBadge } from '../components/Badges'
 import { ErrorState, LoadingState, PageHeader } from '../components/States'
-import type { CoordinationRow, Vehicle } from '../types'
+import { VEHICLE_TYPE_LABELS, type CoordinationRow, type Vehicle } from '../types'
 import { directionLabel, formatDateTime } from '../utils'
+
+function DriverInput({ journeyId, initial }: { journeyId: string; initial?: string }) {
+  const [value, setValue] = useState(initial ?? '')
+  const [saving, setSaving] = useState(false)
+  return <input
+    className="driver-input"
+    value={value}
+    placeholder="Conductor"
+    aria-label="Conductor"
+    disabled={saving}
+    onChange={(e) => setValue(e.target.value)}
+    onBlur={() => {
+      if (value === (initial ?? '')) return
+      setSaving(true)
+      void api.assignJourneyDriver(journeyId, value.trim() || undefined).finally(() => setSaving(false))
+    }}
+  />
+}
 
 function bucketOf(row: CoordinationRow, today: string): 'now' | 'today' | 'tomorrow' {
   const day = row.operationalAt.slice(0, 10)
@@ -73,9 +91,10 @@ export function CoordinationPage() {
                 <label className="vehicle-picker"><span>Vehículo</span>
                   <select value={row.vehicleId ?? ''} onChange={(e) => void assign(row.journeyId, e.target.value)}>
                     <option value="">Sin asignar</option>
-                    {vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.name} ({vehicle.publicId})</option>)}
+                    {vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.name} ({VEHICLE_TYPE_LABELS[vehicle.vehicleType]})</option>)}
                   </select>
                 </label>
+                <DriverInput journeyId={row.journeyId} initial={row.driverName} />
                 <footer><Link to={`/trayectos/${row.journeyId}`}>Ver detalle →</Link></footer>
               </article>
             ))}

@@ -1,11 +1,11 @@
 import { useEffect, useEffectEvent, useState } from 'react'
 import { api } from '../api'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
-import type { Vehicle } from '../types'
+import { VEHICLE_TYPE_LABELS, type Vehicle, type VehicleType } from '../types'
 
-interface VehicleForm { name: string; code: string; externalCode: string }
+interface VehicleForm { name: string; code: string; externalCode: string; vehicleType: VehicleType }
 
-const emptyForm: VehicleForm = { name: '', code: '', externalCode: '' }
+const emptyForm: VehicleForm = { name: '', code: '', externalCode: '', vehicleType: 'Conventional' }
 
 export function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -28,7 +28,7 @@ export function VehiclesPage() {
   function startCreate() { reset(); setMessage('') }
   function startEdit(vehicle: Vehicle) {
     setEditing(vehicle)
-    setForm({ name: vehicle.name, code: vehicle.publicId, externalCode: vehicle.externalCode ?? '' })
+    setForm({ name: vehicle.name, code: vehicle.publicId, externalCode: vehicle.externalCode ?? '', vehicleType: vehicle.vehicleType })
     setMessage('')
   }
 
@@ -37,10 +37,10 @@ export function VehiclesPage() {
     if (!form.name.trim()) return
     try {
       if (editing) {
-        await api.updateVehicle(editing.id, { name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined })
+        await api.updateVehicle(editing.id, { name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined, vehicleType: form.vehicleType })
         setMessage('Vehículo actualizado.')
       } else {
-        await api.createVehicle({ name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined })
+        await api.createVehicle({ name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined, vehicleType: form.vehicleType })
         setMessage('Vehículo creado.')
       }
       reset(); await load(true)
@@ -61,6 +61,7 @@ export function VehiclesPage() {
     {message && <div className="inline-message" role="status">{message}</div>}
     <form className="inline-form vehicle-form" onSubmit={(event) => void submit(event)}>
       <label><span>Nombre</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ambulancia 01" required /></label>
+      <label><span>Tipo</span><select value={form.vehicleType} onChange={(e) => setForm({ ...form, vehicleType: e.target.value as VehicleType })}>{(Object.keys(VEHICLE_TYPE_LABELS) as VehicleType[]).map((t) => <option key={t} value={t}>{VEHICLE_TYPE_LABELS[t]}</option>)}</select></label>
       <label><span>Código interno</span><input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="AMB-01 (si lo dejas vacío, se genera)" /></label>
       <label><span>Código externo</span><input value={form.externalCode} onChange={(e) => setForm({ ...form, externalCode: e.target.value })} placeholder="REF-EXT-01" /></label>
       <div className="inline-actions">
@@ -70,7 +71,7 @@ export function VehiclesPage() {
     </form>
     {vehicles.length ? <div className="card-list">{vehicles.map((vehicle) => (
       <article key={vehicle.id} className="list-row">
-        <div><strong>{vehicle.name}</strong><span>{vehicle.publicId}{vehicle.externalCode ? ` · ${vehicle.externalCode}` : ''}</span></div>
+        <div><strong>{vehicle.name}</strong><span>{vehicle.publicId}{vehicle.externalCode ? ` · ${vehicle.externalCode}` : ''}{` · ${VEHICLE_TYPE_LABELS[vehicle.vehicleType]}`}</span></div>
         <div className="list-actions">
           <button className="button button-small" onClick={() => startEdit(vehicle)}>Editar</button>
           <button className="button button-danger" onClick={() => void remove(vehicle.id)}>Eliminar</button>

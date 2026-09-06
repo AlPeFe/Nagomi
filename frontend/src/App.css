@@ -166,6 +166,7 @@
 .coord-route small{font-size:.72rem;color:#64748b}
 .vehicle-picker{display:flex;flex-direction:column;gap:.25rem;font-size:.75rem;color:#64748b}
 .vehicle-picker select{padding:.4rem;border:1px solid var(--border,#d8dee4);border-radius:6px;background:#fff;font-size:.85rem}
+.driver-input{padding:.4rem;border:1px solid var(--border,#d8dee4);border-radius:6px;background:#fff;font-size:.85rem;color:#1e293b}
 .coordination-card footer{font-size:.82rem}
 .empty-hint{color:#94a3b8;font-size:.85rem}
 

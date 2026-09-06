@@ -119,6 +119,7 @@ internal sealed class JourneyRecordConfiguration : IEntityTypeConfiguration<Jour
         entity.Property(x => x.ProviderVisibleNotes).HasMaxLength(4000);
         entity.Property(x => x.ProviderReference).HasMaxLength(200);
         entity.Property(x => x.CurrentStatus).HasConversion<string>().HasMaxLength(30);
+        entity.Property(x => x.DriverName).HasMaxLength(200);
         entity.Property(x => x.CurrentCancellationReason).HasConversion<string>().HasMaxLength(40);
         entity.Property(x => x.CurrentCancellingParty).HasConversion<string>().HasMaxLength(30);
         entity.Property(x => x.RetrievalState).HasMaxLength(50);
@@ -144,6 +145,7 @@ internal sealed class TransportVehicleConfiguration : IEntityTypeConfiguration<T
         entity.HasIndex(x => new { x.ProviderId, x.IsActive });
         entity.Property(x => x.PublicId).HasMaxLength(40).IsRequired();
         entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        entity.Property(x => x.VehicleType).HasConversion<string>().HasMaxLength(30);
         entity.Property(x => x.ExternalCode).HasMaxLength(200);
     }
 }

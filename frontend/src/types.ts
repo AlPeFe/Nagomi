@@ -121,8 +121,18 @@ export interface Vehicle {
   publicId: string
   name: string
   externalCode?: string
+  vehicleType: VehicleType
   isActive: boolean
   createdAt: string
+}
+
+export type VehicleType = 'Conventional' | 'Sva' | 'Pediatric' | 'Collective'
+
+export const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
+  Conventional: 'Convencional',
+  Sva: 'SVA',
+  Pediatric: 'Pediátrica',
+  Collective: 'Colectiva',
 }
 
 export interface Patient {
@@ -173,6 +183,7 @@ export interface CoordinationRow {
   vehicleId?: string
   vehiclePublicId?: string
   vehicleName?: string
+  driverName?: string
   statusPoints: StatusPoint[]
 }
 

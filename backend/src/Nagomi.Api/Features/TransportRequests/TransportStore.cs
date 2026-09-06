@@ -75,6 +75,8 @@ public sealed class JourneyRecord
     public bool IsManuallyAdded { get; set; }
     public Guid? VehicleId { get; set; }
     public TransportVehicle? Vehicle { get; set; }
+    /// <summary>Driver assigned to this journey (a simple name — no worker directory, no shifts).</summary>
+    public string? DriverName { get; set; }
     public JourneyStatus CurrentStatus { get; set; } = JourneyStatus.Scheduled;
     public DateTimeOffset? ActualActivatedAt { get; set; }
     public DateTimeOffset? ActualArrivedAtOriginAt { get; set; }

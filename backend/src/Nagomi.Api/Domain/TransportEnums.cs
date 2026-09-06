@@ -27,6 +27,19 @@ public enum MobilityType
     Stretcher = 2
 }
 
+/// <summary>
+/// The kind of sanitary vehicle (translation of GAM's TVH catalog, trimmed to the
+/// values a small company actually needs). Deliberately small — grows only when a
+/// customer asks. The coordinator uses it to match a vehicle to transport requirements.
+/// </summary>
+public enum VehicleType
+{
+    Conventional = 0,
+    Sva = 1,
+    Pediatric = 2,
+    Collective = 3
+}
+
 public enum JourneyStatus
 {
     Scheduled = 0,

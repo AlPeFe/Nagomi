@@ -55,6 +55,11 @@ password = env_value("NAGOMI_ADMIN_PASSWORD")
 if not password:
     print("FAIL: NAGOMI_ADMIN_PASSWORD not found in .env"); sys.exit(1)
 
+import os as _os
+_suffix = _os.urandom(3).hex().upper()
+DOC1 = f"E2E-{_suffix}"
+DOC2 = f"E2E2-{_suffix}"
+
 tok = post_form("/connect/token", {
     "grant_type": "password", "username": email, "password": password})
 if "error" in tok:
@@ -64,41 +69,41 @@ results.append(check("login admin", bool(token)))
 
 # 1. Create a patient
 status, created = api("POST", "/api/admin/patients", token, {
-    "firstName": "E2E", "lastName": "Paciente", "documentNumber": "E2E-00000001",
+    "firstName": "E2E", "lastName": "Paciente", "documentNumber": "DOC1",
     "phone": "600000000"})
 results.append(check("create patient 201", status == 201 and (created or {}).get("publicId", "").startswith("PAT-"),
                      f"status={status}"))
 
 # 2. Duplicate document rejected
 status, _ = api("POST", "/api/admin/patients", token, {
-    "firstName": "E2E", "lastName": "Dup", "documentNumber": "E2E-00000001"})
+    "firstName": "E2E", "lastName": "Dup", "documentNumber": "DOC1"})
 results.append(check("duplicate document 400", status == 400, f"status={status}"))
 
 # 3. List includes the patient
 status, lst = api("GET", "/api/admin/patients", token)
-results.append(check("list patients", status == 200 and any(p.get("documentNumber") == "E2E-00000001" for p in (lst or [])),
+results.append(check("list patients", status == 200 and any(p.get("documentNumber") == "DOC1" for p in (lst or [])),
                      f"status={status}"))
 
 # 4. Search by document (web endpoint, auth web)
-status, found = api("GET", "/api/patients/search?q=E2E-00000001", token)
+status, found = api("GET", "/api/patients/search?q=DOC1", token)
 results.append(check("search by document", status == 200 and any(p.get("lastName") == "Paciente" for p in (found or [])),
                      f"status={status}"))
 
 # 5. Ensure reuses by document (idempotent)
 status, ensured = api("POST", "/api/patients/ensure", token, {
-    "firstName": "E2E", "lastName": "Paciente", "documentNumber": "E2E-00000001"})
+    "firstName": "E2E", "lastName": "Paciente", "documentNumber": "DOC1"})
 results.append(check("ensure idempotent reuses", status == 200 and ensured and ensured.get("id") == created.get("id"),
                      f"status={status}"))
 
 # 6. Ensure creates when document is new
 status, ensured2 = api("POST", "/api/patients/ensure", token, {
-    "firstName": "E2E", "lastName": "Nuevo", "documentNumber": "E2E-00000002"})
+    "firstName": "E2E", "lastName": "Nuevo", "documentNumber": "DOC2"})
 results.append(check("ensure creates new", status == 200 and ensured2 and ensured2.get("publicId", "").startswith("PAT-"),
                      f"status={status}"))
 
 # 7. Update
 status, updated = api("PUT", f"/api/admin/patients/{created['id']}", token, {
-    "firstName": "E2E", "lastName": "Paciente Actualizado", "documentNumber": "E2E-00000001"})
+    "firstName": "E2E", "lastName": "Paciente Actualizado", "documentNumber": "DOC1"})
 results.append(check("update patient", status == 200 and updated and updated.get("lastName") == "Paciente Actualizado",
                      f"status={status}"))
 

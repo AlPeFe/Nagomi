@@ -8,7 +8,7 @@ using Nagomi.Api.Infrastructure.PublicIds;
 
 namespace Nagomi.Api.Features.Vehicles;
 
-/// <summary>One row of the coordination board: a journey with its vehicle, status and status points.</summary>
+/// <summary>One row of the coordination board: a journey with its vehicle, driver, status and status points.</summary>
 public sealed record CoordinationRow(
     Guid JourneyId,
     string JourneyPublicId,
@@ -23,6 +23,7 @@ public sealed record CoordinationRow(
     Guid? VehicleId,
     string? VehiclePublicId,
     string? VehicleName,
+    string? DriverName,
     IReadOnlyList<StatusPoint> StatusPoints);
 
 /// <summary>A status event with its reported position (world 1 / testimonial map).</summary>
@@ -36,6 +37,8 @@ public sealed record StatusPoint(
     decimal? Longitude);
 
 public sealed record AssignVehicleCommand(Guid? VehicleId);
+
+public sealed record AssignDriverCommand(string? DriverName);
 
 public static class VehicleEndpoints
 {
@@ -54,6 +57,7 @@ public static class VehicleEndpoints
             .WithTags("Coordination");
         web.MapGet("/coordination", CoordinationAsync);
         web.MapPut("/journeys/{id:guid}/vehicle", AssignJourneyVehicleAsync);
+        web.MapPut("/journeys/{id:guid}/driver", AssignJourneyDriverAsync);
 
         return endpoints;
     }
@@ -66,7 +70,7 @@ public static class VehicleEndpoints
         var vehicles = await db.Vehicles.AsNoTracking()
             .Where(x => x.ProviderId == providerId && x.IsActive)
             .OrderBy(x => x.Name)
-            .Select(x => new VehicleResponse(x.Id, x.PublicId, x.Name, x.ExternalCode, x.IsActive, x.CreatedAt))
+            .Select(x => new VehicleResponse(x.Id, x.PublicId, x.Name, x.ExternalCode, x.VehicleType, x.IsActive, x.CreatedAt))
             .ToListAsync(cancellationToken);
         return TypedResults.Ok<IReadOnlyList<VehicleResponse>>(vehicles);
     }
@@ -92,6 +96,7 @@ public static class VehicleEndpoints
                 ? await ids.NextAsync("VHC", cancellationToken)
                 : code,
             Name = command.Name.Trim(),
+            VehicleType = command.VehicleType,
             ExternalCode = VehicleMapping.Clean(command.ExternalCode),
             IsActive = command.IsActive,
             CreatedAt = clock.GetUtcNow(),
@@ -120,6 +125,7 @@ public static class VehicleEndpoints
             return ValidationProblem($"Ya existe un vehículo con el código interno '{code}'.");
 
         vehicle.Name = command.Name.Trim();
+        vehicle.VehicleType = command.VehicleType;
         if (!string.IsNullOrWhiteSpace(code))
             vehicle.PublicId = code;
         vehicle.ExternalCode = VehicleMapping.Clean(command.ExternalCode);
@@ -173,6 +179,7 @@ public static class VehicleEndpoints
             x.j.VehicleId,
             x.j.VehicleId.HasValue && vehicles.TryGetValue(x.j.VehicleId!.Value, out var v) ? v.PublicId : null,
             x.j.VehicleId.HasValue && vehicles.TryGetValue(x.j.VehicleId!.Value, out var v2) ? v2.Name : null,
+            x.j.DriverName,
             x.j.StatusHistory
                 .OrderByDescending(s => s.OccurredAt).ThenByDescending(s => s.RecordedAt)
                 .Select(s => new StatusPoint(s.Id, s.Status, s.OccurredAt, s.Actor, s.ExternalResourceCode, s.Latitude, s.Longitude))
@@ -211,6 +218,20 @@ public static class VehicleEndpoints
         return response is null
             ? TypedResults.Ok<VehicleResponse?>(null)
             : TypedResults.Ok<VehicleResponse?>(response);
+    }
+
+    /// <summary>Assigns (or clears) the driver name on a journey. A plain name — no worker directory.</summary>
+    private static async Task<Results<Ok<string?>, NotFound>> AssignJourneyDriverAsync(
+        Guid id, AssignDriverCommand command, ITransportDb db, CancellationToken cancellationToken)
+    {
+        var journey = await db.Journeys.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (journey is null) return TypedResults.NotFound();
+
+        journey.DriverName = string.IsNullOrWhiteSpace(command.DriverName)
+            ? null
+            : command.DriverName.Trim();
+        await db.SaveChangesAsync(cancellationToken);
+        return TypedResults.Ok(journey.DriverName);
     }
 
     /// <summary>Resolves the tenant's own provider (the self-execution auto-provider) used to scope web vehicle management.</summary>

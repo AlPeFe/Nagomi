@@ -165,6 +165,22 @@ public sealed class ComposedApplicationTests(NagomiApiFactory factory) : IClassF
             x.GetProperty("publicId").GetGuid() == created.GetProperty("publicId").GetGuid());
     }
 
+    [Fact]
+    public async Task Draft_accepts_enum_names_like_the_web_form()
+    {
+        // The web form sends enum NAMES ("HealthcareFacility", "Autonomous"). The
+        // FlexibleEnumConverter must accept them on input (previously 400).
+        var response = await _client.PostAsJsonAsync("/api/transport-requests/drafts", new
+        {
+            patient = new { firstName = "Web", lastName = "Form" },
+            reason = new { code = "CONSULT", description = "Consultation" },
+            defaultOrigin = new { type = "HealthcareFacility", name = "Hospital A" },
+            defaultDestination = new { type = "HealthcareFacility", name = "Hospital B" },
+            requirements = new { mobility = "Autonomous" }
+        });
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
     private async Task<JsonElement> CreateDraft()
     {
         var snapshot = new TransportRequestSnapshot(

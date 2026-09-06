@@ -27,6 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JourneyScheduleConverter());
+    options.SerializerOptions.Converters.Add(new FlexibleEnumConverterFactory());
 });
 
 builder.Services.AddNagomiPersistence(builder.Configuration);

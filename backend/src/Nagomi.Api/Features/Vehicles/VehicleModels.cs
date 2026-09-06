@@ -1,3 +1,5 @@
+using Nagomi.Api.Domain;
+
 namespace Nagomi.Api.Features.Vehicles;
 
 /// <summary>
@@ -15,6 +17,8 @@ public sealed class TransportVehicle
     public string PublicId { get; set; } = null!;
     /// <summary>Display name / plate / internal code the coordinator recognizes the vehicle by.</summary>
     public string Name { get; set; } = null!;
+    /// <summary>Kind of sanitary vehicle (Conventional, SVA, Pediatric, Collective).</summary>
+    public VehicleType VehicleType { get; set; } = VehicleType.Conventional;
     /// <summary>
     /// External code the company reports through integration (the ExternalResourceCode sent when a
     /// provider marks journey statuses). Lets the requester (world 1) attribute status points to a
@@ -31,15 +35,16 @@ public sealed record VehicleResponse(
     string PublicId,
     string Name,
     string? ExternalCode,
+    VehicleType VehicleType,
     bool IsActive,
     DateTimeOffset CreatedAt);
 
-public sealed record UpsertVehicleCommand(string Name, string? ExternalCode, string? Code = null, bool IsActive = true);
+public sealed record UpsertVehicleCommand(string Name, string? ExternalCode, string? Code = null, VehicleType VehicleType = VehicleType.Conventional, bool IsActive = true);
 
 internal static class VehicleMapping
 {
     internal static VehicleResponse ToResponse(this TransportVehicle vehicle) =>
-        new(vehicle.Id, vehicle.PublicId, vehicle.Name, vehicle.ExternalCode, vehicle.IsActive, vehicle.CreatedAt);
+        new(vehicle.Id, vehicle.PublicId, vehicle.Name, vehicle.ExternalCode, vehicle.VehicleType, vehicle.IsActive, vehicle.CreatedAt);
 
     internal static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
