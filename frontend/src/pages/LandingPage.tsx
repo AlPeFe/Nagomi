@@ -1,43 +1,44 @@
 import { Link } from '../router'
+import { Ambulance, ArrowsLeftRight, ChatCircleText, LockKey, MapTrifold, Receipt, Siren, Truck } from '@phosphor-icons/react'
 
 const features = [
   {
-    icon: '🚑',
+    icon: <Ambulance size={24} weight="duotone" />,
     title: 'Solicitudes de transporte',
     text: 'Crea traslados puntuales o recurrentes con paciente, ruta, necesidades y programación. Catálogo nacional de hospitales y geografía de España.',
   },
   {
-    icon: '🗺️',
+    icon: <MapTrifold size={24} weight="duotone" />,
     title: 'Trayectos y seguimiento',
     text: 'Cada ida y vuelta es un trayecto independiente con su estado, historial y geolocalización. Ventana operativa con actualización automática.',
   },
   {
-    icon: '🚚',
+    icon: <Truck size={24} weight="duotone" />,
     title: 'Coordinación de flota',
     text: 'Panel de trabajo actual, hoy y mañana. Asigna vehículos a cada trayecto y sigue su evolución en un mapa en tiempo real.',
   },
   {
-    icon: '🆘',
+    icon: <Siren size={24} weight="duotone" />,
     title: 'Urgencias geolocalizadas',
     text: 'Registra traslados de emergencia con el punto de incidencia marcado en el mapa, prioridad y seguimiento sobre la operación diaria.',
   },
   {
-    icon: '🤝',
+    icon: <ArrowsLeftRight size={24} weight="duotone" />,
     title: 'Integración con proveedores',
     text: 'Publica a contratos externos por RabbitMQ + REST autenticado, con outbox transaccional y reintentos. Datos sensibles nunca van al broker.',
   },
   {
-    icon: '🧾',
+    icon: <Receipt size={24} weight="duotone" />,
     title: 'Clientes facturables',
     text: 'Factura a organizaciones o particulares (p. ej. mutuas) de forma independiente de quién ejecuta el traslado. La ejecución y la facturación son ortogonales.',
   },
   {
-    icon: '💬',
+    icon: <ChatCircleText size={24} weight="duotone" />,
     title: 'Ayuda integrada',
     text: 'Asistente de ayuda en la aplicación para que el equipo resuelva dudas sin salir del panel.',
   },
   {
-    icon: '🔐',
+    icon: <LockKey size={24} weight="duotone" />,
     title: 'Identidad y acceso',
     text: 'Usuarios y clientes de API sobre OpenIddict, con roles, rotación de secretos y revocación. Solo administradores.',
   },
@@ -117,7 +118,6 @@ export function LandingPage() {
       {/* HOW IT WORKS */}
       <section className="landing-section landing-how">
         <div className="landing-section-inner">
-          <p className="eyebrow">Cómo funciona</p>
           <h2>Del aviso a la factura en tres pasos</h2>
           <div className="landing-grid landing-grid-3">
             {steps.map((s) => (
