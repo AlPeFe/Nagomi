@@ -82,7 +82,16 @@ npm run build
 - [`docs/deployment.md`](docs/deployment.md): deployment, migrations, imports, backups, and recovery
 - [`docs/development-guide.md`](docs/development-guide.md): technical development guide (architecture, RabbitMQ, outbox, tooling)
 - [`docs/provider-integration.md`](docs/provider-integration.md): OAuth, RabbitMQ, REST, idempotency, and failure handling
+- [`docs/provider-onboarding.md`](docs/provider-onboarding.md): step-by-step integration guide for external transport companies
 - [`openspec/specs/`](openspec/specs/): behavioral specifications
+
+### IA (asistente y MCP)
+
+Nagomi expone su dominio por **MCP** (`/mcp`, streamable HTTP, autenticado) y el
+asistente de ayuda usa las mismas tools por function calling: `buscar_pacientes`,
+`consultar_paciente`, `buscar_solicitudes`, `consultar_solicitud`,
+`listar_coordinacion`, `buscar_vehiculos`. Detalles en
+[`docs/development-guide.md`](docs/development-guide.md#12-ia-mcp-server-y-asistente-con-tools).
 
 ## Security
 
