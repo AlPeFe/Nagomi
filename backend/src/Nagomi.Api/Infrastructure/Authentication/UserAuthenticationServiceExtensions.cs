@@ -11,7 +11,11 @@ public sealed class UserAuthenticationOptions
     public const string SectionName = "Authentication:Users";
 
     public string? AdminEmail { get; set; }
+    /// <summary>Legacy: only used when no user exists AND AdminEmail differs from the bootstrap.</summary>
     public string? AdminPassword { get; set; }
+    /// <summary>Credentials for the first-run bootstrap admin (defaults to admin / Admin).</summary>
+    public string BootstrapUserName { get; set; } = "admin";
+    public string BootstrapPassword { get; set; } = "Admin";
 }
 
 public static class UserAuthorizationPolicies
@@ -32,11 +36,19 @@ public static class UserAuthenticationServiceExtensions
         services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
+                // NIST 800-63B / ISO 27001 A.9.4.3: minimum length 12; composition rules are
+                // deliberately relaxed (length beats arbitrary composition).
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequiredLength = 8;
+                options.Password.RequiredLength = 12;
+
+                // Brute-force protection: lock after 10 failed attempts for 15 minutes.
+                // Enforced manually in PasswordGrantHandler (OpenIddict custom grant).
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 10;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             })
             .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<NagomiDbContext>();

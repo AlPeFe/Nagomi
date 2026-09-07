@@ -296,4 +296,6 @@ export const api = {
   },
   getHelpChatStatus: () => request<HelpChatStatus>('/help-chat/status'),
   sendHelpChatMessage: (message: string, history: HelpChatMessage[]) => request<HelpChatReply>('/help-chat/messages', { method: 'POST', body: JSON.stringify({ message, history }) }),
+  onboardAdmin: (body: { displayName: string; email: string; userName: string; password: string }) =>
+    request<void>('/auth/onboarding', { method: 'POST', body: JSON.stringify(body) }),
 }

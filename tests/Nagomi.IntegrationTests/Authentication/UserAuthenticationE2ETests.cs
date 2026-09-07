@@ -87,7 +87,7 @@ public sealed class UserAuthenticationE2ETests(UserAuthenticationE2EFixture fixt
 {
     private const string AdminEmail = "admin@nagomi.local";
     private const string DefaultEmail = "operator@nagomi.local";
-    private const string Password = "Password123";
+    private const string Password = "Password1234";
 
     private async Task<NagomiDbContext> SeedAsync()
     {

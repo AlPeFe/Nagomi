@@ -120,8 +120,10 @@ describe('solicitudes y navegación', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup(); renderAt('/solicitudes/request-1')
-    // El editor carga con el patrón existente (lunes marcado)
-    expect(await screen.findByLabelText('Lunes')).toBeChecked()
+    // El editor carga con el patrón existente (lunes marcado). findByLabelText solo espera a que
+    // el elemento exista; la carga asíncrona del patrón puede tardar, así que esperamos al estado.
+    const lunes = await screen.findByLabelText('Lunes')
+    await vi.waitFor(() => expect(lunes).toBeChecked())
     // Se añade el martes al patrón
     await user.click(screen.getByLabelText('Martes'))
     await user.click(screen.getByRole('button', { name: 'Previsualizar impacto' }))

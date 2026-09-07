@@ -83,6 +83,7 @@ npm run build
 - [`docs/development-guide.md`](docs/development-guide.md): technical development guide (architecture, RabbitMQ, outbox, tooling)
 - [`docs/provider-integration.md`](docs/provider-integration.md): OAuth, RabbitMQ, REST, idempotency, and failure handling
 - [`docs/provider-onboarding.md`](docs/provider-onboarding.md): step-by-step integration guide for external transport companies
+- [`docs/security.md`](docs/security.md): security implementation guide and compliance checklist (RGPD, ISO 27001 Anexo A, ENS)
 - [`openspec/specs/`](openspec/specs/): behavioral specifications
 
 ### IA (asistente y MCP)

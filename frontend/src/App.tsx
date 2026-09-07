@@ -15,8 +15,9 @@ import { CoordinationPage } from './pages/CoordinationPage'
 import { VehiclesPage } from './pages/VehiclesPage'
 import { PatientsPage } from './pages/PatientsPage'
 import { HelpChatWidget } from './components/HelpChatWidget'
-import { isAuthenticated, logout } from './auth'
+import { isAuthenticated, logout, onboardingRequired } from './auth'
 import { useIsMobile } from './hooks/useIsMobile'
+import { OnboardingPage } from './pages/OnboardingPage'
 import './App.css'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -60,6 +61,11 @@ export default function App() {
     setRoles([])
     setMobileNavOpen(false)
     navigate('/login', { replace: true })
+  }
+
+  // The bootstrap admin (admin / Admin) must complete onboarding before using the app.
+  if (session && onboardingRequired()) {
+    return <OnboardingPage />
   }
 
   const navItems = (

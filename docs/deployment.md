@@ -27,6 +27,15 @@ Compose encryption is not storage encryption. Place Docker's PostgreSQL and Rabb
 
 Rotate database, broker, OAuth client, and signing secrets using overlapping credentials where supported. Take and verify backups before rotations or upgrades. Restart affected services after changing `.env`; changing a database or broker password also requires updating the account in the service, not only editing Compose variables.
 
+## First run (bootstrap administrator)
+
+A fresh database has **no administrator**. On first start Nagomi seeds a bootstrap account
+(`admin` / `Admin`) that is locked to the onboarding screen: log in with it and the app asks
+you to create the organization's real administrator (name, email, user, password ≥ 12 chars).
+Completing the onboarding **deactivates the bootstrap account**; from then on only real
+accounts can log in. Upgrades of existing installs are unaffected (the flow only runs when
+the database is empty). See `docs/security.md` for details.
+
 ## Database migrations and imports
 
 Compose applies migrations at backend startup. Production orchestrators may set `Database__MigrateOnStartup=false` and run migrations as a controlled release job. Before releasing application containers:

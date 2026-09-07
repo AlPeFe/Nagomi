@@ -38,6 +38,7 @@ builder.Services.AddSimulatedIdentity(builder.Configuration);
 builder.Services.AddReferenceData();
 builder.Services.AddProviderAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddUserAuthentication(builder.Configuration);
+builder.Services.Configure<LoginRateLimitingOptions>(builder.Configuration.GetSection(LoginRateLimitingOptions.SectionName));
 builder.Services.AddProviderIntegration(builder.Configuration);
 builder.Services.Configure<HelpChatOptions>(builder.Configuration.GetSection(HelpChatOptions.SectionName));
 builder.Services.AddHttpClient(HelpChatEndpoints.HttpClientName).ConfigurePrimaryHttpMessageHandler(static () =>
@@ -62,6 +63,8 @@ app.UseExceptionHandler();
 if (corsOrigins.Length > 0)
     app.UseCors();
 app.UseAuthentication();
+app.UseMiddleware<OnboardingGuardMiddleware>();
+app.UseMiddleware<LoginRateLimitMiddleware>();
 app.UseAuthorization();
 
 app.MapGet("/health", () => TypedResults.Ok(new { status = "healthy" }));

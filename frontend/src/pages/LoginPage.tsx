@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { login } from '../auth'
+import { login, onboardingRequired } from '../auth'
 import { Navigate, useNavigate } from '../router'
 
 export function LoginPage() {
@@ -19,7 +19,7 @@ export function LoginPage() {
     setBusy(true)
     try {
       await login(email.trim(), password)
-      navigate('/trayectos', { replace: true })
+      navigate(onboardingRequired() ? '/onboarding' : '/trayectos', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.')
       setBusy(false)
@@ -34,12 +34,13 @@ export function LoginPage() {
         <p className="login-subtitle">Coordinación de transporte sanitario</p>
         {error && <div className="alert alert-error" role="alert">{error}</div>}
         <label className="field">
-          <span>Correo electrónico</span>
+          <span>Usuario o correo electrónico</span>
           <input
-            type="email"
+            type="text"
             autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin"
             required
             autoFocus
           />

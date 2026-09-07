@@ -1,6 +1,7 @@
 import { ApiError } from './api'
 
 const TOKEN_KEY = 'nagomi_token'
+const ONBOARDING_KEY = 'nagomi_onboarding'
 
 export type CurrentUser = {
   id: string
@@ -8,6 +9,7 @@ export type CurrentUser = {
   email?: string
   displayName?: string
   roles: string[]
+  onboardingRequired?: boolean
 }
 
 type MeResponse = {
@@ -16,6 +18,7 @@ type MeResponse = {
   email?: string
   displayName?: string
   roles: string[]
+  onboardingRequired?: boolean
 }
 
 export function getToken(): string | null {
@@ -32,8 +35,14 @@ export function hasRole(role: string): boolean {
   return false
 }
 
+export function onboardingRequired(): boolean {
+  return sessionStorage.getItem(ONBOARDING_KEY) === '1'
+}
+
 export function rememberUser(user: CurrentUser) {
   sessionStorage.setItem('nagomi_roles', JSON.stringify(user.roles))
+  if (user.onboardingRequired) sessionStorage.setItem(ONBOARDING_KEY, '1')
+  else sessionStorage.removeItem(ONBOARDING_KEY)
 }
 
 export async function login(username: string, password: string): Promise<CurrentUser> {
@@ -44,7 +53,7 @@ export async function login(username: string, password: string): Promise<Current
     body: form,
   })
   if (!response.ok) {
-    let detail = 'Credenciales incorrectas o usuario desactivado.'
+    let detail = 'Credenciales incorrectas, cuenta bloqueada o usuario desactivado.'
     try {
       const body = (await response.json()) as { error_description?: string }
       if (body.error_description) detail = body.error_description
@@ -72,6 +81,7 @@ export async function me(): Promise<CurrentUser> {
     email: body.email,
     displayName: body.displayName,
     roles: body.roles ?? [],
+    onboardingRequired: body.onboardingRequired,
   }
   rememberUser(user)
   return user
@@ -80,4 +90,5 @@ export async function me(): Promise<CurrentUser> {
 export function logout() {
   localStorage.removeItem(TOKEN_KEY)
   sessionStorage.removeItem('nagomi_roles')
+  sessionStorage.removeItem(ONBOARDING_KEY)
 }
