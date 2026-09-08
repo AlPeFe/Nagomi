@@ -171,6 +171,11 @@ internal sealed class FakeTransportDb : ITransportDb
     public void Add(TransportAuditRecord audit) => _audit.Add(audit);
     public void Add(EmergencyTransportRecord emergency) => _emergencies.Add(emergency);
     public void Remove(TransportRequestRecord request) => _requests.Remove(request);
+    public void Remove(JourneyStatusRecord status)
+    {
+        var journey = _requests.SelectMany(x => x.JourneyRecords).SingleOrDefault(x => x.Id == status.JourneyId);
+        if (journey is not null) journey.StatusHistory.Remove(status);
+    }
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
 }
 

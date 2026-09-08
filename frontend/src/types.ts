@@ -6,6 +6,9 @@ export interface LocationSnapshot {
   name: string
   address?: string
   municipality?: string
+  municipalityCode?: string
+  province?: string
+  provinceCode?: string
   phone?: string
   observations?: string
 }
@@ -47,6 +50,7 @@ export interface Journey {
   cancelledBy?: 'Requester' | 'Provider'
   vehicleId?: string
   vehicleName?: string
+  driverName?: string
   notes?: string
   statusEvents?: StatusEvent[]
   audit?: AuditEntry[]

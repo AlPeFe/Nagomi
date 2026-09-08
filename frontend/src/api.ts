@@ -55,7 +55,7 @@ type BackendSchedule = { appointmentAt?: string; scheduledStartAt: string; sched
 type BackendJourney = {
   id: string; transportRequestId: string; publicId: string; direction: number | Journey['direction']; origin: BackendLocation; destination: BackendLocation
   requirements: BackendRequirements; schedule: BackendSchedule; currentStatus: number | JourneyStatus; providerVisibleNotes?: string; providerReference?: string
-  externallyModified?: boolean; retrievalState?: string; currentCancellingParty?: number | string; vehicleId?: string; vehicle?: { publicId?: string; name?: string }
+  externallyModified?: boolean; retrievalState?: string; currentCancellingParty?: number | string; vehicleId?: string; vehicle?: { publicId?: string; name?: string }; driverName?: string
   statusHistory?: Array<Record<string, unknown>>
 }
 type OperationsRow = {
@@ -80,7 +80,7 @@ const locationTypes: Array<NonNullable<LocationSnapshot['type']>> = ['PrivateAdd
 const enumValue = <T extends string>(value: number | string | undefined, values: T[], fallback: T): T => typeof value === 'number' ? values[value] ?? fallback : values.includes(value as T) ? value as T : fallback
 
 function mapLocation(value?: BackendLocation): LocationSnapshot {
-  return { type: enumValue(value?.type, locationTypes, 'PrivateAddress'), name: value?.name ?? '', address: value?.street, municipality: value?.municipality, phone: value?.phone, observations: value?.observations }
+  return { type: enumValue(value?.type, locationTypes, 'PrivateAddress'), name: value?.name ?? '', address: value?.street, municipality: value?.municipality, municipalityCode: value?.municipalityCode, province: value?.province, provinceCode: value?.provinceCode, phone: value?.phone, observations: value?.observations }
 }
 
 function mapRequirements(value?: BackendRequirements): Requirements {
@@ -102,7 +102,7 @@ function mapJourney(value: BackendJourney, parent?: BackendRequest): Journey {
     requirements: mapRequirements(value.requirements), status: enumValue(value.currentStatus, journeyStatuses, 'Scheduled'), provider: parent?.providerName,
     contract: parent?.contractCode, providerReference: value.providerReference, deliveryState: enumValue(value.retrievalState, deliveryStates, 'NotPublished'),
     externallyModified: value.externallyModified, cancelledBy: value.currentCancellingParty === 1 || value.currentCancellingParty === 'TransportProvider' ? 'Provider' : undefined,
-    notes: value.providerVisibleNotes, vehicleId: value.vehicleId, vehicleName: value.vehicle?.name,
+    notes: value.providerVisibleNotes, vehicleId: value.vehicleId, vehicleName: value.vehicle?.name, driverName: value.driverName,
     statusEvents: (value.statusHistory ?? []).map((event) => ({ id: String(event.id), status: enumValue(event.status as number | string, journeyStatuses, 'Scheduled'), occurredAt: String(event.occurredAt), recordedAt: event.recordedAt ? String(event.recordedAt) : undefined, actor: event.actor ? String(event.actor) : undefined, source: event.source === 1 || event.source === 'TransportProvider' ? 'Provider' : 'Nagomi', externalResourceCode: event.externalResourceCode ? String(event.externalResourceCode) : undefined, latitude: typeof event.latitude === 'number' ? event.latitude : event.latitude != null ? Number(event.latitude) : undefined, longitude: typeof event.longitude === 'number' ? event.longitude : event.longitude != null ? Number(event.longitude) : undefined })),
   }
 }
@@ -137,7 +137,7 @@ function mapEmergency(value: BackendEmergency): EmergencyTransport {
 }
 
 function backendLocation(value?: LocationSnapshot) {
-  return value && { type: value.type === 'HealthcareFacility' ? 1 : 0, name: value.name, street: value.address, municipality: value.municipality, phone: value.phone, observations: value.observations }
+  return value && { type: value.type === 'HealthcareFacility' ? 1 : 0, name: value.name, street: value.address, municipality: value.municipality, municipalityCode: value.municipalityCode, province: value.province, provinceCode: value.provinceCode, phone: value.phone, observations: value.observations }
 }
 
 function backendRequirements(value: Requirements) {
@@ -205,6 +205,7 @@ export const api = {
     return { ...body, ...mapJourney(await request<BackendJourney>(`/journeys/${encodeURIComponent(id)}/snapshot`, { method: 'PUT', body: JSON.stringify(command) })), patientName: body.patientName, patientPhone: body.patientPhone, reason: body.reason, provider: body.provider, contract: body.contract, requestPublicId: body.requestPublicId }
   },
   cancelJourney: (id: string) => request<void>(`/journeys/${encodeURIComponent(id)}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 0, cancellingParty: 0, source: 0, actor: 'simulated-user' }) }),
+  resetJourney: (id: string) => request<BackendJourney>(`/journeys/${encodeURIComponent(id)}/reset`, { method: 'POST', body: JSON.stringify({ source: 0, actor: 'simulated-user' }) }),
   async listRequests(search = '') {
     const rows = await request<BackendRequest[]>(`/operations/requests?search=${encodeURIComponent(search)}`)
     return asList(rows.map(mapRequest))
@@ -269,7 +270,7 @@ export const api = {
   },
   listQueueSnapshots: () => request<QueueSnapshot[]>('/queue'),
   peekQueue: (queueName: string, limit = 10) => request<QueueMessageSample[]>(`/queue/${encodeURIComponent(queueName)}/peek?limit=${limit}`),
-  listVehicles: () => request<Vehicle[]>('/admin/vehicles'),
+  listVehicles: () => request<Vehicle[]>('/vehicles'),
   async createVehicle(body: { name: string; code?: string; externalCode?: string; vehicleType?: VehicleType; isActive?: boolean }) {
     return await request<Vehicle>('/admin/vehicles', { method: 'POST', body: JSON.stringify(body) })
   },

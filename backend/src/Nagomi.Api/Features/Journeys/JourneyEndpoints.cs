@@ -29,6 +29,10 @@ public sealed record AddJourneyStatusCommand(
     CancellationReason? CancellationReason = null,
     CancellingParty? CancellingParty = null);
 
+public sealed record ResetJourneyCommand(
+    ChangeSource Source = ChangeSource.Nagomi,
+    string Actor = "simulated-user");
+
 public static class JourneyEndpoints
 {
     public static IEndpointRouteBuilder MapJourneyEndpoints(this IEndpointRouteBuilder endpoints)
@@ -37,6 +41,7 @@ public static class JourneyEndpoints
         group.MapGet("/{id:guid}", Get);
         group.MapPut("/{id:guid}/snapshot", UpdateSnapshot);
         group.MapPost("/{id:guid}/cancel", Cancel);
+        group.MapPost("/{id:guid}/reset", Reset);
         group.MapPost("/{id:guid}/statuses", AddStatus);
         group.MapGet("/{id:guid}/statuses", GetStatusHistory);
         return endpoints;
@@ -87,6 +92,38 @@ public static class JourneyEndpoints
         Audit(db, journey, "Cancelled", command.Source, command.Actor, clock.GetUtcNow());
         if (command.Source != ChangeSource.TransportProvider)
             await NotifyJourney(journey, db, outbox, "JourneyCancelled", cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return TypedResults.Ok(journey);
+    }
+
+    private static async Task<IResult> Reset(
+        Guid id, ResetJourneyCommand command, ITransportDb db, IProviderOutbox outbox,
+        TimeProvider clock, CancellationToken cancellationToken)
+    {
+        var journey = await Query(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (journey is null) return TypedResults.NotFound();
+        if (journey.CurrentStatus == JourneyStatus.Completed)
+            return TypedResults.Conflict("A completed journey cannot be reset.");
+        if (journey.StatusHistory.Count == 0)
+            return TypedResults.Ok(journey);
+
+        // Roll the journey back to a clean Scheduled state: drop the status history,
+        // clear the derived actuals, and keep the assigned vehicle/driver/route data.
+        foreach (var status in journey.StatusHistory.ToArray())
+            db.Remove(status);
+        journey.StatusHistory.Clear();
+        journey.CurrentStatus = JourneyStatus.Scheduled;
+        journey.ActualActivatedAt = null;
+        journey.ActualArrivedAtOriginAt = null;
+        journey.ActualPatientPickupAt = null;
+        journey.ActualArrivedAtDestinationAt = null;
+        journey.ActualCompletedAt = null;
+        journey.CurrentCancellationReason = null;
+        journey.CurrentCancellingParty = null;
+        journey.ExternallyModified = false;
+        Audit(db, journey, "Reset", command.Source, command.Actor, clock.GetUtcNow());
+        if (command.Source != ChangeSource.TransportProvider)
+            await NotifyJourney(journey, db, outbox, "JourneyUpdated", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.Ok(journey);
     }

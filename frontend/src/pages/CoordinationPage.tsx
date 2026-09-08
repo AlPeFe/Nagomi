@@ -46,8 +46,11 @@ export function CoordinationPage() {
   async function load(silent = false) {
     if (!silent) setLoading(true)
     try {
-      const [coordination, fleet] = await Promise.all([api.listCoordination(), api.listVehicles()])
-      setRows(coordination); setVehicles(fleet); setError(''); setRefreshedAt(new Date())
+      // Independent loads: a failure in one list must never blank the board.
+      const [coordination, fleet] = await Promise.allSettled([api.listCoordination(), api.listVehicles()])
+      if (coordination.status === 'fulfilled') { setRows(coordination.value); setError('') } else { setError(coordination.reason instanceof Error ? coordination.reason.message : 'Error al cargar la coordinación.') }
+      if (fleet.status === 'fulfilled') setVehicles(fleet.value)
+      setRefreshedAt(new Date())
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'Error desconocido.') }
     finally { setLoading(false) }
   }

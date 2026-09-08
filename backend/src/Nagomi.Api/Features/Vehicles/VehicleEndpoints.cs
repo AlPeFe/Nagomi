@@ -57,6 +57,7 @@ public static class VehicleEndpoints
         var web = endpoints.MapGroup("/api")
             .RequireAuthorization(UserAuthorizationPolicies.Web)
             .WithTags("Coordination");
+        web.MapGet("/vehicles", ListAsync);
         web.MapGet("/coordination", CoordinationAsync);
         web.MapPut("/journeys/{id:guid}/vehicle", AssignJourneyVehicleAsync);
         web.MapPut("/journeys/{id:guid}/driver", AssignJourneyDriverAsync);

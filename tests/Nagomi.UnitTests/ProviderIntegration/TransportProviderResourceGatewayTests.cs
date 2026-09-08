@@ -310,6 +310,7 @@ public sealed class TransportProviderResourceGatewayTests
         public void Add(Patient patient) => _patients.Add(patient);
         public void Add(CollectiveRoute route) { }
         public void Remove(CollectiveRoute route) { }
+        public void Remove(JourneyStatusRecord status) { }
         public void Add(EmergencyTransportRecord emergency) { }
         public void Add(JourneyRecord journey)
         {

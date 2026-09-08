@@ -100,6 +100,8 @@ public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, Applica
 
     public void Remove(TransportRequestRecord request) => TransportRequestRecords.Remove(request);
 
+    public void Remove(JourneyStatusRecord status) => JourneyStatusRecords.Remove(status);
+
     public async Task<IReadOnlyList<AuditEntry>> GetHistoryAsync(
         string entityType,
         string entityIdentifier,

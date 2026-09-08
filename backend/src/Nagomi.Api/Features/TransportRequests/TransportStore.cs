@@ -29,6 +29,7 @@ public interface ITransportDb
     void Add(CollectiveRoute route);
     void Remove(CollectiveRoute route);
     void Remove(TransportRequestRecord request);
+    void Remove(JourneyStatusRecord status);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
 

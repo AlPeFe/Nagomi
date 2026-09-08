@@ -3,6 +3,7 @@ import { Link, useParams } from '../router'
 import { api } from '../api'
 import { DeliveryBadge, StatusBadge } from '../components/Badges'
 import { RecurrenceEditor } from '../components/RecurrenceEditor'
+import { RequestEditorForm } from '../components/RequestEditorForm'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { RecurrencePattern, TransportRequest } from '../types'
 import { directionLabel, formatDateTime } from '../utils'
@@ -11,6 +12,7 @@ export function RequestDetailPage() {
   const { requestId = '' } = useParams()
   const [request, setRequest] = useState<TransportRequest>()
   const [statusFilter, setStatusFilter] = useState('active')
+  const [editing, setEditing] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [preview, setPreview] = useState<{ additions: number; cancellations: number; exceptions: number }>()
@@ -28,8 +30,9 @@ export function RequestDetailPage() {
   const journeys = (request.journeys ?? []).filter((journey) => statusFilter === 'all' || !['Completed', 'Cancelled'].includes(journey.status))
   return <div className="page detail-page">
     <div className="breadcrumbs"><Link to="/solicitudes">Solicitudes</Link><span>/</span><span>{request.publicId ?? 'Borrador'}</span></div>
-    <PageHeader eyebrow={request.status === 'Draft' ? 'Borrador' : 'Solicitud activa'} title={request.publicId ?? 'Solicitud sin enviar'} description={`${request.patientName || 'Paciente sin identificar'} · ${request.reason || 'Motivo pendiente'}`} actions={<>{request.status !== 'Draft' && request.status !== 'Cancelled' && <button className="button button-danger" onClick={() => void cancel()}>Cancelar solicitud</button>}</>} />
+    <PageHeader eyebrow={request.status === 'Draft' ? 'Borrador' : 'Solicitud activa'} title={request.publicId ?? 'Solicitud sin enviar'} description={`${request.patientName || 'Paciente sin identificar'} · ${request.reason || 'Motivo pendiente'}`} actions={<>{request.status !== 'Draft' && request.status !== 'Cancelled' && <button className="button button-secondary" onClick={() => setEditing(!editing)}>{editing ? 'Cerrar edición' : 'Editar traslado'}</button>}{request.status !== 'Draft' && request.status !== 'Cancelled' && <button className="button button-danger" onClick={() => void cancel()}>Cancelar solicitud</button>}</>} />
     {message && <div className="inline-message" role="status">{message}</div>}
+    {editing && <section className="detail-card"><h2>Editar traslado</h2><RequestEditorForm request={request} onSaved={() => void load()} onClose={() => setEditing(false)} /></section>}
     <div className="request-summary"><div><span>Ruta base</span><strong>{request.origin?.name || 'Pendiente'} → {request.destination?.name || 'Pendiente'}</strong></div><div><span>Contrato / proveedor</span><strong>{request.contract || 'Sin contrato'} · {request.provider || 'Sin proveedor'}</strong></div><div><span>Programación</span><strong>{request.recurring ? 'Recurrente' : 'Puntual'}</strong></div><div><span>Actualización</span><strong>{formatDateTime(request.updatedAt)}</strong></div></div>
     {request.recurring && <section className="detail-card recurrence-actions"><div className="recurrence-heading"><h2>Patrón de recurrencia</h2><p>Modifica el patrón y previsualiza altas, cancelaciones y excepciones antes de propagar cualquier cambio.</p></div><RecurrenceEditor value={draft} onChange={setDraft} /><div className="recurrence-toolbar"><button className="button button-secondary" onClick={() => void previewRecurrence()} disabled={applying}>Previsualizar impacto</button>{preview && <div className="impact-box" role="dialog" aria-label="Impacto de recurrencia"><strong>Impacto calculado</strong><span>+{preview.additions} altas</span><span>−{preview.cancellations} cancelaciones</span><span>{preview.exceptions} excepciones</span><button className="button button-primary" onClick={() => void applyRecurrence(false)} disabled={applying}>{applying ? 'Aplicando…' : 'Conservar excepciones'}</button><button className="button button-accent" onClick={() => void applyRecurrence(true)} disabled={applying}>{applying ? 'Aplicando…' : 'Sobrescribir excepciones'}</button></div>}</div></section>}
     <section className="detail-card"><div className="card-heading"><div><h2>Trayectos</h2><p>Los activos se muestran por defecto.</p></div><label><span className="sr-only">Filtrar trayectos por estado</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="active">Activos</option><option value="all">Todos</option></select></label></div>{journeys.length ? <div className="compact-journeys">{journeys.map((journey) => <Link to={`/trayectos/${journey.id}`} key={journey.id}><span className="direction-box">{directionLabel(journey.direction)}</span><div><strong>{journey.publicId}</strong><small>{journey.origin.name} → {journey.destination.name}</small></div><StatusBadge status={journey.status} /><span aria-hidden="true">→</span></Link>)}</div> : <EmptyState title="No hay trayectos en este filtro" message="Selecciona todos para consultar trayectos terminales." />}</section>
