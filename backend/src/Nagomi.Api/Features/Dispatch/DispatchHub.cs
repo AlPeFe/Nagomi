@@ -22,6 +22,16 @@ public sealed class DispatchHub : Hub
         var normalized = vehicleCode?.Trim();
         if (string.IsNullOrWhiteSpace(normalized))
             throw new HubException("El código de vehículo no puede estar vacío.");
+
+        // Security: when the token carries a vehicle_code claim (driver bound to a vehicle),
+        // only allow subscribing to that vehicle's group. Tokens without the claim (regular web
+        // users in the current driver flow) may still subscribe — the actual filtering is that the
+        // backend only ever publishes to the group of the ADJUDICATED vehicle.
+        var claimed = Context.User?.FindFirst(VehicleCodeClaim)?.Value;
+        if (!string.IsNullOrWhiteSpace(claimed) &&
+            !string.Equals(claimed.Trim(), normalized, StringComparison.OrdinalIgnoreCase))
+            throw new HubException("No autorizado: el código de vehículo no coincide con tu sesión.");
+
         return Groups.AddToGroupAsync(Context.ConnectionId, GroupName(normalized));
     }
 
