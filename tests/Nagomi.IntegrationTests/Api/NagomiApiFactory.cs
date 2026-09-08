@@ -16,6 +16,7 @@ using Microsoft.Extensions.Hosting;
 using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ReferenceData;
+using Nagomi.Api.Features.Routes;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.ProviderIntegration;
@@ -145,6 +146,7 @@ internal sealed class FakeTransportDb : ITransportDb
     private readonly List<EmergencyTransportRecord> _emergencies = [];
     private readonly List<TransportVehicle> _vehicles = [];
     private readonly List<Patient> _patients = [];
+    private readonly List<CollectiveRoute> _routes = [];
 
     public IQueryable<TransportRequestRecord> TransportRequests => _requests.AsAsyncQueryable();
     public IQueryable<JourneyRecord> Journeys => _requests.SelectMany(x => x.JourneyRecords).AsAsyncQueryable();
@@ -152,10 +154,14 @@ internal sealed class FakeTransportDb : ITransportDb
     public IQueryable<EmergencyTransportRecord> EmergencyTransports => _emergencies.AsAsyncQueryable();
     public IQueryable<TransportVehicle> Vehicles => _vehicles.AsAsyncQueryable();
     public IQueryable<Patient> Patients => _patients.AsAsyncQueryable();
+    public IQueryable<CollectiveRoute> Routes => _routes.AsAsyncQueryable();
+    public IQueryable<CollectiveRouteStop> RouteStops => _routes.SelectMany(x => x.Stops).AsAsyncQueryable();
 
     public void Add(TransportRequestRecord request) => _requests.Add(request);
     public void Add(TransportVehicle vehicle) => _vehicles.Add(vehicle);
     public void Add(Patient patient) => _patients.Add(patient);
+    public void Add(CollectiveRoute route) => _routes.Add(route);
+    public void Remove(CollectiveRoute route) => _routes.Remove(route);
     public void Add(JourneyRecord journey)
     {
         if (_requests.SelectMany(x => x.JourneyRecords).All(x => x.Id != journey.Id))

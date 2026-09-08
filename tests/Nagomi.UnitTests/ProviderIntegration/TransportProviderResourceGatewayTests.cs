@@ -8,6 +8,7 @@ using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ProviderIntegration;
+using Nagomi.Api.Features.Routes;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Vehicles;
 
@@ -302,9 +303,13 @@ public sealed class TransportProviderResourceGatewayTests
         public IQueryable<EmergencyTransportRecord> EmergencyTransports => new AsyncEnumerable<EmergencyTransportRecord>([]);
         public IQueryable<TransportVehicle> Vehicles => new AsyncEnumerable<TransportVehicle>(_vehicles);
         public IQueryable<Patient> Patients => new AsyncEnumerable<Patient>(_patients);
+        public IQueryable<CollectiveRoute> Routes => new AsyncEnumerable<CollectiveRoute>([]);
+        public IQueryable<CollectiveRouteStop> RouteStops => new AsyncEnumerable<CollectiveRouteStop>([]);
         public void Add(TransportRequestRecord request) => _requests.Add(request);
         public void Add(TransportVehicle vehicle) => _vehicles.Add(vehicle);
         public void Add(Patient patient) => _patients.Add(patient);
+        public void Add(CollectiveRoute route) { }
+        public void Remove(CollectiveRoute route) { }
         public void Add(EmergencyTransportRecord emergency) { }
         public void Add(JourneyRecord journey)
         {

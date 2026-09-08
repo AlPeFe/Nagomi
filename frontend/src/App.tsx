@@ -14,6 +14,7 @@ import { IdentityPage } from './pages/IdentityPage'
 import { CoordinationPage } from './pages/CoordinationPage'
 import { VehiclesPage } from './pages/VehiclesPage'
 import { PatientsPage } from './pages/PatientsPage'
+import { RoutesPage } from './pages/RoutesPage'
 import { HelpChatWidget } from './components/HelpChatWidget'
 import { isAuthenticated, logout, onboardingRequired } from './auth'
 import { useIsMobile } from './hooks/useIsMobile'
@@ -72,6 +73,7 @@ export default function App() {
     <>
       <NavLink to="/trayectos">Operación</NavLink>
       <NavLink to="/coordinacion">Coordinación</NavLink>
+      <NavLink to="/rutas">Rutas</NavLink>
       <NavLink to="/solicitudes">Solicitudes</NavLink>
       <NavLink to="/urgencias">Urgencias</NavLink>
       {roles.includes('admin') && <NavLink to="/vehiculos">Vehículos</NavLink>}
@@ -132,6 +134,7 @@ export default function App() {
             <Route path="/trayectos" element={<RequireAuth><JourneysPage /></RequireAuth>} />
             <Route path="/trayectos/:journeyId" element={<RequireAuth><JourneyDetailPage /></RequireAuth>} />
             <Route path="/coordinacion" element={<RequireAuth><CoordinationPage /></RequireAuth>} />
+            <Route path="/rutas" element={<RequireAuth><RoutesPage /></RequireAuth>} />
             <Route path="/vehiculos" element={<RequireAuth><RequireAdmin><VehiclesPage /></RequireAdmin></RequireAuth>} />
             <Route path="/pacientes" element={<RequireAuth><RequireAdmin><PatientsPage /></RequireAdmin></RequireAuth>} />
             <Route path="/solicitudes" element={<RequireAuth><RequestsPage /></RequireAuth>} />

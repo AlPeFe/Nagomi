@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Patients;
+using Nagomi.Api.Features.Routes;
 using Nagomi.Api.Features.Vehicles;
 
 namespace Nagomi.Api.Features.TransportRequests;
@@ -15,6 +16,8 @@ public interface ITransportDb
     IQueryable<EmergencyTransportRecord> EmergencyTransports { get; }
     IQueryable<TransportVehicle> Vehicles { get; }
     IQueryable<Patient> Patients { get; }
+    IQueryable<CollectiveRoute> Routes { get; }
+    IQueryable<CollectiveRouteStop> RouteStops { get; }
 
     void Add(TransportRequestRecord request);
     void Add(JourneyRecord journey);
@@ -23,6 +26,8 @@ public interface ITransportDb
     void Add(EmergencyTransportRecord emergency);
     void Add(TransportVehicle vehicle);
     void Add(Patient patient);
+    void Add(CollectiveRoute route);
+    void Remove(CollectiveRoute route);
     void Remove(TransportRequestRecord request);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

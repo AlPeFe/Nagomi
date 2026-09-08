@@ -7,6 +7,7 @@ using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
+using Nagomi.Api.Features.Routes;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Features.Vehicles;
@@ -41,6 +42,8 @@ public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, Applica
     public DbSet<TransportClient> TransportClients => Set<TransportClient>();
     public DbSet<TransportVehicle> Vehicles => Set<TransportVehicle>();
     public DbSet<Patient> Patients => Set<Patient>();
+    public DbSet<CollectiveRoute> Routes => Set<CollectiveRoute>();
+    public DbSet<CollectiveRouteStop> RouteStops => Set<CollectiveRouteStop>();
 
     IQueryable<TransportRequestRecord> ITransportDb.TransportRequests => TransportRequestRecords;
     IQueryable<JourneyRecord> ITransportDb.Journeys => JourneyRecords;
@@ -48,6 +51,8 @@ public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, Applica
     IQueryable<EmergencyTransportRecord> ITransportDb.EmergencyTransports => EmergencyTransportRecords;
     IQueryable<TransportVehicle> ITransportDb.Vehicles => Vehicles;
     IQueryable<Patient> ITransportDb.Patients => Patients;
+    IQueryable<CollectiveRoute> ITransportDb.Routes => Routes;
+    IQueryable<CollectiveRouteStop> ITransportDb.RouteStops => RouteStops;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,6 +93,10 @@ public sealed class NagomiDbContext : IdentityDbContext<ApplicationUser, Applica
     public void Add(TransportVehicle vehicle) => Vehicles.Add(vehicle);
 
     public void Add(Patient patient) => Patients.Add(patient);
+
+    public void Add(CollectiveRoute route) => Routes.Add(route);
+
+    public void Remove(CollectiveRoute route) => Routes.Remove(route);
 
     public void Remove(TransportRequestRecord request) => TransportRequestRecords.Remove(request);
 

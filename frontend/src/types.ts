@@ -157,6 +157,39 @@ export interface PatientInput {
   notes?: string
 }
 
+export type RouteStatus = 'Planned' | 'InProgress' | 'Completed' | 'Cancelled'
+
+export interface CollectiveRouteStop {
+  journeyId: string
+  journeyPublicId: string
+  order: number
+  patientName: string
+  origin: string
+  destination: string
+  status: string
+}
+
+export interface CollectiveRoute {
+  id: string
+  publicId: string
+  serviceDate: string
+  vehicleId?: string
+  vehiclePublicId?: string
+  vehicleName?: string
+  driverName?: string
+  notes?: string
+  status: RouteStatus
+  stops: CollectiveRouteStop[]
+}
+
+export interface CollectiveRouteInput {
+  serviceDate: string
+  journeyIds: string[]
+  vehicleId?: string
+  driverName?: string
+  notes?: string
+}
+
 export type JourneyDirection = 'Outbound' | 'Return'
 
 export interface StatusPoint {

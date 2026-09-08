@@ -253,3 +253,28 @@
   .inline-form{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){.mobile-drawer{transition:none}}
+
+/* ---- Rutas colectivas ---- */
+.route-create{background:var(--wash)}
+.route-create-row{display:flex;gap:.75rem;align-items:end;flex-wrap:wrap;margin-bottom:.9rem}
+.route-create-row label{flex:1;min-width:160px}
+.route-journey-pick{list-style:none;padding:0;margin:0;max-height:260px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
+.route-journey-pick li{padding:.45rem .7rem;border-bottom:1px solid #eef2f2}
+.route-journey-pick li:last-child{border-bottom:0}
+.route-journey-pick .check-line{min-height:auto;font-size:.82rem}
+.route-journey-pick strong{color:var(--navy)}
+.route-card{background:#fff}
+.route-card header{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.6rem}
+.route-card header strong{color:var(--navy)}
+.route-status{font-size:.7rem;font-weight:800;text-transform:uppercase;padding:.2rem .5rem;border-radius:3px;background:#e5efef;color:#276b69}
+.route-status-completed{background:#e9edee;color:#536971}
+.route-status-cancelled{background:#f8e7e5;color:#8d2f29}
+.route-status-inprogress{background:#fff0e5;color:#9a4c18}
+.route-meta{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.8rem;font-size:.85rem;color:var(--muted)}
+.route-meta label{flex:1;min-width:180px;flex-direction:row;align-items:center;gap:.5rem}
+.route-stops{list-style:none;padding:0;margin:0;border-top:1px solid #eef2f2}
+.route-stops li{display:flex;gap:.7rem;align-items:center;padding:.5rem 0;border-bottom:1px solid #f1f4f4}
+.route-stop-order{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;font-size:.75rem;font-weight:800}
+.route-stops strong,.route-stops small{display:block}
+.route-stops small{color:var(--muted);font-size:.75rem}
+@media(max-width:640px){.route-create-row{flex-direction:column;align-items:stretch}.route-create-row .button{width:100%}}

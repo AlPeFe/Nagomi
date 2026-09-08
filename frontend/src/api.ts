@@ -1,4 +1,4 @@
-import type { CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle, VehicleType } from './types'
+import type { CollectiveRoute, CollectiveRouteInput, CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle, VehicleType } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -298,4 +298,9 @@ export const api = {
   sendHelpChatMessage: (message: string, history: HelpChatMessage[]) => request<HelpChatReply>('/help-chat/messages', { method: 'POST', body: JSON.stringify({ message, history }) }),
   onboardAdmin: (body: { displayName: string; email: string; userName: string; password: string }) =>
     request<void>('/auth/onboarding', { method: 'POST', body: JSON.stringify(body) }),
+  listRoutes: (date?: string) => request<CollectiveRoute[]>(`/routes${date ? `?date=${date}` : ''}`),
+  createRoute: (body: CollectiveRouteInput) => request<CollectiveRoute>('/routes', { method: 'POST', body: JSON.stringify(body) }),
+  completeRoute: (id: string) => request<CollectiveRoute>(`/routes/${id}/complete`, { method: 'POST' }),
+  cancelRoute: (id: string) => request<CollectiveRoute>(`/routes/${id}/cancel`, { method: 'POST' }),
+  assignRouteVehicle: (id: string, vehicleId?: string) => request<CollectiveRoute>(`/routes/${id}/vehicle`, { method: 'PUT', body: JSON.stringify({ vehicleId }) }),
 }

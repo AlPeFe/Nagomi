@@ -12,6 +12,7 @@ using Nagomi.Api.Features.Operations;
 using Nagomi.Api.Features.Patients;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.ReferenceData;
+using Nagomi.Api.Features.Routes;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Features.UserAdministration;
@@ -84,6 +85,7 @@ app.MapTenantEndpoints();
 app.MapWebQueueEndpoints();
 app.MapVehicleEndpoints();
 app.MapPatientEndpoints();
+app.MapRouteEndpoints();
 app.MapHelpChatEndpoints();
 app.MapMcp("/mcp")
     .RequireAuthorization(UserAuthorizationPolicies.Web);

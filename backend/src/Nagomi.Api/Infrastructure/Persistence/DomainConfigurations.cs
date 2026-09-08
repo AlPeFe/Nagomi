@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.Patients;
+using Nagomi.Api.Features.Routes;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.Vehicles;
 using Nagomi.Api.Infrastructure.PublicIds;
@@ -166,6 +167,33 @@ internal sealed class PatientConfiguration : IEntityTypeConfiguration<Patient>
         entity.Property(x => x.HealthCardNumber).HasMaxLength(60);
         entity.Property(x => x.Phone).HasMaxLength(30);
         entity.Property(x => x.Notes).HasMaxLength(1000);
+    }
+}
+
+internal sealed class RouteConfiguration : IEntityTypeConfiguration<CollectiveRoute>
+{
+    public void Configure(EntityTypeBuilder<CollectiveRoute> entity)
+    {
+        entity.ToTable("collective_routes");
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => x.PublicId).IsUnique();
+        entity.HasIndex(x => x.ServiceDate);
+        entity.Property(x => x.PublicId).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.DriverName).HasMaxLength(200);
+        entity.Property(x => x.Notes).HasMaxLength(2000);
+        entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+        entity.HasMany(x => x.Stops).WithOne().HasForeignKey(x => x.RouteId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class RouteStopConfiguration : IEntityTypeConfiguration<CollectiveRouteStop>
+{
+    public void Configure(EntityTypeBuilder<CollectiveRouteStop> entity)
+    {
+        entity.ToTable("route_stops");
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => new { x.RouteId, x.Order });
+        entity.Property(x => x.JourneyId).IsRequired();
     }
 }
 
