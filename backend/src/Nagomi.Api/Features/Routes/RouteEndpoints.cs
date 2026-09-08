@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
+using Nagomi.Api.Features.Dispatch;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Infrastructure.Authentication;
@@ -182,7 +184,7 @@ public static class RouteEndpoints
 
     private static async Task<Results<Ok<RouteResponse>, NotFound, ValidationProblem>> AssignVehicleAsync(
         Guid id, RouteAssignVehicleCommand command, ITransportDb db, IProviderIntegrationDb integrationDb,
-        CancellationToken cancellationToken)
+        IHubContext<DispatchHub> dispatch, CancellationToken cancellationToken)
     {
         var route = await db.Routes.Include(x => x.Stops).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (route is null) return TypedResults.NotFound();
@@ -190,9 +192,13 @@ public static class RouteEndpoints
             return ValidationProblem("La ruta ya está cerrada.");
 
         var providerId = await TenantProviderIdAsync(integrationDb, cancellationToken);
+        VehicleInfo? vehicle = null;
         if (command.VehicleId.HasValue)
         {
-            var vehicle = await db.Vehicles.SingleOrDefaultAsync(x => x.Id == command.VehicleId.Value && x.ProviderId == providerId && x.IsActive, cancellationToken);
+            vehicle = await db.Vehicles.AsNoTracking()
+                .Where(x => x.Id == command.VehicleId.Value && x.ProviderId == providerId && x.IsActive)
+                .Select(x => new VehicleInfo(x.Id, x.PublicId, x.Name))
+                .SingleOrDefaultAsync(cancellationToken);
             if (vehicle is null) return ValidationProblem("Vehículo no encontrado o no activo.");
             route.VehicleId = vehicle.Id;
         }
@@ -202,6 +208,14 @@ public static class RouteEndpoints
         }
         route.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
+
+        // Real-time dispatch: tell the assigned vehicle's group there is a collective route waiting.
+        if (vehicle is not null && !string.IsNullOrWhiteSpace(vehicle.PublicId))
+        {
+            await dispatch.Clients.Group(DispatchHub.GroupName(vehicle.PublicId))
+                .SendAsync("WorkAssigned", new DispatchNotification(
+                    "route", route.PublicId, route.Id, vehicle.PublicId, DateTimeOffset.UtcNow), cancellationToken);
+        }
 
         var updated = await FetchAsync(route.Id, db, integrationDb, cancellationToken);
         return TypedResults.Ok(updated!);

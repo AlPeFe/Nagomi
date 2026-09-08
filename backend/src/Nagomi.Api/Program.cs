@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OpenIddict.Server.AspNetCore;
 using Nagomi.Api.Features.Audit;
 using Nagomi.Api.Features.EmergencyTransports;
+using Nagomi.Api.Features.Dispatch;
 using Nagomi.Api.Features.HelpChat;
 using Nagomi.Api.Features.IdentityAdministration;
 using Nagomi.Api.Features.Journeys;
@@ -47,6 +48,7 @@ builder.Services.AddHttpClient(HelpChatEndpoints.HttpClientName).ConfigurePrimar
 builder.Services.AddMcpServer().WithHttpTransport().WithTools<NagomiMcpTools>();
 builder.Services.AddScoped<NagomiMcpTools>();
 builder.Services.AddScoped<IProviderResourceGateway, TransportProviderResourceGateway>();
+builder.Services.AddSignalR();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHealthChecks().AddDbContextCheck<NagomiDbContext>();
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
@@ -86,6 +88,7 @@ app.MapWebQueueEndpoints();
 app.MapVehicleEndpoints();
 app.MapPatientEndpoints();
 app.MapRouteEndpoints();
+app.MapDispatchEndpoints();
 app.MapHelpChatEndpoints();
 app.MapMcp("/mcp")
     .RequireAuthorization(UserAuthorizationPolicies.Web);

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
+using Nagomi.Api.Features.Dispatch;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Infrastructure.Authentication;
@@ -191,7 +193,7 @@ public static class VehicleEndpoints
 
     private static async Task<Results<Ok<VehicleResponse?>, NotFound, ValidationProblem>> AssignJourneyVehicleAsync(
         Guid id, AssignVehicleCommand command, ITransportDb db, IProviderIntegrationDb integrationDb,
-        CancellationToken cancellationToken)
+        IHubContext<DispatchHub> dispatch, CancellationToken cancellationToken)
     {
         var journey = await db.Journeys.Include(x => x.Vehicle)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -215,6 +217,20 @@ public static class VehicleEndpoints
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        // Real-time dispatch: tell the assigned vehicle's group there is new work.
+        if (journey.VehicleId.HasValue && response is not null)
+        {
+            var vehicle = await db.Vehicles.AsNoTracking().SingleOrDefaultAsync(
+                x => x.Id == journey.VehicleId.Value, cancellationToken);
+            if (vehicle is not null && !string.IsNullOrWhiteSpace(vehicle.PublicId))
+            {
+                await dispatch.Clients.Group(DispatchHub.GroupName(vehicle.PublicId))
+                    .SendAsync("WorkAssigned", new DispatchNotification(
+                        "journey", journey.PublicId, journey.Id, vehicle.PublicId, DateTimeOffset.UtcNow), cancellationToken);
+            }
+        }
+
         return response is null
             ? TypedResults.Ok<VehicleResponse?>(null)
             : TypedResults.Ok<VehicleResponse?>(response);
