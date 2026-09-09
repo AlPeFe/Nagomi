@@ -99,6 +99,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", app.Environment.IsDe
     await scope.ServiceProvider.GetRequiredService<NagomiDbContext>().Database.MigrateAsync();
     await UserSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
     await TenantSeeder.SeedAsync(scope.ServiceProvider);
+    await ReferenceDataSeeder.SeedAsync(scope.ServiceProvider);
 }
 
 await app.RunAsync();
