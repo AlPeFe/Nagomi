@@ -16,12 +16,12 @@ public sealed record CoordinationRow(
     string JourneyPublicId,
     Guid RequestId,
     string RequestPublicId,
-    JourneyDirection Direction,
+    string Direction,
     DateTimeOffset OperationalAt,
     string PatientName,
     string Origin,
     string Destination,
-    JourneyStatus Status,
+    string Status,
     Guid? VehicleId,
     string? VehiclePublicId,
     string? VehicleName,
@@ -31,7 +31,7 @@ public sealed record CoordinationRow(
 /// <summary>A status event with its reported position (world 1 / testimonial map).</summary>
 public sealed record StatusPoint(
     Guid Id,
-    JourneyStatus Status,
+    string Status,
     DateTimeOffset OccurredAt,
     string? Actor,
     string? ExternalResourceCode,
@@ -174,18 +174,18 @@ public static class VehicleEndpoints
         var values = await joined.ToListAsync(cancellationToken);
         var rows = values.Select(x => new CoordinationRow(
             x.j.Id, x.j.PublicId, x.r.Id, x.r.PublicId!,
-            x.j.Direction,
+            x.j.Direction.ToString(),
             x.j.Direction == JourneyDirection.Return ? x.j.Schedule.ScheduledPickupAt!.Value : x.j.Schedule.ScheduledStartAt,
             x.r.Patient == null ? "" : ((x.r.Patient.FirstName ?? "") + " " + (x.r.Patient.LastName ?? "")).Trim(),
             x.j.Origin.Name ?? x.j.Origin.Street ?? "", x.j.Destination.Name ?? x.j.Destination.Street ?? "",
-            x.j.CurrentStatus,
+            x.j.CurrentStatus.ToString(),
             x.j.VehicleId,
             x.j.VehicleId.HasValue && vehicles.TryGetValue(x.j.VehicleId!.Value, out var v) ? v.PublicId : null,
             x.j.VehicleId.HasValue && vehicles.TryGetValue(x.j.VehicleId!.Value, out var v2) ? v2.Name : null,
             x.j.DriverName,
             x.j.StatusHistory
                 .OrderByDescending(s => s.OccurredAt).ThenByDescending(s => s.RecordedAt)
-                .Select(s => new StatusPoint(s.Id, s.Status, s.OccurredAt, s.Actor, s.ExternalResourceCode, s.Latitude, s.Longitude))
+                .Select(s => new StatusPoint(s.Id, s.Status.ToString(), s.OccurredAt, s.Actor, s.ExternalResourceCode, s.Latitude, s.Longitude))
                 .ToArray()))
             .OrderBy(x => x.OperationalAt)
             .ToArray();
