@@ -379,11 +379,12 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
 .app-shell.nav-collapsed { --sidebar-w: 68px; }
 .app-shell.nav-collapsed .sidebar { padding: 0.6rem 0.35rem 0.5rem; }
 .app-shell.nav-collapsed .sidebar .nav-label { display: none; }
-.app-shell.nav-collapsed .sidebar-head { padding: 0.35rem 0.15rem 0.6rem; }
+.app-shell.nav-collapsed .sidebar-head { flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.35rem 0.15rem 0.5rem; }
+.app-shell.nav-collapsed .sidebar-head .nav-toggle { margin-left: 0; }
 .app-shell.nav-collapsed .sidebar-nav a { justify-content: center; padding: 0.5rem 0.3rem; }
 .app-shell.nav-collapsed .sidebar-nav a svg { width: 18px; height: 18px; }
 /* Cada grupo queda separado por una línea fina en vez de por su título. */
-.app-shell.nav-collapsed .sidebar .sidebar-section { font-size: 0; line-height: 0; padding: 0; margin: 0.45rem 0.3rem 0.3rem; border-top: 1px solid var(--line); }
+.app-shell.nav-collapsed .sidebar .sidebar-section { display: block; font-size: 0; line-height: 0; height: 1px; padding: 0; margin: 0.5rem 0.45rem; background: var(--line); }
 .app-shell.nav-collapsed .sidebar-cta { padding: 0 0.1rem 0.6rem; }
 .app-shell.nav-collapsed .sidebar-cta .button { padding: 0.4rem; }
 .app-shell.nav-collapsed .sidebar-foot { flex-direction: column; gap: 0.35rem; padding: 0.55rem 0 0.1rem; }
