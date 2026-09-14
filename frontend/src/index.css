@@ -372,3 +372,66 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
   .history-filters .search-field, .history-filters .filter-actions { grid-column: 1 / -1; }
   .history-filters .filter-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ================= Menú lateral minimizado (rail de iconos) ================= */
+/* Todo va scopeado a .sidebar: el drawer móvil reutiliza las mismas etiquetas y no
+   debe perder el texto cuando el usuario tiene el menú plegado. */
+.app-shell.nav-collapsed { --sidebar-w: 68px; }
+.app-shell.nav-collapsed .sidebar { padding: 0.6rem 0.35rem 0.5rem; }
+.app-shell.nav-collapsed .sidebar .nav-label { display: none; }
+.app-shell.nav-collapsed .sidebar-head { padding: 0.35rem 0.15rem 0.6rem; }
+.app-shell.nav-collapsed .sidebar-nav a { justify-content: center; padding: 0.5rem 0.3rem; }
+.app-shell.nav-collapsed .sidebar-nav a svg { width: 18px; height: 18px; }
+/* Cada grupo queda separado por una línea fina en vez de por su título. */
+.app-shell.nav-collapsed .sidebar .sidebar-section { font-size: 0; line-height: 0; padding: 0; margin: 0.45rem 0.3rem 0.3rem; border-top: 1px solid var(--line); }
+.app-shell.nav-collapsed .sidebar-cta { padding: 0 0.1rem 0.6rem; }
+.app-shell.nav-collapsed .sidebar-cta .button { padding: 0.4rem; }
+.app-shell.nav-collapsed .sidebar-foot { flex-direction: column; gap: 0.35rem; padding: 0.55rem 0 0.1rem; }
+.nav-toggle { margin-left: auto; }
+.sidebar .nav-toggle { color: var(--faint); }
+.sidebar .nav-toggle:hover { color: var(--ink); }
+
+/* ==================== Detalle rápido (slide-over por la derecha) ==================== */
+.qv-scrim { position: fixed; inset: 0; background: rgba(12, 22, 24, 0.34); z-index: 100; }
+.quick-view {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 101;
+  width: min(560px, 94vw); background: var(--surface); border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-md); display: flex; flex-direction: column;
+  animation: qv-in 0.22s var(--ease);
+}
+@keyframes qv-in { from { transform: translateX(18px); opacity: 0.7; } to { transform: none; opacity: 1; } }
+.qv-head { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.qv-nav { display: flex; align-items: center; gap: 0.35rem; }
+.qv-counter { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.qv-head-actions { margin-left: auto; display: flex; align-items: center; gap: 0.4rem; }
+.quick-view .icon-button:disabled { opacity: 0.3; cursor: not-allowed; }
+.qv-body { padding: 1rem 1.1rem 2rem; overflow-y: auto; display: grid; gap: 1rem; align-content: start; }
+.qv-title { display: flex; align-items: center; gap: 0.65rem; }
+.qv-title h2 { margin: 0; font-size: 1.0625rem; letter-spacing: -0.02em; }
+.qv-title p { margin: 0.1rem 0 0; font-size: 0.75rem; }
+.qv-title > .badge { margin-left: auto; }
+.qv-phase { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); }
+.qv-scheduled { background: #e6eefb; border-color: #cddff3; color: #17507f; }
+.qv-activated, .qv-enroutetoorigin, .qv-arrivedatorigin, .qv-patientonboard,
+.qv-enroutetodestination, .qv-arrivedatdestination { background: #e2f1ee; border-color: #c4e2de; color: #0a5f5b; }
+.qv-completed { background: #e2f0ea; border-color: #c6e3d6; color: #0d5a43; }
+.qv-cancelled { background: #fbe8e5; border-color: #efd0cc; color: #93362e; }
+.qv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem 1rem; margin: 0; }
+.qv-grid .span-2 { grid-column: span 2; }
+.qv-grid dt { display: flex; align-items: center; gap: 0.3rem; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.qv-grid dd { margin: 0.15rem 0 0; font-size: 0.8125rem; color: var(--ink); }
+.qv-block h3 { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 0.5rem; }
+.qv-notes { margin: 0; font-size: 0.8125rem; color: var(--ink-2); background: var(--amber-wash); border: 1px solid #f0ddb8; border-radius: var(--r-sm); padding: 0.6rem 0.7rem; }
+.qv-timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+.qv-timeline-item { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.25rem 0; }
+.qv-timeline-node { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; display: grid; place-items: center; }
+.qv-timeline-item strong { display: block; font-size: 0.8125rem; font-weight: 550; }
+.qv-timeline-item span { font-size: 0.75rem; color: var(--muted); }
+.qv-foot { margin: 0; display: flex; gap: 0.4rem; align-items: center; font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 0.75rem; }
+.quick-open { width: 1.6rem; height: 1.6rem; color: var(--faint); flex: 0 0 auto; }
+.quick-open:hover { color: var(--brand); background: var(--brand-wash); }
+@media (max-width: 700px) {
+  .quick-view { width: 100%; border-left: 0; }
+  .qv-grid { grid-template-columns: 1fr; }
+  .qv-grid .span-2 { grid-column: auto; }
+}

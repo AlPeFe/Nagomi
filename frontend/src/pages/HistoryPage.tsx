@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { JourneyTable } from '../components/JourneyTable'
+import { JourneyQuickView } from '../components/JourneyQuickView'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { Journey, JourneyFilters, Vehicle } from '../types'
 import { csvForJourneys, localDate } from '../utils'
@@ -27,6 +28,7 @@ export function HistoryPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [quickId, setQuickId] = useState<string | null>(null)
 
   useEffect(() => {
     // La lista de vehículos solo alimenta el selector de asignación: si falla, la
@@ -138,9 +140,20 @@ export function HistoryPage() {
       <JourneyTable
         journeys={journeys}
         vehicles={vehicles}
+        onOpen={setQuickId}
         onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
         onAssignDriver={(id, name) => void assignDriver(id, name)}
       />
     </>}
+    {quickId && journeys.some((journey) => journey.id === quickId) && <JourneyQuickView
+      journeys={journeys}
+      index={journeys.findIndex((journey) => journey.id === quickId)}
+      onClose={() => setQuickId(null)}
+      onNavigate={(nextIndex) => setQuickId(journeys[nextIndex]?.id ?? null)}
+      vehicles={vehicles}
+      onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
+      onAssignDriver={(id, name) => void assignDriver(id, name)}
+      onChanged={() => applied ? void search(applied) : undefined}
+    />}
   </div>
 }

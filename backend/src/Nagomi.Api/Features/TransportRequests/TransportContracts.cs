@@ -38,9 +38,12 @@ public sealed record UpdateRequestCommand(
     bool OverwriteExceptions = false,
     ChangeSource Source = ChangeSource.Nagomi,
     string Actor = "simulated-user");
+/// <summary>Campos de cancelación NULLABLE a propósito: el endpoint HTTP valida que
+/// vengan informados, en lugar de rellenarlos con el 0 del enum por defecto (que hacía
+/// que toda cancelación sin motivo se guardase como "ya no es necesario / solicitante").</summary>
 public sealed record CancelCommand(
-    CancellationReason Reason,
-    CancellingParty CancellingParty,
+    CancellationReason? Reason = null,
+    CancellingParty? CancellingParty = null,
     DateTimeOffset? OccurredAt = null,
     ChangeSource Source = ChangeSource.Nagomi,
     string Actor = "simulated-user",

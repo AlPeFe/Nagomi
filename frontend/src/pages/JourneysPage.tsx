@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useState } from 'react'
 import { api } from '../api'
 import { JourneyTable } from '../components/JourneyTable'
+import { JourneyQuickView } from '../components/JourneyQuickView'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { Journey, JourneyFilters, Vehicle } from '../types'
 import { csvForJourneys, localDate } from '../utils'
@@ -25,6 +26,7 @@ export function JourneysPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [refreshedAt, setRefreshedAt] = useState<Date>()
+  const [quickId, setQuickId] = useState<string | null>(null)
 
   async function load(silent = false) {
     if (!silent) setLoading(true)
@@ -93,9 +95,20 @@ export function JourneysPage() {
       <JourneyTable
         journeys={journeys}
         vehicles={vehicles}
+        onOpen={setQuickId}
         onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
         onAssignDriver={(id, name) => void assignDriver(id, name)}
       />
     </>}
+    {quickId && journeys.some((journey) => journey.id === quickId) && <JourneyQuickView
+      journeys={journeys}
+      index={journeys.findIndex((journey) => journey.id === quickId)}
+      onClose={() => setQuickId(null)}
+      onNavigate={(nextIndex) => setQuickId(journeys[nextIndex]?.id ?? null)}
+      vehicles={vehicles}
+      onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
+      onAssignDriver={(id, name) => void assignDriver(id, name)}
+      onChanged={() => void load(true)}
+    />}
   </div>
 }

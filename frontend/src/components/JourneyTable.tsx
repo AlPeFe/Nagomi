@@ -1,3 +1,4 @@
+import { Eye } from '@phosphor-icons/react'
 import { Link } from '../router'
 import type { Journey, Vehicle } from '../types'
 import { VEHICLE_TYPE_LABELS } from '../types'
@@ -55,11 +56,13 @@ export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDri
   </div>
 }
 
-export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssignDriver }: {
+export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssignDriver, onOpen }: {
   journeys: Journey[]
   vehicles?: Vehicle[]
   onAssignVehicle?: (journeyId: string, vehicleId: string) => void
   onAssignDriver?: (journeyId: string, driverName: string) => void
+  /** Abre el detalle rápido (panel lateral) sin salir de la lista. */
+  onOpen?: (journeyId: string) => void
 }) {
   const pairs = new Map<string, { outbound?: Journey; return?: Journey }>()
   for (const journey of journeys) {
@@ -80,7 +83,7 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssig
       const accent = paired ? accentFor(journey.requestId) : undefined
       const mate = journey.direction === 'Outbound' ? pair?.return : pair?.outbound
       return <tr key={journey.id} className={`${journey.deliveryState === 'Dead' ? 'row-alert' : ''}${paired ? ' pair-row' : ''}`} style={accent ? { '--pair-accent': accent } as React.CSSProperties : undefined}>
-        <td data-label="Hora / trayecto"><div className="journey-cell"><span className={`rail-dot rail-${journey.status.toLowerCase()}`} aria-hidden="true" /><div><strong className={journey.pickupTimePending ? 'pending-time' : ''}>{operationalTime(journey)}</strong><Link to={`/trayectos/${journey.id}`}>{journey.publicId}</Link><small>{directionLabel(journey.direction)} · {journey.requestPublicId}{paired && mate ? <span className="pair-chip" title={`Ida y vuelta de ${journey.requestPublicId}`}>↕ {mate.publicId}</span> : null}</small></div></div></td>
+        <td data-label="Hora / trayecto"><div className="journey-cell"><span className={`rail-dot rail-${journey.status.toLowerCase()}`} aria-hidden="true" />{onOpen && <button type="button" className="icon-button quick-open" title="Vista rápida" aria-label={`Vista rápida de ${journey.publicId}`} onClick={() => onOpen(journey.id)}><Eye size={15} aria-hidden="true" /></button>}<div><strong className={journey.pickupTimePending ? 'pending-time' : ''}>{operationalTime(journey)}</strong><Link to={`/trayectos/${journey.id}`}>{journey.publicId}</Link><small>{directionLabel(journey.direction)} · {journey.requestPublicId}{paired && mate ? <span className="pair-chip" title={`Ida y vuelta de ${journey.requestPublicId}`}>↕ {mate.publicId}</span> : null}</small></div></div></td>
         <td data-label="Paciente"><strong>{journey.patientName || 'Sin identificar'}</strong><small>{journey.patientPhone || 'Sin teléfono'}</small></td>
         <td data-label="Ruta"><div className="route-line"><strong>{journey.origin.name}</strong><span className="route-arrow" aria-hidden="true">→</span><span>{journey.destination.name}</span></div>{[journey.origin.municipality, journey.destination.municipality].filter(Boolean).length > 0 && <small>{[journey.origin.municipality, journey.destination.municipality].filter(Boolean).join(' · ')}</small>}</td>
         <td data-label="Motivo / requisitos">{journey.reason}<small>{requirementSummary(journey.requirements)}</small></td>

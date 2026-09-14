@@ -88,6 +88,14 @@ public static class JourneyEndpoints
         var journey = await Query(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (journey is null) return TypedResults.NotFound();
         if (journey.CurrentStatus == JourneyStatus.Completed) return TypedResults.Conflict("A completed journey cannot be cancelled.");
+        // Cancelar exige motivo y parte que cancela: sin ellos se guardaba un 0 por
+        // defecto (NoLongerRequired/solicitante) y la cancelación no era trazable.
+        if (command.Reason is null || command.CancellingParty is null)
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["cancellationReason"] = ["Cancelar un traslado exige indicar el motivo."],
+                ["cancellingParty"] = ["Cancelar un traslado exige indicar quién cancela."]
+            });
         JourneyCancellation.Apply(journey, command, clock.GetUtcNow(), $"journey-cancel:{id}", db);
         Audit(db, journey, "Cancelled", command.Source, command.Actor, clock.GetUtcNow());
         if (command.Source != ChangeSource.TransportProvider)

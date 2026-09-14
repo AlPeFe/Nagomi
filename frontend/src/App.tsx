@@ -11,6 +11,7 @@ import {
   MapTrifold,
   Path,
   Plus,
+  SidebarSimple,
   SignOut,
   Siren,
   UserList,
@@ -117,6 +118,15 @@ export default function App() {
   const [roles, setRoles] = useState<string[]>(() =>
     JSON.parse(sessionStorage.getItem('nagomi_roles') ?? '[]') as string[])
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  // Menú lateral minimizado a iconos (rail). Se recuerda entre sesiones.
+  const [navCollapsed, setNavCollapsed] = useState(() => localStorage.getItem('nagomi_nav_collapsed') === '1')
+
+  function toggleNav() {
+    setNavCollapsed((current) => {
+      localStorage.setItem('nagomi_nav_collapsed', current ? '0' : '1')
+      return !current
+    })
+  }
 
   useEffect(() => {
     setSession(isAuthenticated())
@@ -159,9 +169,9 @@ export default function App() {
           <div key={group.section}>
             <p className="sidebar-section">{group.section}</p>
             {visible.map((item) => (
-              <NavLink key={item.to} to={item.to}>
+              <NavLink key={item.to} to={item.to} title={item.label} aria-label={item.label}>
                 <item.icon size={16} weight="regular" aria-hidden="true" />
-                {item.label}
+                <span className="nav-label">{item.label}</span>
               </NavLink>
             ))}
           </div>
@@ -217,7 +227,7 @@ export default function App() {
   const [section, page] = crumbFor(location)
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${navCollapsed ? " nav-collapsed" : ""}`}>
       <a className="skip-link" href="#contenido">Saltar al contenido</a>
 
       {/*
@@ -229,19 +239,28 @@ export default function App() {
         <div className="sidebar-head">
           <NavLink className="brand" to="/trayectos" aria-label="Nagomi, inicio">
             <span className="brand-mark" aria-hidden="true">N</span>
-            <span><strong>Nagomi</strong><small>Transporte sanitario</small></span>
+            <span className="nav-label"><strong>Nagomi</strong><small>Transporte sanitario</small></span>
           </NavLink>
+          <button
+            type="button"
+            className="icon-button nav-toggle"
+            onClick={toggleNav}
+            title={navCollapsed ? 'Expandir el menú' : 'Minimizar el menú'}
+            aria-label={navCollapsed ? 'Expandir el menú' : 'Minimizar el menú'}
+          >
+            <SidebarSimple size={16} aria-hidden="true" />
+          </button>
         </div>
         <div className="sidebar-cta">
-          <NavLink className="button button-primary" to="/solicitudes/nueva">
-            <Plus size={14} weight="bold" aria-hidden="true" /> Nueva solicitud
+          <NavLink className="button button-primary" to="/solicitudes/nueva" title="Nueva solicitud">
+            <Plus size={14} weight="bold" aria-hidden="true" /><span className="nav-label">Nueva solicitud</span>
           </NavLink>
         </div>
         <nav className="sidebar-nav" aria-label="Navegación principal">{navItems}</nav>
         <div className="sidebar-foot">
           <span className="user-chip">
             <span className="user-avatar" aria-hidden="true">{userInitials}</span>
-            <span>
+            <span className="nav-label">
               <strong>{userName || 'Sesión activa'}</strong>
               <small>{roleLabel}</small>
             </span>

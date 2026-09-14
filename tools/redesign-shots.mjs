@@ -150,6 +150,30 @@ await mobile.addInitScript(() => {
   sessionStorage.setItem('nagomi_user', 'Administrador')
 })
 await shoot(mobile, 'mob', [['/trayectos', 'operacion'], ['/historico', 'historico']])
+// Vista rápida (slide-over) desde la lista de Operación
+{
+  const page = await authed.newPage()
+  await page.route('**/api/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixtureFor(r.request().url())) }))
+  await page.goto(`${BASE}/trayectos`, { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(900)
+  await page.locator('.quick-open').first().click()
+  await page.waitForTimeout(900)
+  await page.screenshot({ path: path.join(OUT, 'desk-detalle-rapido.png'), fullPage: false })
+  await page.close()
+}
+
+// Menú lateral minimizado (rail de iconos)
+{
+  const page = await authed.newPage()
+  await page.route('**/api/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixtureFor(r.request().url())) }))
+  await page.goto(`${BASE}/trayectos`, { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(800)
+  await page.getByRole('button', { name: 'Minimizar el menú' }).click()
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: path.join(OUT, 'desk-menu-minimizado.png'), fullPage: false })
+  await page.close()
+}
+
 // Drawer open
 {
   const page = await mobile.newPage()
