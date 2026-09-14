@@ -109,10 +109,38 @@ public static class AiSettingsEndpoints
             using var client = httpClientFactory.CreateClient(HelpChatEndpoints.HttpClientName);
             using var response = await client.SendAsync(http, cancellationToken);
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            var detail = response.IsSuccessStatusCode
-                ? $"Conexión correcta con {endpoint.Host} ({model})."
-                : $"El gateway respondió {(int)response.StatusCode}: {Truncate(body)}";
-            return TypedResults.Ok(new AiConnectionTestResponse(response.IsSuccessStatusCode, (int)response.StatusCode, detail));
+            var mediaType = response.Content.Headers.ContentType?.MediaType;
+
+            // Un 200 NO basta: hay que comprobar que la respuesta es realmente una
+            // completion de chat. Si no, el asistente fallará luego y el usuario no
+            // sabría por qué (un panel web devuelve 200 con HTML, por ejemplo).
+            var looksLikeChat = false;
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(body))
+            {
+                try
+                {
+                    using var document = JsonDocument.Parse(body);
+                    looksLikeChat = document.RootElement.TryGetProperty("choices", out var choices)
+                        && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0;
+                }
+                catch (JsonException) { looksLikeChat = false; }
+            }
+
+            var status = (int)response.StatusCode;
+            string detail;
+            if (looksLikeChat)
+                detail = $"Conexión correcta con {endpoint.Host} ({model}).";
+            else if (status is 401 or 403)
+                detail = $"El gateway responde pero rechaza las credenciales ({status}). Revisa usuario y contraseña.";
+            else if (!response.IsSuccessStatusCode)
+                detail = $"El gateway respondió {status}: {Truncate(body)}";
+            else if (body.TrimStart().StartsWith('<'))
+                detail = "La URL responde una página web, no el API de chat. Si es el panel del gateway de Hermes, "
+                    + "aquí se autentica con sesión de navegador (cookie): apunta a un endpoint compatible con OpenAI.";
+            else
+                detail = $"Respondió {status} ({mediaType ?? "sin tipo"}) pero sin 'choices': no parece una respuesta de chat.";
+
+            return TypedResults.Ok(new AiConnectionTestResponse(looksLikeChat, status, detail));
         }
         catch (Exception exception)
         {
