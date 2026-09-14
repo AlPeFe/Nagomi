@@ -32,6 +32,16 @@ if (await fab.count()) {
   await panel.screenshot({ path: `.hermes-shots/${out}-panel-solo.png` });
   console.log('--- texto del panel ---');
   console.log((await panel.innerText()).slice(0, 600));
+
+  // Estado de conversación: burbujas + aviso si el proveedor no responde.
+  if (process.argv[6] === 'send') {
+    await page.fill('.help-chat-form input', '¿Qué traslados tengo hoy?');
+    await page.click('.help-chat-send');
+    await page.waitForTimeout(6000);
+    await panel.screenshot({ path: `.hermes-shots/${out}-conversacion.png` });
+    console.log('--- tras enviar ---');
+    console.log((await panel.innerText()).slice(-400));
+  }
 }
 console.log('errores de consola:', errors.length, errors.slice(0, 3).join(' | '));
 await browser.close();

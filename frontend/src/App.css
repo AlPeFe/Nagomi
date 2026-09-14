@@ -524,3 +524,13 @@
   .help-chat-open::before { content: ''; position: fixed; inset: 0; background: rgb(15 27 29 / 32%); z-index: 40; }
   .help-chat-panel { z-index: 41; }
 }
+
+/* El aviso del asistente es parte de la conversación, no un bloque suelto de alerta. */
+.help-chat-notice { display: grid; gap: 0.4rem; border-color: #e8c9c9; background: var(--danger-wash, #fdf2f2); }
+.help-chat-avatar-warn { background: #fdf2f2; border-color: #e8c9c9; color: var(--danger, #b3261e); }
+.help-chat-retry { justify-self: start; display: inline-flex; align-items: center; gap: 0.25rem; border: 1px solid var(--line-3); background: var(--surface); color: var(--ink-2); border-radius: var(--r-xs); padding: 0.2rem 0.45rem; font-size: 0.6875rem; cursor: pointer; }
+.help-chat-retry:hover:not(:disabled) { border-color: var(--brand); color: var(--brand-ink); background: var(--brand-wash); }
+.help-chat-retry:disabled { opacity: 0.5; cursor: not-allowed; }
+/* La X de cerrar no debe costar verla. */
+.help-chat-header .icon-button { color: var(--ink-2); }
+.help-chat-form input { padding-block: 0.45rem; }

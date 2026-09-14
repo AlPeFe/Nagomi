@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChatCircleDots, PaperPlaneRight, Robot, Sparkle, X } from '@phosphor-icons/react'
+import { ArrowClockwise, ChatCircleDots, PaperPlaneRight, Robot, Sparkle, WarningCircle, X } from '@phosphor-icons/react'
 import { api } from '../api'
 import type { HelpChatMessage } from '../types'
 
@@ -20,12 +20,12 @@ export function HelpChatWidget() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const endRef = useRef<HTMLDivElement | null>(null)
-  const provider = useRef<string | undefined>(undefined)
+  const lastUser = useRef('')
 
   useEffect(() => {
     let active = true
     api.getHelpChatStatus()
-      .then((status) => { if (active) { setEnabled(status.enabled); provider.current = status.provider; setChecked(true) } })
+      .then((status) => { if (active) { setEnabled(status.enabled); setChecked(true) } })
       .catch(() => { if (active) setChecked(true) })
     return () => { active = false }
   }, [])
@@ -41,6 +41,7 @@ export function HelpChatWidget() {
     const value = text.trim()
     if (!value || busy) return
     const userMessage: HelpChatMessage = { role: 'user', content: value }
+    lastUser.current = value
     const next = [...messages, userMessage]
     setMessages(next)
     setDraft('')
@@ -51,11 +52,12 @@ export function HelpChatWidget() {
       setMessages([...next, { role: 'assistant', content: reply.reply }])
     } catch (caught) {
       const detail = caught instanceof Error ? caught.message.trim() : ''
-      // Un 502 significa que el proveedor no está disponible: mejor decirlo con
-      // claridad y apuntar a la configuración que mostrar un error opaco.
-      setError(detail && !/^\s*$/.test(detail)
-        ? detail
-        : 'El asistente no está disponible ahora mismo. Revisa la configuración de IA.')
+      // Un 502/503 es "el proveedor no está disponible": decirlo en cristiano y apuntar
+      // a la configuración, en vez de soltarle al usuario un "la API respondió 502".
+      const unavailable = !detail || /\b(502|503|504)\b|Bad Gateway|no disponible/i.test(detail)
+      setError(unavailable
+        ? 'El asistente no está disponible ahora mismo. Revisa la configuración de IA.'
+        : detail)
     } finally {
       setBusy(false)
     }
@@ -102,7 +104,15 @@ export function HelpChatWidget() {
           </div>
         </div>}
 
-        {error && <div className="alert alert-error help-chat-error" role="alert">{error}</div>}
+        {error && <div className="help-chat-row help-chat-row-assistant">
+          <span className="help-chat-avatar help-chat-avatar-small help-chat-avatar-warn" aria-hidden="true"><WarningCircle size={13} weight="duotone" /></span>
+          <div className="help-chat-bubble help-chat-assistant help-chat-notice" role="alert">
+            <span>{error}</span>
+            {lastUser.current && <button type="button" className="help-chat-retry" onClick={() => void send(lastUser.current)} disabled={busy}>
+              <ArrowClockwise size={12} aria-hidden="true" /> Reintentar
+            </button>}
+          </div>
+        </div>}
         <div ref={endRef} />
       </div>
 
@@ -115,7 +125,7 @@ export function HelpChatWidget() {
         </button>
       </form>
       <p className="help-chat-foot">
-        Respuestas generadas por IA{provider.current ? ` · ${provider.current}` : ''} · pueden contener errores.
+        Respuestas generadas por IA · pueden contener errores.
       </p>
     </section>}
 
