@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
+import { Link } from '../router'
 import { PageHeader } from '../components/States'
 
 /**
@@ -47,6 +48,7 @@ export function SetupAndroidPage() {
           La app debe estar en la misma red local que este servidor. Si el móvil no alcanza esta
           URL, abre el puerto en el firewall del host (TCP 8080).
         </p>
+        <Link className="button button-secondary" to="/driver">Abrir el emulador web de la app →</Link>
       </div>
     </div>
   )

@@ -38,6 +38,7 @@ import { SetupAndroidPage } from './pages/SetupAndroidPage'
 import { HelpChatWidget } from './components/HelpChatWidget'
 import { isAuthenticated, logout, onboardingRequired } from './auth'
 import { useIsMobile } from './hooks/useIsMobile'
+import { DriverAppPage } from './pages/DriverAppPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import './App.css'
 
@@ -149,6 +150,12 @@ export default function App() {
     setRoles([])
     setMobileNavOpen(false)
     navigate('/login', { replace: true })
+  }
+
+  // El emulador de la app de conductor tiene su propia sesión (vehículo + trabajadores)
+  // y se sirve a pantalla completa, sin el shell de administración.
+  if (location.split(/[?#]/, 1)[0].replace(/\/$/, '') === '/driver') {
+    return <DriverAppPage />
   }
 
   // The bootstrap admin (admin / Admin) must complete onboarding before using the app.

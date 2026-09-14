@@ -242,7 +242,17 @@ export const api = {
   previewRecurrence: (id: string, body: unknown) => request<{ additions: number; cancellations: number; exceptions: number }>(`/transport-requests/${encodeURIComponent(id)}/recurrence/preview`, { method: 'POST', body: JSON.stringify(body) }),
   applyRecurrence: (id: string, recurrence: RecurrencePattern, overwriteExceptions: boolean) => request<void>(`/transport-requests/${encodeURIComponent(id)}/recurrence/apply`, { method: 'POST', body: JSON.stringify({ recurrence, overwriteExceptions }) }),
   cancelRequest: (id: string) => request<void>(`/transport-requests/${encodeURIComponent(id)}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 0, cancellingParty: 0, source: 0, actor: 'simulated-user' }) }),
-  addJourneyStatus: (id: string, status: JourneyStatus, occurredAt: string, idempotencyKey: string) => request<void>(`/journeys/${encodeURIComponent(id)}/statuses`, { method: 'POST', body: JSON.stringify({ status: journeyStatuses.indexOf(status), occurredAt, idempotencyKey, source: 0, actor: 'simulated-user' }) }),
+  addJourneyStatus: (id: string, status: JourneyStatus, occurredAt: string, idempotencyKey: string, options?: { actor?: string; externalResourceCode?: string; latitude?: number; longitude?: number; source?: number }) =>
+    request<void>(`/journeys/${encodeURIComponent(id)}/statuses`, {
+      method: 'POST',
+      body: JSON.stringify({
+        status: journeyStatuses.indexOf(status), occurredAt, idempotencyKey,
+        // El emulador de la app del conductor manda su propio actor (primer trabajador
+        // activo) y el vehículo; la web manda los valores por defecto.
+        source: options?.source ?? 0, actor: options?.actor ?? 'simulated-user',
+        externalResourceCode: options?.externalResourceCode, latitude: options?.latitude, longitude: options?.longitude,
+      }),
+    }),
   async listEmergencies(filters: { status?: EmergencyStatus; from?: string; to?: string } = {}) {
     const params = new URLSearchParams()
     if (filters.status) params.set('status', filters.status)

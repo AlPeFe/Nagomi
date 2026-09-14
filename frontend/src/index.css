@@ -498,3 +498,44 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
   .map-modal { width: 100%; max-height: 100vh; height: 100%; border-radius: 0; top: 0; left: 0; transform: none; }
   .map-modal-canvas { height: 45vh; }
 }
+
+/* ==================== Emulador web de la app de conductor (/driver) ==================== */
+/* Cliente de PRUEBAS del modelo de sesión real: 1 vehículo + N trabajadores. */
+.driver-app { min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
+.driver-app-login { display: grid; place-items: center; padding: 2rem 1rem; background: radial-gradient(120% 100% at 50% 0%, #edf6f5 0%, var(--bg) 60%); }
+.driver-login-card { width: min(380px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-md); padding: 1.6rem; display: grid; gap: 0.85rem; }
+.driver-login-card h1 { margin: 0; font-size: 1.05rem; }
+.driver-login-card p { margin: 0; font-size: 0.8125rem; }
+.driver-tag { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-ink); background: var(--brand-wash); border: 1px solid #cfe6e4; border-radius: var(--r-full); padding: 0.1rem 0.45rem; vertical-align: middle; }
+.driver-back { font-size: 0.75rem; text-align: center; }
+.driver-head { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 0.9rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.driver-head strong { display: block; font-size: 0.9375rem; }
+.driver-head small { display: block; font-size: 0.75rem; color: var(--muted); }
+.driver-head .icon-button { margin-left: auto; }
+.driver-body { width: min(560px, 100%); margin: 0 auto; padding: 0.9rem 0.9rem 3rem; display: grid; gap: 0.9rem; }
+.driver-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 0.9rem 1rem; }
+.driver-card h2 { display: flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.driver-card p { font-size: 0.8125rem; margin: 0 0 0.6rem; }
+.driver-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.driver-note { font-size: 0.6875rem; }
+.driver-note code { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-xs); padding: 0 0.25rem; }
+.driver-vehicles { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.driver-vehicles li { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); }
+.driver-vehicles li > div { flex: 1; min-width: 0; }
+.driver-vehicles strong { display: block; font-size: 0.875rem; }
+.driver-vehicles small { display: block; font-size: 0.6875rem; color: var(--muted); }
+.driver-workers { list-style: none; margin: 0 0 0.6rem; padding: 0; display: grid; gap: 0.3rem; }
+.driver-workers li { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: var(--r-sm); font-size: 0.8125rem; }
+.driver-workers li strong { font-weight: 600; }
+.driver-workers li span { color: var(--muted); flex: 1; }
+.driver-worker-form { display: flex; gap: 0.4rem; align-items: flex-end; flex-wrap: wrap; }
+.driver-worker-form label { flex: 1 1 130px; }
+.driver-jobs { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.driver-job { border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: var(--r-sm); padding: 0.65rem 0.75rem; background: var(--surface-2); display: grid; gap: 0.3rem; }
+.driver-job header { display: flex; align-items: center; gap: 0.5rem; }
+.driver-job header strong { font-size: 0.875rem; }
+.driver-job header .badge { margin-left: auto; }
+.driver-job p { margin: 0; font-size: 0.8125rem; }
+.driver-job p strong { font-weight: 600; }
+.driver-job-actions { display: flex; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; }
+.driver-job-actions .button { min-height: 2.25rem; }
