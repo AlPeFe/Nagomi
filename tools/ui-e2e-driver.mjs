@@ -68,7 +68,8 @@ await page.fill('input[autocomplete="current-password"]', pass)
 await page.getByRole('button', { name: /Entrar/ }).click()
 await page.waitForTimeout(1500)
 const listText = await page.locator('body').innerText()
-check('sesión iniciada y lista de vehículos', listText.includes('Iniciar vehículo'), listText.slice(0, 80).replace(/\s+/g, ' '))
+// El h2 se pinta en MAYÚSCULAS por CSS: comparar sin distinguir caja.
+check('sesión iniciada y lista de vehículos', /iniciar vehículo/i.test(listText), listText.slice(0, 80).replace(/\s+/g, ' '))
 await page.screenshot({ path: `${OUT}/driver-vehiculos.png` })
 
 // Activar el vehículo creado
@@ -101,7 +102,7 @@ check('el vehículo viaja en externalResourceCode', lastEvent?.externalResourceC
 await page.getByRole('button', { name: 'Cerrar vehículo' }).click()
 await page.waitForTimeout(800)
 const closed = await page.locator('body').innerText()
-check('cerrar vehículo libera trabajadores y vuelve al selector', closed.includes('Iniciar vehículo') && !closed.includes('CON-001'))
+check('cerrar vehículo libera trabajadores y vuelve al selector', /iniciar vehículo/i.test(closed) && !closed.includes('CON-001'), closed.replace(/\s+/g, ' ').slice(0, 90))
 
 check('sin errores de consola', errors.length === 0, errors.join(' | '))
 await browser.close()
