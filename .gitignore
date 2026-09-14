@@ -34,3 +34,6 @@ imports/
 
 # Android companion app (separate MAUI project, not part of this repo)
 android-app/
+
+# Local UI review screenshots (tools/redesign-shots.mjs)
+.hermes-shots/

@@ -56,6 +56,31 @@ const audiences = [
   { title: 'Empresas de ambulancias', text: 'Ejecutan sus propios traslados con flota propia, coordinación y app de conductor.' },
 ]
 
+function RouteMotif() {
+  return (
+    <svg
+      className="landing-motif"
+      viewBox="0 0 720 190"
+      role="img"
+      aria-label="Esquema de un traslado: origen, trayecto y destino"
+    >
+      <rect x="0.5" y="0.5" width="719" height="189" rx="14" fill="#fff" stroke="#e6ebeb" />
+      <path
+        d="M96 118 C 230 118, 268 82, 372 84 S 552 92, 624 88"
+        fill="none"
+        stroke="#d3dcdc"
+        strokeWidth="1.5"
+        strokeDasharray="5 7"
+        strokeLinecap="round"
+      />
+      <circle cx="96" cy="118" r="7" fill="#fff" stroke="#0d7a75" strokeWidth="2.5" />
+      <circle cx="624" cy="88" r="7" fill="#0d7a75" stroke="#0d7a75" strokeWidth="2.5" />
+      <circle cx="372" cy="84" r="15" fill="#eaf5f4" stroke="#cfe6e4" />
+      <circle cx="372" cy="84" r="6" fill="#0d7a75" />
+    </svg>
+  )
+}
+
 export function LandingPage() {
   const logged = !!localStorage.getItem('nagomi_token')
   return (
@@ -63,7 +88,6 @@ export function LandingPage() {
       {/* HERO */}
       <section className="landing-hero">
         <div className="landing-hero-inner">
-          <span className="brand-mark brand-mark-large" aria-hidden="true">N</span>
           <h1>Coordinación de transporte sanitario, de principio a fin</h1>
           <p className="landing-tagline">
             Nagomi planifica, coordina y sigue los traslados de pacientes de tu
@@ -71,14 +95,15 @@ export function LandingPage() {
           </p>
           <div className="landing-actions">
             {logged ? (
-              <Link className="button button-accent" to="/trayectos">Ir a la operación</Link>
+              <Link className="button button-primary" to="/trayectos">Ir a la operación</Link>
             ) : (
               <>
-                <Link className="button button-accent" to="/login">Entrar</Link>
-                <Link className="button button-landing-ghost" to="/trayectos">Ver la operación</Link>
+                <Link className="button button-primary" to="/login">Entrar</Link>
+                <Link className="button button-secondary" to="/trayectos">Ver la operación</Link>
               </>
             )}
           </div>
+          <RouteMotif />
         </div>
       </section>
 
@@ -138,9 +163,9 @@ export function LandingPage() {
           <p>Entra con tu cuenta para empezar a operar hoy mismo.</p>
           <div className="landing-actions">
             {logged ? (
-              <Link className="button button-accent" to="/trayectos">Abrir Nagomi</Link>
+              <Link className="button button-primary" to="/trayectos">Abrir Nagomi</Link>
             ) : (
-              <Link className="button button-accent" to="/login">Entrar</Link>
+              <Link className="button button-primary" to="/login">Entrar</Link>
             )}
           </div>
         </div>

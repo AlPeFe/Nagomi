@@ -41,6 +41,8 @@ export function onboardingRequired(): boolean {
 
 export function rememberUser(user: CurrentUser) {
   sessionStorage.setItem('nagomi_roles', JSON.stringify(user.roles))
+  // Display name for the shell's user chip (the token only carries roles).
+  sessionStorage.setItem('nagomi_user', user.displayName ?? user.name ?? user.email ?? '')
   if (user.onboardingRequired) sessionStorage.setItem(ONBOARDING_KEY, '1')
   else sessionStorage.removeItem(ONBOARDING_KEY)
 }
@@ -90,5 +92,6 @@ export async function me(): Promise<CurrentUser> {
 export function logout() {
   localStorage.removeItem(TOKEN_KEY)
   sessionStorage.removeItem('nagomi_roles')
+  sessionStorage.removeItem('nagomi_user')
   sessionStorage.removeItem(ONBOARDING_KEY)
 }
