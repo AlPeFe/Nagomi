@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { PageHeader } from '../components/States'
+import { AiSettingsCard } from '../components/AiSettingsCard'
 import type { QueueMessageSample, QueueSnapshot, TenantCapabilities, TransportClient } from '../types'
 
 export function TenantConfigPage() {
@@ -143,6 +144,8 @@ export function TenantConfigPage() {
               </label>
             </div>
           </section>
+
+          <AiSettingsCard />
 
           <section className="config-card">
             <div className="section-heading"><h2>Clientes facturables</h2><p>Organizaciones o particulares a los que se factura un traslado. No tienen integración ni cola.</p></div>

@@ -1,4 +1,4 @@
-import type { CancellationReason, CollectiveRoute, CollectiveRouteInput, CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle, VehicleType } from './types'
+import type { AiConnectionTestResult, AiSettings, CancellationReason, CollectiveRoute, CollectiveRouteInput, CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle, VehicleType } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -287,6 +287,14 @@ export const api = {
     return await request<void>(`/admin/identity/clients/${encodeURIComponent(clientId)}`, { method: 'DELETE' })
   },
   getCapabilities: () => request<TenantCapabilities>('/admin/tenant/capabilities'),
+  getAiSettings: () => request<AiSettings>('/admin/tenant/ai'),
+  updateAiSettings: (body: {
+    enabled: boolean; provider?: string; baseUrl?: string; model?: string; username?: string
+    /** Vacío = mantener la contraseña guardada. */
+    password?: string; clearPassword?: boolean; systemPrompt?: string; enableTools: boolean
+  }) => request<AiSettings>('/admin/tenant/ai', { method: 'PUT', body: JSON.stringify(body) }),
+  testAiConnection: (body: { baseUrl?: string; model?: string; username?: string; password?: string; provider?: string }) =>
+    request<AiConnectionTestResult>('/admin/tenant/ai/test', { method: 'POST', body: JSON.stringify(body) }),
   updateCapabilities: (body: TenantCapabilities) => request<TenantCapabilities>('/admin/tenant/capabilities', { method: 'PUT', body: JSON.stringify(body) }),
   listClients: (includeInactive = false) => request<TransportClient[]>(`/admin/tenant/clients${includeInactive ? '?includeInactive=true' : ''}`),
   async createClient(body: Omit<TransportClient, 'id' | 'publicId' | 'isActive' | 'createdAt'> & { isActive?: boolean }) {

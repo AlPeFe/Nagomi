@@ -21,6 +21,21 @@ public sealed class TenantSettings
     public TenantCapabilities Capabilities { get; set; } =
         TenantCapabilities.PublishesRequests | TenantCapabilities.ExecutesTransports | TenantCapabilities.HandlesEmergencies;
     public DateTimeOffset UpdatedAt { get; set; }
+
+    // --- Asistente de IA (chat de ayuda) ---------------------------------------------
+    // Configurable desde la web para no depender de appsettings/.env: la instalación
+    // apunta a un proveedor OpenAI-compatible (p. ej. el gateway de Hermes) o a Ollama.
+    public bool AiEnabled { get; set; }
+    /// <summary>Etiqueta informativa: 'hermes', 'openai' u 'ollama'.</summary>
+    public string? AiProvider { get; set; }
+    public string? AiBaseUrl { get; set; }
+    public string? AiModel { get; set; }
+    /// <summary>Usuario del gateway (auth Basic). El gateway de Hermes usa usuario+contraseña.</summary>
+    public string? AiUsername { get; set; }
+    /// <summary>Secreto. NO se devuelve nunca por la API; el cliente sólo sabe si existe.</summary>
+    public string? AiPassword { get; set; }
+    public string? AiSystemPrompt { get; set; }
+    public bool AiEnableTools { get; set; } = true;
 }
 
 /// <summary>Billable client: an organization or individual invoiced for a transport but not integrated into Nagomi.</summary>

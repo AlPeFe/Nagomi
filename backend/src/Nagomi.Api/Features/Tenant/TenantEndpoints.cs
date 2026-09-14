@@ -26,7 +26,7 @@ public static class TenantSettingsEndpoints
     private static async Task<Ok<TenantSettingsResponse>> GetCapabilities(
         ITenantDb db, CancellationToken cancellationToken)
     {
-        var settings = await EnsureSettings(db, cancellationToken);
+        var settings = await EnsureSettingsAsync(db, cancellationToken);
         return TypedResults.Ok(ToResponse(settings));
     }
 
@@ -34,7 +34,7 @@ public static class TenantSettingsEndpoints
         TenantSettingsCommand command, ITenantDb db, TimeProvider clock, CancellationToken cancellationToken)
     {
         if (command is null) return TypedResults.ValidationProblem(Error("request", "Capabilities are required."));
-        var settings = await EnsureSettings(db, cancellationToken);
+        var settings = await EnsureSettingsAsync(db, cancellationToken);
         var caps = TenantCapabilities.None;
         if (command.PublishesRequests) caps |= TenantCapabilities.PublishesRequests;
         if (command.ExecutesTransports) caps |= TenantCapabilities.ExecutesTransports;
@@ -98,7 +98,7 @@ public static class TenantSettingsEndpoints
         return TypedResults.Ok(client.ToResponse());
     }
 
-    private static async Task<TenantSettings> EnsureSettings(ITenantDb db, CancellationToken cancellationToken)
+    internal static async Task<TenantSettings> EnsureSettingsAsync(ITenantDb db, CancellationToken cancellationToken)
     {
         var settings = await db.TenantSettings.SingleOrDefaultAsync(x => x.Id == TenantSettings.SingletonId, cancellationToken);
         if (settings is null)

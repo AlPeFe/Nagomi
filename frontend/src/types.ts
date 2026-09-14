@@ -1,3 +1,17 @@
+export interface AiSettings {
+  enabled: boolean
+  provider?: string
+  baseUrl?: string
+  model?: string
+  username?: string
+  /** El servidor nunca devuelve la contraseña: sólo si existe. */
+  hasPassword: boolean
+  systemPrompt?: string
+  enableTools: boolean
+}
+
+export interface AiConnectionTestResult { ok: boolean; status: number; detail: string }
+
 export type CancellationReason = 'NoLongerRequired' | 'PatientUnavailable' | 'MedicalReason' | 'SchedulingConflict' | 'ProviderUnavailable' | 'Other'
 
 export const CANCELLATION_REASON_LABELS: Record<CancellationReason, string> = {
@@ -328,6 +342,8 @@ export interface HelpChatStatus {
 }
 
 export type HelpChatRole = 'user' | 'assistant' | 'system'
+
+export interface HelpChatStatus { enabled: boolean; provider?: string; model?: string }
 
 export interface HelpChatMessage {
   role: HelpChatRole

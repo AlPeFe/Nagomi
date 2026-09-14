@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Options;
 using Nagomi.Api.Features.Mcp;
 using Nagomi.Api.Infrastructure.Authentication;
+using Nagomi.Api.Features.Tenant;
 
 namespace Nagomi.Api.Features.HelpChat;
 
@@ -24,12 +25,13 @@ public static class HelpChatEndpoints
         return endpoints;
     }
 
-    /// <summary>Reports whether the help chat is enabled, so the frontend can show/hide its button.</summary>
-    private static Ok<HelpChatStatusResponse> GetStatus(
-        IOptions<HelpChatOptions> options)
+    /// <summary>Indica si el chat está disponible y contra qué proveedor, para pintar el widget.</summary>
+    private static async Task<Ok<HelpChatStatusResponse>> GetStatus(
+        IHelpChatSettingsProvider settingsProvider, CancellationToken cancellationToken)
     {
-        var configured = options.Value.IsConfigured;
-        return TypedResults.Ok(new HelpChatStatusResponse(configured));
+        var settings = await settingsProvider.GetAsync(cancellationToken);
+        return TypedResults.Ok(new HelpChatStatusResponse(
+            settings.IsConfigured, settings.Provider ?? "openai", settings.Model));
     }
 
     /// <summary>
@@ -39,14 +41,14 @@ public static class HelpChatEndpoints
     /// </summary>
     private static async Task<Results<Ok<HelpChatMessageResponse>, ValidationProblem, StatusCodeHttpResult>> SendMessage(
         HelpChatMessageRequest request,
-        IOptions<HelpChatOptions> options,
+        IHelpChatSettingsProvider settingsProvider,
         IHttpClientFactory httpClientFactory,
         NagomiMcpTools domainTools,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger("Nagomi.HelpChat");
-        var opts = options.Value;
+        var opts = await settingsProvider.GetAsync(cancellationToken);
         if (!opts.IsConfigured)
             return TypedResults.ValidationProblem(Error("help-chat", "El chat de ayuda no está configurado."));
 
@@ -78,7 +80,13 @@ public static class HelpChatEndpoints
                 };
                 if (useTools)
                     payload["tools"] = HelpChatTools.Schemas;
-                response = await client.PostAsJsonAsync(chatEndpoint, payload, cancellationToken);
+                // Basic (usuario+contraseña, gateway de Hermes) o Bearer (clave de API).
+                using var httpRequest = new HttpRequestMessage(HttpMethod.Post, chatEndpoint)
+                {
+                    Content = JsonContent.Create(payload),
+                };
+                AiSettingsEndpoints.ApplyAuthentication(httpRequest, opts.Username, opts.Password, opts.ApiKey);
+                response = await client.SendAsync(httpRequest, cancellationToken);
             }
             catch (Exception ex)
             {

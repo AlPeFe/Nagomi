@@ -6,6 +6,7 @@ using Nagomi.Api.Features.Audit;
 using Nagomi.Api.Features.EmergencyTransports;
 using Nagomi.Api.Features.Dispatch;
 using Nagomi.Api.Features.HelpChat;
+using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Features.IdentityAdministration;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.Mcp;
@@ -43,6 +44,9 @@ builder.Services.AddUserAuthentication(builder.Configuration);
 builder.Services.Configure<LoginRateLimitingOptions>(builder.Configuration.GetSection(LoginRateLimitingOptions.SectionName));
 builder.Services.AddProviderIntegration(builder.Configuration);
 builder.Services.Configure<HelpChatOptions>(builder.Configuration.GetSection(HelpChatOptions.SectionName));
+// La configuración efectiva del asistente vive en la BD (editable desde la web) con
+// respaldo en appsettings, así que se resuelve por petición.
+builder.Services.AddScoped<IHelpChatSettingsProvider, HelpChatSettingsProvider>();
 builder.Services.AddHttpClient(HelpChatEndpoints.HttpClientName).ConfigurePrimaryHttpMessageHandler(static () =>
     new HttpClientHandler { AllowAutoRedirect = true });
 builder.Services.AddMcpServer().WithHttpTransport().WithTools<NagomiMcpTools>();
@@ -89,6 +93,7 @@ app.MapVehicleEndpoints();
 app.MapPatientEndpoints();
 app.MapRouteEndpoints();
 app.MapDispatchEndpoints();
+app.MapAiSettingsEndpoints();
 app.MapHelpChatEndpoints();
 app.MapMcp("/mcp")
     .RequireAuthorization(UserAuthorizationPolicies.Web);

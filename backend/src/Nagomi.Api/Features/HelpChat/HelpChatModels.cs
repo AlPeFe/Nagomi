@@ -20,7 +20,6 @@ public sealed class HelpChatOptions
         !string.IsNullOrWhiteSpace(Model);
 }
 
-public sealed record HelpChatStatusResponse(bool Enabled);
 
 public sealed class HelpChatHistoryItem
 {

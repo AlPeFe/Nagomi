@@ -539,3 +539,43 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
 .driver-job p strong { font-weight: 600; }
 .driver-job-actions { display: flex; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; }
 .driver-job-actions .button { min-height: 2.25rem; }
+
+/* ============ Configuración del asistente de IA (gateway de Hermes) ============ */
+.section-heading h2 { display: flex; align-items: center; gap: 0.4rem; }
+.ai-form { display: grid; gap: 0.7rem; }
+.ai-form .form-row { gap: 0.7rem; }
+.ai-form textarea { min-height: 3.5rem; }
+.ai-hint { font-size: 0.75rem; margin: 0; }
+.ai-actions { justify-content: flex-start; padding: 0; background: transparent; border-top: 0; gap: 0.5rem; }
+.ai-form .alert { display: flex; align-items: center; gap: 0.4rem; font-weight: 500; }
+.link-button { border: 0; background: transparent; color: var(--brand); font: inherit; padding: 0; cursor: pointer; text-decoration: underline; }
+.link-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ======================= Asistente de IA: acabado visual ======================= */
+.help-chat-avatar { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-wash); border: 1px solid #cfe6e4; color: var(--brand-ink); }
+.help-chat-avatar-small { width: 22px; height: 22px; flex: 0 0 22px; }
+.help-chat-title { flex: 1; min-width: 0; }
+.help-chat-title strong { display: block; font-size: 0.8125rem; font-weight: 600; }
+.help-chat-title small { display: flex; align-items: center; gap: 0.3rem; font-size: 0.6875rem; color: var(--muted); }
+.help-chat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 2px var(--ok-wash); }
+.help-chat-panel { border-radius: var(--r-lg); }
+.help-chat-empty { margin: auto; text-align: left; display: grid; gap: 0.5rem; }
+.help-chat-empty-icon { width: 34px; height: 34px; border-radius: var(--r-md); display: grid; place-items: center; background: var(--brand-wash); border: 1px solid #cfe6e4; color: var(--brand); }
+.help-chat-empty strong { font-size: 0.875rem; }
+.help-chat-empty p { margin: 0; font-size: 0.75rem; color: var(--muted); }
+.help-chat-suggestions { list-style: none; margin: 0.35rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
+.help-chat-suggestions button { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-sm); padding: 0.4rem 0.55rem; font-size: 0.75rem; color: var(--ink-2); cursor: pointer; transition: border-color var(--t-fast), background-color var(--t-fast); }
+.help-chat-suggestions button:hover:not(:disabled) { border-color: var(--brand); background: var(--brand-wash); color: var(--brand-ink); }
+.help-chat-row { display: flex; gap: 0.4rem; align-items: flex-end; }
+.help-chat-row-user { justify-content: flex-end; }
+.help-chat-bubble { max-width: 82%; }
+.help-chat-typing { display: inline-flex; gap: 0.2rem; align-items: center; padding: 0.5rem 0.6rem; }
+.help-chat-typing-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); animation: help-chat-blink 1.2s infinite ease-in-out; }
+.help-chat-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.help-chat-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes help-chat-blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+.help-chat-send { min-height: 2.125rem; padding: 0.4rem 0.6rem; flex: 0 0 auto; }
+.help-chat-foot { margin: 0; padding: 0 0.7rem 0.6rem; font-size: 0.625rem; color: var(--faint); }
+.help-chat-fab { background: var(--primary); border: 1px solid var(--primary); }
+.help-chat-fab:hover { background: var(--primary-hover); }
+@media (prefers-reduced-motion: reduce) { .help-chat-typing-dot { animation: none; } }
