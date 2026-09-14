@@ -15,6 +15,12 @@ async function main() {
   // Estado de la configuración de IA
   console.log('config IA:', JSON.stringify(await (await fetch(base + '/api/admin/tenant/ai', { headers: H })).json()));
 
+  // Prueba de conexión: debe validar que la respuesta sea de verdad una completion
+  const probe = await fetch(base + '/api/admin/tenant/ai/test', {
+    method: 'POST', headers: H, body: JSON.stringify({}),
+  });
+  console.log('prueba conexion:', JSON.stringify(await probe.json()));
+
   // Pregunta real al asistente (mismo endpoint que usa el widget)
   const chat = await fetch(base + '/api/help-chat/messages', {
     method: 'POST',
