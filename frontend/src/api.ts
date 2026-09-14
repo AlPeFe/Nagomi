@@ -64,6 +64,8 @@ type OperationsRow = {
   requirements: string; status: number | JourneyStatus; provider?: string; contractCode?: string; providerReference?: string; retrievalState?: string
   externallyModified?: boolean; providerCancelled?: boolean
   vehicleId?: string; vehicleName?: string; driverName?: string; notes?: string
+  requiresOxygen?: boolean; companionRequired?: boolean; medicalStaffRequired?: boolean
+  isolationRequired?: boolean; bariatricRequired?: boolean; stairsAssistanceRequired?: boolean
   cancellationReason?: number | string
 }
 type BackendRequest = {
@@ -118,7 +120,15 @@ function mapOperationsRow(value: OperationsRow): Journey {
     id: value.journeyId, publicId: value.journeyPublicId, requestId: value.requestId, requestPublicId: value.requestPublicId, direction,
     scheduledStartAt: direction === 'Outbound' ? value.operationalAt : undefined, scheduledPickupAt: direction === 'Return' ? value.operationalAt : undefined,
     pickupTimePending: value.pickupTimePending, patientName: value.patientName, patientPhone: value.patientPhone, origin: { name: value.origin }, destination: { name: value.destination },
-    reason: value.reason, requirements: { ...mapRequirements(), mobility: enumValue(value.requirements, ['Autonomous', 'Wheelchair', 'Stretcher'], 'Autonomous') },
+    reason: value.reason,
+    requirements: {
+      ...mapRequirements(),
+      mobility: enumValue(value.requirements, ['Autonomous', 'Wheelchair', 'Stretcher'], 'Autonomous'),
+      // Los flags viajan en la fila de operaciones para poder pintar la movilidad en iconos.
+      oxygen: value.requiresOxygen ?? false, companion: value.companionRequired ?? false,
+      medicalStaff: value.medicalStaffRequired ?? false, isolation: value.isolationRequired ?? false,
+      bariatric: value.bariatricRequired ?? false, stairsAssistance: value.stairsAssistanceRequired ?? false,
+    },
     status: enumValue(value.status, journeyStatuses, 'Scheduled'), provider: value.provider, contract: value.contractCode, providerReference: value.providerReference,
     vehicleId: value.vehicleId, vehicleName: value.vehicleName, driverName: value.driverName, notes: value.notes,
     cancellationReason: value.cancellationReason == null ? undefined : enumValue(value.cancellationReason, cancellationReasons, 'Other'),

@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useState } from 'react'
 import { api } from '../api'
 import { JourneyTable } from '../components/JourneyTable'
 import { JourneyQuickView } from '../components/JourneyQuickView'
+import { JourneyMapModal } from '../components/JourneyMapModal'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { Journey, JourneyFilters, Vehicle } from '../types'
 import { csvForJourneys, localDate } from '../utils'
@@ -27,6 +28,7 @@ export function JourneysPage() {
   const [error, setError] = useState('')
   const [refreshedAt, setRefreshedAt] = useState<Date>()
   const [quickId, setQuickId] = useState<string | null>(null)
+  const [mapId, setMapId] = useState<string | null>(null)
 
   async function load(silent = false) {
     if (!silent) setLoading(true)
@@ -96,6 +98,7 @@ export function JourneysPage() {
         journeys={journeys}
         vehicles={vehicles}
         onOpen={setQuickId}
+        onShowMap={setMapId}
         onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
         onAssignDriver={(id, name) => void assignDriver(id, name)}
       />
@@ -109,6 +112,10 @@ export function JourneysPage() {
       onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
       onAssignDriver={(id, name) => void assignDriver(id, name)}
       onChanged={() => void load(true)}
+    />}
+    {mapId && journeys.some((journey) => journey.id === mapId) && <JourneyMapModal
+      journey={journeys.find((journey) => journey.id === mapId)!}
+      onClose={() => setMapId(null)}
     />}
   </div>
 }

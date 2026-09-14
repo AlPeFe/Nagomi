@@ -18,10 +18,11 @@ const ops = (i, status, direction, extra = {}) => ({
   journeyId: `j-${i}`, journeyPublicId: `TRA-2026-00${40 + i}`, requestId: `r-${i % 4}`, requestPublicId: `SOL-2026-00${10 + (i % 4)}`,
   operationalAt: `${i > 4 ? tmr : today}T${String(7 + i).padStart(2, '0')}:30:00+02:00`, pickupTimePending: i === 3,
   patientName: ['Ana Martín', 'Luis Ferrer', 'Marta Ruiz', 'José Peña', 'Carmen Solís', 'Iván Bravo', 'Nuria Cano', 'Pau Serra'][i % 8],
-  patientPhone: '600 123 456', origin: ['Hospital La Paz', 'Residencia Los Olivos', 'CAP Gràcia', 'Clínica Teknon'][i % 4],
-  destination: ['Residencia Los Olivos', 'Hospital Clínic', 'Hospital La Paz', 'CAP Sants'][i % 4],
+  // En una vuelta el vehículo va del destino al origen: el dominio ya lo guarda así.
+  origin: (direction === 'Return' ? ['Residencia Los Olivos', 'Hospital Clínic', 'Hospital La Paz', 'CAP Sants'] : ['Hospital La Paz', 'Residencia Los Olivos', 'CAP Gràcia', 'Clínica Teknon'])[i % 4],
+  destination: (direction === 'Return' ? ['Hospital La Paz', 'Residencia Los Olivos', 'CAP Gràcia', 'Clínica Teknon'] : ['Residencia Los Olivos', 'Hospital Clínic', 'Hospital La Paz', 'CAP Sants'])[i % 4],
   direction, reason: ['Alta hospitalaria', 'Diálisis', 'Consulta externa', 'Rehabilitación'][i % 4],
-  requirements: ['Wheelchair', 'Autonomous', 'Stretcher'][i % 3], status,
+  requirements: ['Wheelchair', 'Autonomous', 'Stretcher'][i % 3], status, requiresOxygen: i % 3 === 0, companionRequired: i % 2 === 0, medicalStaffRequired: i === 4, isolationRequired: false, bariatricRequired: i === 6, stairsAssistanceRequired: i === 2,
   provider: i % 3 === 0 ? 'Ambulancias Centro' : 'Flota propia', contractCode: i % 3 === 0 ? 'CTR-MAD-01' : 'SELF',
   providerReference: `EXT-88${i}`, retrievalState: ['Retrieved', 'Pending', 'NotPublished'][i % 3],
   vehicleId: i % 3 === 2 ? undefined : `v-${i % 2}`, vehicleName: i % 3 === 2 ? undefined : ['AMB-01', 'AMB-02'][i % 2],
@@ -156,9 +157,21 @@ await shoot(mobile, 'mob', [['/trayectos', 'operacion'], ['/historico', 'histori
   await page.route('**/api/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixtureFor(r.request().url())) }))
   await page.goto(`${BASE}/trayectos`, { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(900)
-  await page.locator('.quick-open').first().click()
+  await page.getByRole('button', { name: /Vista rápida/ }).first().click()
   await page.waitForTimeout(900)
   await page.screenshot({ path: path.join(OUT, 'desk-detalle-rapido.png'), fullPage: false })
+  await page.close()
+}
+
+// Mapa del trayecto (origen, destino y vehículo)
+{
+  const page = await authed.newPage()
+  await page.route('**/api/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixtureFor(r.request().url())) }))
+  await page.goto(`${BASE}/trayectos`, { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(900)
+  await page.getByRole('button', { name: /Ver en el mapa/ }).first().click()
+  await page.waitForTimeout(4000)
+  await page.screenshot({ path: path.join(OUT, 'desk-mapa-trayecto.png'), fullPage: false })
   await page.close()
 }
 

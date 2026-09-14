@@ -1,9 +1,10 @@
-import { Eye } from '@phosphor-icons/react'
+import { Eye, MapTrifold, Note } from '@phosphor-icons/react'
 import { Link } from '../router'
 import type { Journey, Vehicle } from '../types'
 import { VEHICLE_TYPE_LABELS } from '../types'
-import { directionLabel, operationalTime, requirementSummary } from '../utils'
+import { directionLabel, operationalTime } from '../utils'
 import { Indicators, StatusBadge } from './Badges'
+import { RequirementsIcons } from './RequirementsIcons'
 
 // Paleta de acentos para parejas ida/vuelta: cada solicitud con ambos trayectos
 // visibles comparte un color de borde para que la vuelta se identifique al instante.
@@ -56,13 +57,15 @@ export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDri
   </div>
 }
 
-export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssignDriver, onOpen }: {
+export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssignDriver, onOpen, onShowMap }: {
   journeys: Journey[]
   vehicles?: Vehicle[]
   onAssignVehicle?: (journeyId: string, vehicleId: string) => void
   onAssignDriver?: (journeyId: string, driverName: string) => void
   /** Abre el detalle rápido (panel lateral) sin salir de la lista. */
   onOpen?: (journeyId: string) => void
+  /** Abre el mapa del trayecto (origen, destino y posiciones del vehículo). */
+  onShowMap?: (journeyId: string) => void
 }) {
   const pairs = new Map<string, { outbound?: Journey; return?: Journey }>()
   for (const journey of journeys) {
@@ -74,8 +77,8 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssig
   return <div className="table-scroll"><table className="operations-table">
     <caption className="sr-only">Trayectos del resultado operativo actual</caption>
     <thead><tr>
-      <th>Hora / trayecto</th><th>Paciente</th><th>Ruta</th><th>Motivo / requisitos</th>
-      <th>Estado</th><th>Vehículo / conductor</th><th>Observaciones</th><th>Proveedor</th>
+      <th>Hora / trayecto</th><th>Paciente</th><th>Ruta</th><th>Motivo / movilidad</th>
+      <th>Estado</th><th>Vehículo / conductor</th><th>Acciones</th><th>Proveedor</th>
     </tr></thead>
     <tbody>{journeys.map((journey) => {
       const pair = pairs.get(journey.requestId)
@@ -83,10 +86,10 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssig
       const accent = paired ? accentFor(journey.requestId) : undefined
       const mate = journey.direction === 'Outbound' ? pair?.return : pair?.outbound
       return <tr key={journey.id} className={`${journey.deliveryState === 'Dead' ? 'row-alert' : ''}${paired ? ' pair-row' : ''}`} style={accent ? { '--pair-accent': accent } as React.CSSProperties : undefined}>
-        <td data-label="Hora / trayecto"><div className="journey-cell"><span className={`rail-dot rail-${journey.status.toLowerCase()}`} aria-hidden="true" />{onOpen && <button type="button" className="icon-button quick-open" title="Vista rápida" aria-label={`Vista rápida de ${journey.publicId}`} onClick={() => onOpen(journey.id)}><Eye size={15} aria-hidden="true" /></button>}<div><strong className={journey.pickupTimePending ? 'pending-time' : ''}>{operationalTime(journey)}</strong><Link to={`/trayectos/${journey.id}`}>{journey.publicId}</Link><small>{directionLabel(journey.direction)} · {journey.requestPublicId}{paired && mate ? <span className="pair-chip" title={`Ida y vuelta de ${journey.requestPublicId}`}>↕ {mate.publicId}</span> : null}</small></div></div></td>
+        <td data-label="Hora / trayecto"><div className="journey-cell"><span className={`rail-dot rail-${journey.status.toLowerCase()}`} aria-hidden="true" /><div><strong className={journey.pickupTimePending ? 'pending-time' : ''}>{operationalTime(journey)}</strong><Link to={`/trayectos/${journey.id}`}>{journey.publicId}</Link><small>{directionLabel(journey.direction)} · {journey.requestPublicId}{paired && mate ? <span className="pair-chip" title={`Ida y vuelta de ${journey.requestPublicId}`}>↕ {mate.publicId}</span> : null}</small></div></div></td>
         <td data-label="Paciente"><strong>{journey.patientName || 'Sin identificar'}</strong><small>{journey.patientPhone || 'Sin teléfono'}</small></td>
         <td data-label="Ruta"><div className="route-line"><strong>{journey.origin.name}</strong><span className="route-arrow" aria-hidden="true">→</span><span>{journey.destination.name}</span></div>{[journey.origin.municipality, journey.destination.municipality].filter(Boolean).length > 0 && <small>{[journey.origin.municipality, journey.destination.municipality].filter(Boolean).join(' · ')}</small>}</td>
-        <td data-label="Motivo / requisitos">{journey.reason}<small>{requirementSummary(journey.requirements)}</small></td>
+        <td data-label="Motivo / movilidad"><strong>{journey.reason}</strong><RequirementsIcons requirements={journey.requirements} className="req-icons-cell" /></td>
         <td data-label="Estado">
           {isPending(journey) ? <span className="badge badge-pending"><span aria-hidden="true" />Pendiente de vehículo</span> : <StatusBadge status={journey.status} />}
           <Indicators external={journey.externallyModified} cancelledBy={journey.cancelledBy} delivery={journey.deliveryState} />
@@ -94,11 +97,14 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssig
         <td data-label="Vehículo / conductor">
           <AssignmentCell journey={journey} vehicles={vehicles} onAssignVehicle={onAssignVehicle} onAssignDriver={onAssignDriver} />
         </td>
-        <td data-label="Observaciones">
-          {journey.notes
-            ? <details className="notes-peek"><summary>Ver observaciones</summary><p>{journey.notes}</p></details>
-            : <span className="muted">—</span>}
-        </td>
+        <td data-label="Acciones"><div className="row-actions">
+          {onOpen && <button type="button" className="icon-button row-action" title={`Vista rápida de ${journey.publicId}`} aria-label={`Vista rápida de ${journey.publicId}`} onClick={() => onOpen(journey.id)}><Eye size={15} aria-hidden="true" /></button>}
+          {onShowMap && <button type="button" className="icon-button row-action" title={`Ver en el mapa ${journey.publicId}`} aria-label={`Ver en el mapa ${journey.publicId}`} onClick={() => onShowMap(journey.id)}><MapTrifold size={15} aria-hidden="true" /></button>}
+          {journey.notes && <details className="row-pop">
+            <summary className="icon-button row-action" title="Observaciones" aria-label={`Observaciones de ${journey.publicId}`}><Note size={15} aria-hidden="true" /></summary>
+            <p className="row-pop-body">{journey.notes}</p>
+          </details>}
+        </div></td>
         <td data-label="Proveedor"><strong>{journey.provider || 'Sin asignar'}</strong><small>{journey.contract || 'Sin contrato'}</small></td>
       </tr>
     })}</tbody>

@@ -20,10 +20,11 @@ import type { Icon } from '@phosphor-icons/react'
 import { api } from '../api'
 import type { Journey, JourneyStatus, Vehicle } from '../types'
 import { CANCELLATION_REASON_LABELS } from '../types'
-import { directionLabel, formatDateTime, operationalTime, requirementSummary, statusLabel } from '../utils'
+import { directionLabel, formatDateTime, operationalTime, statusLabel } from '../utils'
 import { Indicators, StatusBadge } from './Badges'
 import { Link } from '../router'
 import { AssignmentCell } from './JourneyTable'
+import { RequirementsIcons } from './RequirementsIcons'
 
 /** Icono y color por fase: ayuda a leer el estado de un vistazo. */
 const PHASE_ICON: Record<JourneyStatus, Icon> = {
@@ -150,7 +151,7 @@ export function JourneyQuickView({ journeys, index, onClose, onNavigate, vehicle
           <div><dt><Clock size={12} aria-hidden="true" /> Hora operativa</dt><dd>{shown.pickupTimePending ? 'Hora pendiente' : operationalTime(shown)}</dd></div>
           <div><dt>Motivo</dt><dd>{shown.reason || 'Sin motivo'}</dd></div>
           <div className="span-2"><dt>Ruta</dt><dd>{shown.origin.name} → {shown.destination.name}</dd></div>
-          <div className="span-2"><dt>Requisitos</dt><dd>{requirementSummary(shown.requirements)}</dd></div>
+          <div className="span-2"><dt>Movilidad y requisitos</dt><dd><RequirementsIcons requirements={shown.requirements} withText /></dd></div>
           <div><dt>Proveedor</dt><dd>{shown.provider || 'Sin asignar'}</dd></div>
           <div><dt>Contrato</dt><dd>{shown.contract || 'Sin contrato'}</dd></div>
         </dl>

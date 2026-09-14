@@ -436,3 +436,61 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
   .qv-grid { grid-template-columns: 1fr; }
   .qv-grid .span-2 { grid-column: auto; }
 }
+
+/* ============================ Densidad de filas (estilo Gmail, punto medio) ============================ */
+.operations-table { font-size: 0.8125rem; }
+.operations-table th { padding: 0.4rem 0.65rem; }
+.operations-table td { padding: 0.35rem 0.65rem; line-height: 1.35; }
+.operations-table td > small, .operations-table .journey-cell div small { line-height: 1.3; }
+.operations-table .journey-cell { gap: 0.45rem; }
+.journey-cell strong { font-size: 0.8125rem; }
+.journey-cell a { font-size: 0.8125rem; }
+.rail-dot { width: 3px; min-width: 3px; }
+.result-bar { padding: 0.5rem 0.15rem 0.4rem; }
+.page .filter-panel { padding: 0.7rem; }
+
+/* Iconos de movilidad: sustituyen al texto de requisitos. */
+.req-icons { list-style: none; display: flex; gap: 0.3rem; margin: 0.15rem 0 0; padding: 0; flex-wrap: wrap; }
+.req-icon { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--ink-2); background: var(--surface-3); border: 1px solid var(--line); border-radius: var(--r-full); padding: 0.05rem 0.3rem; }
+.req-icon svg { color: var(--brand-ink); }
+.req-icon-text { font-size: 0.6875rem; color: var(--muted); }
+
+/* Grupo de acciones de fila (vista rápida · mapa · observaciones). */
+.row-actions { display: flex; gap: 0.15rem; align-items: center; }
+.row-action { width: 1.6rem; height: 1.6rem; color: var(--faint); }
+.row-action:hover { color: var(--brand); background: var(--brand-wash); }
+.row-pop { position: relative; }
+.row-pop summary { list-style: none; cursor: pointer; }
+.row-pop summary::-webkit-details-marker { display: none; }
+.row-pop-body {
+  position: absolute; right: 0; top: 1.8rem; z-index: 30; width: min(300px, 60vw); margin: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm);
+  box-shadow: var(--shadow-md); padding: 0.6rem 0.7rem; font-size: 0.75rem; color: var(--ink-2);
+  white-space: pre-wrap;
+}
+
+/* ============================ Mapa del trayecto (modal) ============================ */
+.map-modal {
+  position: fixed; z-index: 101; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(880px, 94vw); max-height: 90vh; display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md); overflow: hidden;
+}
+.map-modal-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.map-modal-head h2 { margin: 0; font-size: 0.9375rem; }
+.map-modal-head p { margin: 0.1rem 0 0; font-size: 0.75rem; }
+.map-modal-head .icon-button { margin-left: auto; }
+.map-modal-canvas { height: min(52vh, 460px); width: 100%; z-index: 0; }
+.map-modal-foot { padding: 0.7rem 0.9rem; border-top: 1px solid var(--line); display: grid; gap: 0.35rem; }
+.map-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-size: 0.75rem; color: var(--ink-2); }
+.map-legend li { display: inline-flex; align-items: center; gap: 0.35rem; }
+.map-dot { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-size: 0.625rem; }
+.map-dot-origin { background: #fff; color: var(--brand); border: 2px solid var(--brand); }
+.map-dot-destination { background: var(--brand); color: #fff; }
+.map-dot-vehicle { background: #E86F2D; color: #fff; }
+.map-modal-foot p { margin: 0; font-size: 0.6875rem; display: flex; align-items: center; gap: 0.3rem; }
+.journey-map-marker { background: transparent; border: 0; }
+@media (max-width: 700px) {
+  .map-modal { width: 100%; max-height: 100vh; height: 100%; border-radius: 0; top: 0; left: 0; transform: none; }
+  .map-modal-canvas { height: 45vh; }
+}

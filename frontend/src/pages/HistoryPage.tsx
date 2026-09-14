@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { JourneyTable } from '../components/JourneyTable'
 import { JourneyQuickView } from '../components/JourneyQuickView'
+import { JourneyMapModal } from '../components/JourneyMapModal'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { Journey, JourneyFilters, Vehicle } from '../types'
 import { csvForJourneys, localDate } from '../utils'
@@ -29,6 +30,7 @@ export function HistoryPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [quickId, setQuickId] = useState<string | null>(null)
+  const [mapId, setMapId] = useState<string | null>(null)
 
   useEffect(() => {
     // La lista de vehículos solo alimenta el selector de asignación: si falla, la
@@ -141,6 +143,7 @@ export function HistoryPage() {
         journeys={journeys}
         vehicles={vehicles}
         onOpen={setQuickId}
+        onShowMap={setMapId}
         onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
         onAssignDriver={(id, name) => void assignDriver(id, name)}
       />
@@ -154,6 +157,10 @@ export function HistoryPage() {
       onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
       onAssignDriver={(id, name) => void assignDriver(id, name)}
       onChanged={() => applied ? void search(applied) : undefined}
+    />}
+    {mapId && journeys.some((journey) => journey.id === mapId) && <JourneyMapModal
+      journey={journeys.find((journey) => journey.id === mapId)!}
+      onClose={() => setMapId(null)}
     />}
   </div>
 }
