@@ -547,6 +547,11 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
 .ai-form textarea { min-height: 3.5rem; }
 .ai-hint { font-size: 0.75rem; margin: 0; }
 .ai-actions { justify-content: flex-start; padding: 0; background: transparent; border-top: 0; gap: 0.5rem; }
+/* El botón de probar conexión no debe perderse en el fondo blanco: borde y texto con
+   contraste suficiente sin robarle protagonismo a "Guardar". */
+.ai-actions .button-secondary { border-color: var(--line-3); color: var(--ink-2); }
+.ai-actions .button-secondary:hover:not(:disabled) { border-color: var(--brand); color: var(--brand-ink); background: var(--brand-wash); }
+.ai-form .check-line + .field { margin-top: 0.15rem; }
 .ai-form .alert { display: flex; align-items: center; gap: 0.4rem; font-weight: 500; }
 .link-button { border: 0; background: transparent; color: var(--brand); font: inherit; padding: 0; cursor: pointer; text-decoration: underline; }
 .link-button:disabled { opacity: 0.5; cursor: not-allowed; }
