@@ -24,11 +24,13 @@ function isPending(journey: Journey) {
   return journey.status === 'Scheduled' && !journey.vehicleId
 }
 
-export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDriver }: {
+export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDriver, showDriver = false }: {
   journey: Journey
   vehicles: Vehicle[]
   onAssignVehicle?: (journeyId: string, vehicleId: string) => void
   onAssignDriver?: (journeyId: string, driverName: string) => void
+  /** El conductor no es necesario en la mesa diaria: sólo se muestra donde se pide. */
+  showDriver?: boolean
 }) {
   const editable = !!onAssignVehicle
   return <div className="assignment-cell">
@@ -44,7 +46,7 @@ export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDri
         <option key={vehicle.id} value={vehicle.id}>{vehicle.name} · {VEHICLE_TYPE_LABELS[vehicle.vehicleType]}</option>
       ))}
     </select>
-    {editable && onAssignDriver && (
+    {showDriver && editable && onAssignDriver && (
       <input
         className="assignment-driver"
         aria-label={`Conductor de ${journey.publicId}`}
@@ -53,15 +55,14 @@ export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDri
         onBlur={(e) => { if (e.target.value.trim() !== (journey.driverName ?? '')) onAssignDriver(journey.id, e.target.value) }}
       />
     )}
-    {!editable && journey.driverName && <small>{journey.driverName}</small>}
+    {showDriver && journey.driverName && !editable && <small>{journey.driverName}</small>}
   </div>
 }
 
-export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssignDriver, onOpen, onShowMap }: {
+export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onOpen, onShowMap }: {
   journeys: Journey[]
   vehicles?: Vehicle[]
   onAssignVehicle?: (journeyId: string, vehicleId: string) => void
-  onAssignDriver?: (journeyId: string, driverName: string) => void
   /** Abre el detalle rápido (panel lateral) sin salir de la lista. */
   onOpen?: (journeyId: string) => void
   /** Abre el mapa del trayecto (origen, destino y posiciones del vehículo). */
@@ -78,7 +79,7 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssig
     <caption className="sr-only">Trayectos del resultado operativo actual</caption>
     <thead><tr>
       <th>Hora / trayecto</th><th>Paciente</th><th>Ruta</th><th>Motivo / movilidad</th>
-      <th>Estado</th><th>Vehículo / conductor</th><th>Acciones</th><th>Proveedor</th>
+      <th>Estado</th><th>Vehículo</th><th>Acciones</th><th>Proveedor</th>
     </tr></thead>
     <tbody>{journeys.map((journey) => {
       const pair = pairs.get(journey.requestId)
@@ -94,8 +95,8 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onAssig
           {isPending(journey) ? <span className="badge badge-pending"><span aria-hidden="true" />Pendiente de vehículo</span> : <StatusBadge status={journey.status} />}
           <Indicators external={journey.externallyModified} cancelledBy={journey.cancelledBy} delivery={journey.deliveryState} />
         </td>
-        <td data-label="Vehículo / conductor">
-          <AssignmentCell journey={journey} vehicles={vehicles} onAssignVehicle={onAssignVehicle} onAssignDriver={onAssignDriver} />
+        <td data-label="Vehículo">
+          <AssignmentCell journey={journey} vehicles={vehicles} onAssignVehicle={onAssignVehicle} />
         </td>
         <td data-label="Acciones"><div className="row-actions">
           {onOpen && <button type="button" className="icon-button row-action" title={`Vista rápida de ${journey.publicId}`} aria-label={`Vista rápida de ${journey.publicId}`} onClick={() => onOpen(journey.id)}><Eye size={15} aria-hidden="true" /></button>}

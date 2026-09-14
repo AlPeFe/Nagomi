@@ -145,7 +145,6 @@ export function HistoryPage() {
         onOpen={setQuickId}
         onShowMap={setMapId}
         onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
-        onAssignDriver={(id, name) => void assignDriver(id, name)}
       />
     </>}
     {quickId && journeys.some((journey) => journey.id === quickId) && <JourneyQuickView

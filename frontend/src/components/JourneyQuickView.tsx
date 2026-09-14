@@ -158,7 +158,7 @@ export function JourneyQuickView({ journeys, index, onClose, onNavigate, vehicle
 
         <section className="qv-block">
           <h3>Vehículo y conductor</h3>
-          <AssignmentCell journey={shown} vehicles={vehicles} onAssignVehicle={onAssignVehicle} onAssignDriver={onAssignDriver} />
+          <AssignmentCell journey={shown} vehicles={vehicles} onAssignVehicle={onAssignVehicle} onAssignDriver={onAssignDriver} showDriver />
         </section>
 
         {mutable && <section className="qv-block">
