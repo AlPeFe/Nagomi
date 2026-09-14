@@ -56,7 +56,7 @@ export function HelpChatWidget() {
       // a la configuración, en vez de soltarle al usuario un "la API respondió 502".
       const unavailable = !detail || /\b(502|503|504)\b|Bad Gateway|no disponible/i.test(detail)
       setError(unavailable
-        ? 'El asistente no está disponible ahora mismo. Revisa la configuración de IA.'
+        ? 'El asistente no está disponible ahora mismo. Inténtalo de nuevo en un momento.'
         : detail)
     } finally {
       setBusy(false)
@@ -69,7 +69,7 @@ export function HelpChatWidget() {
         <span className="help-chat-avatar" aria-hidden="true"><Robot size={16} weight="duotone" /></span>
         <div className="help-chat-title">
           <strong>Asistente de Nagomi</strong>
-          <small><span className="help-chat-dot" aria-hidden="true" />En línea</small>
+          <small><span className="help-chat-dot" aria-hidden="true" />Consulta datos de Nagomi</small>
         </div>
         <button className="icon-button" onClick={() => setOpen(false)} aria-label="Cerrar el asistente">
           <X size={15} aria-hidden="true" />
