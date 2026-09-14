@@ -8,10 +8,18 @@ export const statusLabel = (status: JourneyStatus) => statusLabels[status]
 export const directionLabel = (direction: Journey['direction']) => direction === 'Outbound' ? 'Ida' : 'Vuelta'
 export const deliveryLabel = (state: Journey['deliveryState']) => ({ Pending: 'Pendiente de envío', Published: 'Enviado', Retrieved: 'Recibido', Dead: 'Envío fallido', NotPublished: 'Sin publicar' })[state]
 
+/** DD/MM del calendario LOCAL. `toISOString()` da la fecha UTC: en España (UTC+1/+2)
+ *  entre las 00:00 y la 01:00/02:00 locales devolvía AYER, y la ventana operativa
+ *  de los listados se desplazaba un día. */
 export function localDate(offset = 0) {
   const date = new Date()
   date.setDate(date.getDate() + offset)
-  return date.toISOString().slice(0, 10)
+  return localDateOnly(date)
+}
+
+/** Fecha local (YYYY-MM-DD) de un Date o de un instante con offset. */
+export function localDateOnly(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 export function formatDateTime(value?: string) {
@@ -30,7 +38,10 @@ export function requirementSummary(requirements: Requirements) {
   const values = [labels[requirements.mobility]]
   if (requirements.oxygen) values.push('Oxígeno')
   if (requirements.companion) values.push('Acompañante')
+  if (requirements.medicalStaff) values.push('Personal sanitario')
   if (requirements.isolation) values.push('Aislamiento')
+  if (requirements.bariatric) values.push('Bariátrica')
+  if (requirements.stairsAssistance) values.push('Ayuda escaleras')
   return values.join(' · ')
 }
 

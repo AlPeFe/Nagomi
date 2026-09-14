@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { api } from '../api'
 import { IncidentMap } from '../components/IncidentMap'
 import { geocodeAddress } from '../geocode'
@@ -49,7 +49,11 @@ export function EmergencyPage() {
     }
   }
 
-  useEffect(() => { void load() }, [tab])
+  // `load` lee los filtros del render actual: con [tab] como única dependencia la
+  // closure podía quedar obsoleta. useEffectEvent da siempre la versión viva.
+  const loadEffect = useEffectEvent(load)
+
+  useEffect(() => { void loadEffect() }, [tab])
 
   function resetForm() {
     setReason(''); setContactPhone(''); setObservations(''); setAddressQuery(''); setIncident(undefined)

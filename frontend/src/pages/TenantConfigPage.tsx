@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { PageHeader } from '../components/States'
 import type { QueueMessageSample, QueueSnapshot, TenantCapabilities, TransportClient } from '../types'
@@ -22,10 +22,17 @@ export function TenantConfigPage() {
   const [peeked, setPeeked] = useState<QueueMessageSample[] | null>(null)
   const [peekError, setPeekError] = useState<string | null>(null)
 
+  const noticeTimer = useRef<number | undefined>(undefined)
+
+  // Un guardado rápido tras otro dejaba dos timers vivos: el primero borraba el
+  // aviso nuevo. Y sin limpiar, el timer escribía estado tras desmontar.
   const flash = (message: string) => {
     setNotice(message)
-    window.setTimeout(() => setNotice(null), 4000)
+    window.clearTimeout(noticeTimer.current)
+    noticeTimer.current = window.setTimeout(() => setNotice(null), 4000)
   }
+
+  useEffect(() => () => window.clearTimeout(noticeTimer.current), [])
 
   const refresh = useCallback(async () => {
     setLoading(true)

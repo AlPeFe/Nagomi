@@ -6,7 +6,7 @@ import { StatusMap } from '../components/StatusMap'
 import { StatusBadge } from '../components/Badges'
 import { ErrorState, LoadingState, PageHeader } from '../components/States'
 import { VEHICLE_TYPE_LABELS, type CoordinationRow, type Vehicle } from '../types'
-import { directionLabel, formatDateTime } from '../utils'
+import { directionLabel, formatDateTime, localDate } from '../utils'
 
 function DriverInput({ journeyId, initial }: { journeyId: string; initial?: string }) {
   const [value, setValue] = useState(initial ?? '')
@@ -26,13 +26,10 @@ function DriverInput({ journeyId, initial }: { journeyId: string; initial?: stri
   />
 }
 
-function bucketOf(row: CoordinationRow, today: string): 'now' | 'today' | 'tomorrow' {
+function bucketOf(row: CoordinationRow, today: string, tomorrow: string): 'now' | 'today' | 'tomorrow' {
   const day = row.operationalAt.slice(0, 10)
-  const tomorrow = new Date(`${today}T00:00:00`)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10)
   if (day === today) return 'today'
-  if (day === tomorrowStr) return 'tomorrow'
+  if (day === tomorrow) return 'tomorrow'
   return 'now'
 }
 
@@ -66,7 +63,10 @@ export function CoordinationPage() {
     await load(true)
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  // Fechas del calendario LOCAL: compararlas con la fecha UTC dejaba la columna
+  // "Mañana" siempre vacía (los trayectos de mañana caían en "Trabajo actual").
+  const today = localDate(0)
+  const tomorrow = localDate(1)
   const bands: Array<{ key: 'now' | 'today' | 'tomorrow'; title: string }> = [
     { key: 'now', title: 'Trabajo actual' },
     { key: 'today', title: 'Hoy' },
@@ -81,7 +81,7 @@ export function CoordinationPage() {
     <FleetMap rows={rows} className="fleet-map-panel" />
     <div className="coordination-board">
       {bands.map((band) => {
-        const items = rows.filter((row) => bucketOf(row, today) === band.key)
+        const items = rows.filter((row) => bucketOf(row, today, tomorrow) === band.key)
         return <section key={band.key} className="coordination-column">
           <h2>{band.title}<span className="count-badge">{items.length}</span></h2>
           <div className="coordination-list">
