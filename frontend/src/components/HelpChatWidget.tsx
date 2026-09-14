@@ -50,13 +50,18 @@ export function HelpChatWidget() {
       const reply = await api.sendHelpChatMessage(value, next)
       setMessages([...next, { role: 'assistant', content: reply.reply }])
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'No se pudo enviar el mensaje.')
+      const detail = caught instanceof Error ? caught.message.trim() : ''
+      // Un 502 significa que el proveedor no está disponible: mejor decirlo con
+      // claridad y apuntar a la configuración que mostrar un error opaco.
+      setError(detail && !/^\s*$/.test(detail)
+        ? detail
+        : 'El asistente no está disponible ahora mismo. Revisa la configuración de IA.')
     } finally {
       setBusy(false)
     }
   }
 
-  return <div className="help-chat">
+  return <div className={`help-chat${open ? ' help-chat-open' : ''}`}>
     {open && <section className="help-chat-panel" role="dialog" aria-label="Asistente de Nagomi">
       <header className="help-chat-header">
         <span className="help-chat-avatar" aria-hidden="true"><Robot size={16} weight="duotone" /></span>

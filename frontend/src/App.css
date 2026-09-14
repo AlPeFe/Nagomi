@@ -503,3 +503,24 @@
   .help-chat:has(.help-chat-panel) .help-chat-fab { display: none; }
   input, select, textarea, .button { min-height: 2.5rem; }
 }
+
+/* --- Ajustes de la revisión visual: sin botón duplicado y envío con contraste --- */
+/* El panel ya trae su aspa: el botón flotante sobraba y quedaba descolgado debajo. */
+.help-chat.help-chat-open .help-chat-fab { display: none; }
+/* Separación clara del contenido de la tabla cuando el panel está abierto. */
+.help-chat-panel { width: min(360px, calc(100vw - 2rem)); max-height: min(78vh, 620px); }
+/* El cuerpo estaba clavado en 320px: ahora crece con el panel y el input queda abajo. */
+.help-chat-body { flex: 1; max-height: none; min-height: 240px; }
+.help-chat-header { background: var(--surface); border-bottom: 1px solid var(--line); }
+/* El de enviar sólo parece deshabilitado cuando de verdad lo está. */
+.help-chat-send:not(:disabled) { background: var(--primary); border-color: var(--primary); color: #fff; }
+.help-chat-send:disabled { background: var(--surface-2); border-color: var(--line); color: var(--faint); }
+/* Textos secundarios: del gris casi invisible a un gris legible. */
+.help-chat-foot { color: var(--muted); }
+.help-chat-title small { color: var(--muted); }
+/* En pantallas pequeñas, hoja inferior a lo ancho con fondo atenuado. */
+@media (max-width: 520px) {
+  .help-chat-panel { width: 100vw; max-height: 80vh; border-radius: var(--r-lg) var(--r-lg) 0 0; right: 0; bottom: 0; }
+  .help-chat-open::before { content: ''; position: fixed; inset: 0; background: rgb(15 27 29 / 32%); z-index: 40; }
+  .help-chat-panel { z-index: 41; }
+}
