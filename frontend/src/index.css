@@ -325,6 +325,14 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition: none !important; }
 }
 
+/* ---- Operación manual desde el detalle del traslado ---- */
+.manual-ops { display: grid; gap: 0.85rem; margin-bottom: 0.85rem; }
+.manual-ops-block { display: flex; gap: 0.5rem; align-items: flex-end; flex-wrap: wrap; }
+.manual-ops-block label { flex: 1 1 180px; min-width: 0; }
+.manual-ops-block .button { flex: 0 0 auto; }
+.manual-ops-cancel { border-top: 1px solid var(--line); padding-top: 0.85rem; }
+@media (max-width: 700px) { .manual-ops-block { flex-direction: column; align-items: stretch; } }
+
 /* ---- Asignación rápida y observaciones en la mesa de operaciones ---- */
 .assignment-cell { display: flex; flex-direction: column; gap: 0.4rem; min-width: 160px; }
 .route-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem; }

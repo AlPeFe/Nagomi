@@ -30,7 +30,27 @@ const ops = (i, status, direction, extra = {}) => ({
   externallyModified: i === 2, providerCancelled: status === 'Cancelled', ...extra,
 })
 
+const backendJourney = {
+  id: 'j-0', transportRequestId: 'r-0', publicId: 'TRA-2026-0040', direction: 'Outbound', serviceDate: today,
+  origin: { type: 'HealthcareFacility', name: 'Hospital La Paz', street: 'Castellana 261', municipality: 'Madrid' },
+  destination: { type: 'PrivateAddress', name: 'Residencia Los Olivos', street: 'Mayor 8', municipality: 'Alcobendas' },
+  requirements: { mobility: 'Wheelchair', requiresOxygen: true, companionRequired: true },
+  schedule: { scheduledStartAt: `${today}T09:30:00+02:00`, pickupTimePending: false },
+  currentStatus: 'Activated', providerReference: 'EXT-1', retrievalState: 'Retrieved', vehicleId: 'v-0', vehicle: { name: 'AMB-01' },
+  driverName: 'Jordi R.', providerVisibleNotes: 'Paciente con oxígeno portátil: avisar en recepción.',
+  statusHistory: [{ id: 'e-1', status: 'Scheduled', occurredAt: `${today}T08:00:00+02:00`, actor: 'Nagomi', source: 0 }],
+}
+const backendRequestDetail = {
+  id: 'r-0', publicId: 'SOL-2026-0010', status: 'Active', patient: { firstName: 'Ana', lastName: 'Martín', phone: '600 123 456' },
+  reason: { description: 'Alta' }, defaultOrigin: backendJourney.origin, defaultDestination: backendJourney.destination,
+  requirements: backendJourney.requirements, contractCode: 'SELF', providerName: 'Flota propia', updatedAt: `${today}T09:12:00Z`,
+  journeyRecords: [backendJourney], deliveries: [],
+}
+
 const fixtures = {
+  'journeys/j-0': backendJourney,
+  'transport-requests/r-0': backendRequestDetail,
+  'journeys/j-0/statuses': {},
   'operations/journeys': [
     ops(1, 'Scheduled', 'Outbound'), ops(1, 'Return', 'Return'), ops(2, 'PatientOnBoard', 'Outbound'),
     ops(3, 'Activated', 'Outbound'), ops(4, 'Completed', 'Return'), ops(5, 'Cancelled', 'Outbound'),
@@ -110,6 +130,7 @@ const anon = await browser.newContext({ viewport: { width: 1440, height: 900 } }
 await shoot(anon, 'anon', [['/', 'landing'], ['/login', 'login']])
 await shoot(authed, 'desk', [
   ['/trayectos', 'operacion'],
+  ['/trayectos/j-0', 'detalle-trayecto'],
   ['/historico', 'historico'],
   ['/rutas', 'rutas'],
   ['/urgencias', 'urgencias'],

@@ -51,10 +51,10 @@ type BackendRequirements = Partial<Requirements> & {
   bariatricRequired?: boolean
   stairsAssistanceRequired?: boolean
 }
-type BackendSchedule = { appointmentAt?: string; scheduledStartAt: string; scheduledPickupAt?: string; pickupTimePending?: boolean }
+type BackendSchedule = { appointmentAt?: string; scheduledStartAt?: string; scheduledPickupAt?: string; pickupTimePending?: boolean }
 type BackendJourney = {
   id: string; transportRequestId: string; publicId: string; direction: number | Journey['direction']; origin: BackendLocation; destination: BackendLocation
-  requirements: BackendRequirements; schedule: BackendSchedule; currentStatus: number | JourneyStatus; providerVisibleNotes?: string; providerReference?: string
+  requirements: BackendRequirements; schedule?: BackendSchedule; currentStatus: number | JourneyStatus; providerVisibleNotes?: string; providerReference?: string
   externallyModified?: boolean; retrievalState?: string; currentCancellingParty?: number | string; vehicleId?: string; vehicle?: { publicId?: string; name?: string }; driverName?: string
   statusHistory?: Array<Record<string, unknown>>
 }
@@ -99,8 +99,10 @@ function mapRequirements(value?: BackendRequirements): Requirements {
 function mapJourney(value: BackendJourney, parent?: BackendRequest): Journey {
   return {
     id: value.id, publicId: value.publicId, requestId: value.transportRequestId, requestPublicId: parent?.publicId ?? '',
-    direction: enumValue(value.direction, directions, 'Outbound'), scheduledStartAt: value.schedule.scheduledStartAt, scheduledPickupAt: value.schedule.scheduledPickupAt,
-    appointmentAt: value.schedule.appointmentAt, pickupTimePending: value.schedule.pickupTimePending, patientName: [parent?.patient?.firstName, parent?.patient?.lastName].filter(Boolean).join(' '),
+    // `schedule` puede venir ausente en respuestas parciales: degradamos en vez de
+    // reventar la pantalla con un TypeError crudo.
+    direction: enumValue(value.direction, directions, 'Outbound'), scheduledStartAt: value.schedule?.scheduledStartAt, scheduledPickupAt: value.schedule?.scheduledPickupAt,
+    appointmentAt: value.schedule?.appointmentAt, pickupTimePending: value.schedule?.pickupTimePending, patientName: [parent?.patient?.firstName, parent?.patient?.lastName].filter(Boolean).join(' '),
     patientPhone: parent?.patient?.phone, origin: mapLocation(value.origin), destination: mapLocation(value.destination), reason: parent?.reason?.description ?? '',
     requirements: mapRequirements(value.requirements), status: enumValue(value.currentStatus, journeyStatuses, 'Scheduled'), provider: parent?.providerName,
     contract: parent?.contractCode, providerReference: value.providerReference, deliveryState: enumValue(value.retrievalState, deliveryStates, 'NotPublished'),

@@ -26,7 +26,7 @@ await page.waitForURL(/trayectos/, { timeout: 20000 })
 await page.waitForTimeout(2500)
 
 const report = []
-for (const [route, name] of [['/trayectos', 'real-operacion'], ['/coordinacion', 'real-coordinacion'], ['/solicitudes', 'real-solicitudes'], ['/configuracion', 'real-configuracion']]) {
+for (const [route, name] of [['/trayectos', 'real-operacion'], ['/historico', 'real-historico'], ['/solicitudes', 'real-solicitudes'], ['/configuracion', 'real-configuracion']]) {
   await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(2200)
   await page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true })
