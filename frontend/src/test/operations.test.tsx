@@ -31,10 +31,9 @@ describe('mesa de operaciones', () => {
     expect(screen.queryByText('TARJETA-9988')).not.toBeInTheDocument()
   })
 
-  it('envía todos los filtros operativos a la API', async () => {
+  it('envía los filtros de la mesa diaria sin estado ni dirección', async () => {
     const user = userEvent.setup(); renderAt('/trayectos'); await screen.findByText('TRA-2026-0042')
     await user.type(screen.getByLabelText('Buscar'), 'EXT-887')
-    await user.selectOptions(screen.getByLabelText('Dirección'), 'Return')
     await user.click(screen.getByText('Más filtros'))
     await user.type(screen.getByLabelText('Proveedor'), '11111111-1111-1111-1111-111111111111')
     await user.selectOptions(screen.getByLabelText('Recepción'), 'Dead')
@@ -42,6 +41,25 @@ describe('mesa de operaciones', () => {
     await waitFor(() => expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(1))
     const url = String(vi.mocked(fetch).mock.calls.at(-1)?.[0])
     expect(url).toContain('search=EXT-887'); expect(url).toContain('providerId=11111111-1111-1111-1111-111111111111'); expect(url).toContain('retrievalState=Dead')
+    // El trabajo diario ya no filtra por estado (los terminales viven en el Histórico) ni por
+    // dirección: ida y vuelta son las dos partes del mismo trabajo y se muestran siempre.
+    expect(url).not.toContain('direction=')
+    expect(screen.queryByLabelText('Dirección')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Estado')).not.toBeInTheDocument()
+  })
+
+  it('el histórico arranca vacío y solo consulta al aplicar filtros', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => String(input).includes('/api/vehicles') ? json([]) : json([operationsRow]))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup(); renderAt('/historico')
+    // Sin filtros aplicados NO se barre el dataset.
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes('/operations/journeys'))).toBe(false)
+    expect(screen.getByText('Aún no hay resultados')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Buscar' }))
+    await screen.findByText('TRA-2026-0042')
+    const url = String(fetchMock.mock.calls.at(-1)?.[0])
+    expect(url).toContain('/operations/journeys')
+    expect(url).toContain('from=2000-01-01')   // "cualquier fecha" = todo el histórico
   })
 
   it('exporta campos operativos y excluye identificadores sensibles', () => {

@@ -1,4 +1,4 @@
-import type { CollectiveRoute, CollectiveRouteInput, CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle, VehicleType } from './types'
+import type { CancellationReason, CollectiveRoute, CollectiveRouteInput, CoordinationRow, DeliveryState, EmergencyDraft, EmergencyStatus, EmergencyTransport, HelpChatMessage, HelpChatReply, HelpChatStatus, Journey, JourneyFilters, JourneySchedule, JourneyStatus, ListResponse, LocationSnapshot, Patient, PatientInput, QueueMessageSample, QueueSnapshot, RecurrencePattern, Requirements, TenantCapabilities, TransportClient, TransportRequest, TransportRequestDraft, TransportRequestSubmission, Vehicle, VehicleType } from './types'
 import { getToken, logout } from './auth'
 
 export class ApiError extends Error {
@@ -63,6 +63,8 @@ type OperationsRow = {
   patientName: string; patientPhone?: string; origin: string; destination: string; direction: number | Journey['direction']; reason: string
   requirements: string; status: number | JourneyStatus; provider?: string; contractCode?: string; providerReference?: string; retrievalState?: string
   externallyModified?: boolean; providerCancelled?: boolean
+  vehicleId?: string; vehicleName?: string; driverName?: string; notes?: string
+  cancellationReason?: number | string
 }
 type BackendRequest = {
   id: string; publicId?: string; status: number | TransportRequest['status']; patient?: { firstName?: string; lastName?: string; phone?: string }
@@ -76,6 +78,7 @@ const journeyStatuses: JourneyStatus[] = ['Scheduled', 'Activated', 'EnRouteToOr
 const requestStatuses: TransportRequest['status'][] = ['Draft', 'Active', 'Completed', 'Cancelled']
 const directions: Journey['direction'][] = ['Outbound', 'Return']
 const deliveryStates: DeliveryState[] = ['Pending', 'Published', 'Retrieved', 'Dead', 'NotPublished']
+const cancellationReasons: CancellationReason[] = ['NoLongerRequired', 'PatientUnavailable', 'MedicalReason', 'SchedulingConflict', 'ProviderUnavailable', 'Other']
 const locationTypes: Array<NonNullable<LocationSnapshot['type']>> = ['PrivateAddress', 'HealthcareFacility']
 const enumValue = <T extends string>(value: number | string | undefined, values: T[], fallback: T): T => typeof value === 'number' ? values[value] ?? fallback : values.includes(value as T) ? value as T : fallback
 
@@ -115,6 +118,8 @@ function mapOperationsRow(value: OperationsRow): Journey {
     pickupTimePending: value.pickupTimePending, patientName: value.patientName, patientPhone: value.patientPhone, origin: { name: value.origin }, destination: { name: value.destination },
     reason: value.reason, requirements: { ...mapRequirements(), mobility: enumValue(value.requirements, ['Autonomous', 'Wheelchair', 'Stretcher'], 'Autonomous') },
     status: enumValue(value.status, journeyStatuses, 'Scheduled'), provider: value.provider, contract: value.contractCode, providerReference: value.providerReference,
+    vehicleId: value.vehicleId, vehicleName: value.vehicleName, driverName: value.driverName, notes: value.notes,
+    cancellationReason: value.cancellationReason == null ? undefined : enumValue(value.cancellationReason, cancellationReasons, 'Other'),
     deliveryState: enumValue(value.retrievalState, deliveryStates, 'NotPublished'), externallyModified: value.externallyModified, cancelledBy: value.providerCancelled ? 'Provider' : undefined,
   }
 }
@@ -204,7 +209,7 @@ export const api = {
     const command = { origin: backendLocation(body.origin), destination: backendLocation(body.destination), requirements: backendRequirements(body.requirements), schedule: backendSchedule({ appointmentAt: body.appointmentAt, scheduledStartAt: body.scheduledStartAt ?? '', scheduledPickupAt: body.scheduledPickupAt, pickupTimePending: body.pickupTimePending ?? false }), providerVisibleNotes: body.notes, providerReference: body.providerReference, source: 0, actor: 'simulated-user' }
     return { ...body, ...mapJourney(await request<BackendJourney>(`/journeys/${encodeURIComponent(id)}/snapshot`, { method: 'PUT', body: JSON.stringify(command) })), patientName: body.patientName, patientPhone: body.patientPhone, reason: body.reason, provider: body.provider, contract: body.contract, requestPublicId: body.requestPublicId }
   },
-  cancelJourney: (id: string) => request<void>(`/journeys/${encodeURIComponent(id)}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 0, cancellingParty: 0, source: 0, actor: 'simulated-user' }) }),
+  cancelJourney: (id: string, reason: CancellationReason = 'Other', party: 'Requester' | 'TransportProvider' = 'Requester') => request<void>(`/journeys/${encodeURIComponent(id)}/cancel`, { method: 'POST', body: JSON.stringify({ reason: cancellationReasons.indexOf(reason), cancellingParty: party === 'TransportProvider' ? 1 : 0, source: 0, actor: 'simulated-user' }) }),
   resetJourney: (id: string) => request<BackendJourney>(`/journeys/${encodeURIComponent(id)}/reset`, { method: 'POST', body: JSON.stringify({ source: 0, actor: 'simulated-user' }) }),
   async listRequests(search = '') {
     const rows = await request<BackendRequest[]>(`/operations/requests?search=${encodeURIComponent(search)}`)

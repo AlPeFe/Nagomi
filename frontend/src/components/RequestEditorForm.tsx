@@ -77,7 +77,7 @@ export function RequestEditorForm({ request, onSaved, onClose }: { request: Tran
     <section className="form-section"><div className="section-number">✎</div><div className="section-heading"><h2>Paciente y motivo</h2><p>Actualiza los datos del paciente y el motivo del traslado.</p></div><div className="field-grid">
       <label><span>Nombre y apellidos</span><input value={patientName} onChange={(e) => setPatientName(e.target.value)} autoComplete="name" /></label>
       <label><span>Teléfono</span><input value={patientPhone} onChange={(e) => setPatientPhone(e.target.value)} type="tel" /></label>
-      <label className="span-2"><span>Motivo del transporte</span><select value={reason} onChange={(e) => setReason(e.target.value)}><option value="">— Sin motivo —</option><option>Consulta externa</option><option>Alta hospitalaria</option><option>Tratamiento programado</option><option>Traslado entre centros</option></select></label>
+      <label className="span-2"><span>Motivo del transporte</span><select value={reason} onChange={(e) => setReason(e.target.value)}><option value="">— Sin motivo —</option><option>Alta</option><option>Tratamiento Programado</option><option>Interhospitalario</option></select></label>
     </div></section>
     <section className="form-section"><div className="section-number">✎</div><div className="section-heading"><h2>Ruta operativa</h2><p>Origen y destino con provincia y población; los centros del catálogo se rellenan solos.</p></div>
       {(['origin', 'destination'] as const).map((which) => {

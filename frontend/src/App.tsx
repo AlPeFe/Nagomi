@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
   Ambulance,
-  Broadcast,
   CaretRight,
+  ClockCounterClockwise,
   DeviceMobile,
   FileText,
   Gear,
@@ -20,6 +20,7 @@ import type { Icon } from '@phosphor-icons/react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from './router'
 import { EmergencyPage } from './pages/EmergencyPage'
 import { JourneyDetailPage } from './pages/JourneyDetailPage'
+import { HistoryPage } from './pages/HistoryPage'
 import { JourneysPage } from './pages/JourneysPage'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
@@ -28,7 +29,7 @@ import { RequestFormPage } from './pages/RequestFormPage'
 import { RequestsPage } from './pages/RequestsPage'
 import { TenantConfigPage } from './pages/TenantConfigPage'
 import { IdentityPage } from './pages/IdentityPage'
-import { CoordinationPage } from './pages/CoordinationPage'
+
 import { VehiclesPage } from './pages/VehiclesPage'
 import { PatientsPage } from './pages/PatientsPage'
 import { RoutesPage } from './pages/RoutesPage'
@@ -47,7 +48,6 @@ const NAV: NavSection[] = [
     section: 'Operación diaria',
     items: [
       { to: '/trayectos', label: 'Operación', icon: MapTrifold },
-      { to: '/coordinacion', label: 'Coordinación', icon: Broadcast },
       { to: '/rutas', label: 'Rutas', icon: Path },
       { to: '/urgencias', label: 'Urgencias', icon: Siren },
     ],
@@ -55,6 +55,7 @@ const NAV: NavSection[] = [
   {
     section: 'Gestión',
     items: [
+      { to: '/historico', label: 'Histórico', icon: ClockCounterClockwise },
       { to: '/solicitudes', label: 'Solicitudes', icon: FileText },
       { to: '/pacientes', label: 'Pacientes', icon: UserList, admin: true },
       { to: '/vehiculos', label: 'Vehículos', icon: Ambulance, admin: true },
@@ -73,7 +74,7 @@ const NAV: NavSection[] = [
 /** Topbar breadcrumb: path prefix → [section, page]. Longest prefix wins. */
 const CRUMBS: Record<string, [string, string]> = {
   '/trayectos': ['Operación diaria', 'Trayectos'],
-  '/coordinacion': ['Operación diaria', 'Coordinación'],
+  '/historico': ['Gestión', 'Histórico'],
   '/rutas': ['Operación diaria', 'Rutas colectivas'],
   '/urgencias': ['Operación diaria', 'Urgencias'],
   '/solicitudes/nueva': ['Gestión', 'Nueva solicitud'],
@@ -175,7 +176,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/trayectos" element={<RequireAuth><JourneysPage /></RequireAuth>} />
       <Route path="/trayectos/:journeyId" element={<RequireAuth><JourneyDetailPage /></RequireAuth>} />
-      <Route path="/coordinacion" element={<RequireAuth><CoordinationPage /></RequireAuth>} />
+      <Route path="/historico" element={<RequireAuth><HistoryPage /></RequireAuth>} />
       <Route path="/rutas" element={<RequireAuth><RoutesPage /></RequireAuth>} />
       <Route path="/setup-android" element={<RequireAuth><SetupAndroidPage /></RequireAuth>} />
       <Route path="/vehiculos" element={<RequireAuth><RequireAdmin><VehiclesPage /></RequireAdmin></RequireAuth>} />

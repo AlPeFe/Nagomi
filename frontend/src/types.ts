@@ -1,3 +1,14 @@
+export type CancellationReason = 'NoLongerRequired' | 'PatientUnavailable' | 'MedicalReason' | 'SchedulingConflict' | 'ProviderUnavailable' | 'Other'
+
+export const CANCELLATION_REASON_LABELS: Record<CancellationReason, string> = {
+  NoLongerRequired: 'Ya no es necesario',
+  PatientUnavailable: 'Paciente no disponible',
+  MedicalReason: 'Motivo médico',
+  SchedulingConflict: 'Conflicto de agenda',
+  ProviderUnavailable: 'Proveedor no disponible',
+  Other: 'Otro',
+}
+
 export type JourneyStatus = 'Scheduled' | 'Activated' | 'EnRouteToOrigin' | 'ArrivedAtOrigin' | 'PatientOnBoard' | 'EnRouteToDestination' | 'ArrivedAtDestination' | 'Completed' | 'Cancelled'
 export type DeliveryState = 'Pending' | 'Published' | 'Retrieved' | 'Dead' | 'NotPublished'
 
@@ -48,6 +59,7 @@ export interface Journey {
   deliveryState: DeliveryState
   externallyModified?: boolean
   cancelledBy?: 'Requester' | 'Provider'
+  cancellationReason?: CancellationReason
   vehicleId?: string
   vehicleName?: string
   driverName?: string

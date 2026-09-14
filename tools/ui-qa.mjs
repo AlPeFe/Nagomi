@@ -133,7 +133,7 @@ async function mock(page, overrides = {}) {
   const { ctx, consoleErrors } = await ctxFor(['admin'])
   const page = await ctx.newPage()
   await mock(page)
-  for (const [route, marker] of [['/trayectos', 'TRA-2026-0040'], ['/trayectos/j-0', 'TRA-2026-0040'], ['/solicitudes', 'SOL-2026-0010'], ['/solicitudes/r-0', 'TRA-2026-0040'], ['/coordinacion', 'Ana Martín'], ['/rutas', 'RUT-2026-000001'], ['/vehiculos', 'AMB-01'], ['/pacientes', 'Ana'], ['/identidad', 'admin@nagomi.local'], ['/configuracion', 'Capacidades'], ['/urgencias', 'urgencias']]) {
+  for (const [route, marker] of [['/trayectos', 'TRA-2026-0040'], ['/trayectos/j-0', 'TRA-2026-0040'], ['/solicitudes', 'SOL-2026-0010'], ['/solicitudes/r-0', 'TRA-2026-0040'], ['/historico', 'Histórico'], ['/rutas', 'RUT-2026-000001'], ['/vehiculos', 'AMB-01'], ['/pacientes', 'Ana'], ['/identidad', 'admin@nagomi.local'], ['/configuracion', 'Capacidades'], ['/urgencias', 'urgencias']]) {
     await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(700)
     const body = await page.locator('body').innerText()
@@ -170,6 +170,13 @@ async function mock(page, overrides = {}) {
   await page.getByRole('button', { name: 'Aplicar filtros' }).click()
   await page.waitForTimeout(700)
   requests.some((u) => u.includes('search=Mart')) ? pass('filtros: search llega a la API') : fail('filtros: search llega a la API', requests.join(' '))
+  // La mesa diaria ya no filtra por estado ni dirección.
+  // Playwright usa getByLabel (getByLabelText es de Testing Library).
+  const hasEstado = await page.getByLabel('Estado', { exact: true }).count()
+  const hasDireccion = await page.getByLabel('Dirección', { exact: true }).count()
+  hasEstado === 0 && hasDireccion === 0
+    ? pass('operación: sin filtros de estado ni dirección')
+    : fail('operación: sin filtros de estado ni dirección', `estado=${hasEstado} dirección=${hasDireccion}`)
   // exportar CSV genera descarga
   const dl = page.waitForEvent('download', { timeout: 5000 }).catch(() => null)
   await page.getByRole('button', { name: /Exportar CSV/ }).click()
@@ -227,6 +234,24 @@ async function mock(page, overrides = {}) {
 }
 
 {
+  // 7b. Histórico: arranca vacío y solo consulta al buscar
+  const { ctx } = await ctxFor(['admin'])
+  const page = await ctx.newPage()
+  const requests = await mock(page)
+  await page.goto(`${BASE}/historico`, { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(900)
+  const antes = requests.filter((u) => u.includes('/operations/journeys')).length
+  const vacio = (await page.locator('body').innerText()).includes('Aún no hay resultados')
+  antes === 0 && vacio ? pass('histórico: arranca vacío y no consulta') : fail('histórico: arranca vacío y no consulta', `${antes} consultas, vacío=${vacio}`)
+  await page.getByRole('button', { name: 'Buscar' }).click()
+  await page.waitForTimeout(900)
+  const despues = requests.filter((u) => u.includes('/operations/journeys')).length
+  const conFilas = (await page.locator('body').innerText()).includes('TRA-2026-0040')
+  despues > 0 && conFilas ? pass('histórico: busca al aplicar filtros') : fail('histórico: busca al aplicar filtros', `${despues} consultas, filas=${conFilas}`)
+  await ctx.close()
+}
+
+{
   // 8. Móvil: drawer, navegación, y sin desbordamiento horizontal
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const page = await ctx.newPage()
@@ -240,10 +265,10 @@ async function mock(page, overrides = {}) {
   overflow <= 1 ? pass('móvil sin scroll horizontal') : fail('móvil sin scroll horizontal', `${overflow}px`)
   await page.getByRole('button', { name: 'Abrir menú' }).click()
   await page.waitForTimeout(400)
-  await page.locator('.mobile-drawer a', { hasText: 'Coordinación' }).click()
+  await page.locator('.mobile-drawer a', { hasText: 'Rutas' }).click()
   await page.waitForTimeout(700)
   const drawerGone = (await page.locator('.mobile-drawer').count()) === 0
-  const onCoord = page.url().includes('/coordinacion')
+  const onCoord = page.url().includes('/rutas')
   drawerGone && onCoord ? pass('móvil: navegar cierra el drawer') : fail('móvil: navegar cierra el drawer', `${page.url()} drawer=${!drawerGone}`)
   await ctx.close()
 }

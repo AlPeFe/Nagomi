@@ -41,6 +41,11 @@ public sealed record JourneyOperationsRow(
     string? ContractCode,
     string? ProviderReference,
     string? RetrievalState,
+    Guid? VehicleId,
+    string? VehicleName,
+    string? DriverName,
+    string? Notes,
+    CancellationReason? CancellationReason,
     bool ExternallyModified,
     bool ProviderCancelled);
 
@@ -133,6 +138,10 @@ public static class OperationsEndpoints
         }
 
         var values = await joined.ToListAsync(cancellationToken);
+        // El nombre del vehículo se resuelve con una consulta aparte (no con Include)
+        // para que los dobles en memoria de los tests sigan funcionando.
+        var vehicleNames = await db.Vehicles.AsNoTracking()
+            .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
         return values.Select(x => new JourneyOperationsRow(
             x.j.Id, x.j.PublicId, x.r.Id, x.r.PublicId!,
             x.j.Direction == JourneyDirection.Return ? x.j.Schedule.ScheduledPickupAt!.Value : x.j.Schedule.ScheduledStartAt,
@@ -142,6 +151,8 @@ public static class OperationsEndpoints
             x.j.Origin.Name ?? x.j.Origin.Street ?? "", x.j.Destination.Name ?? x.j.Destination.Street ?? "",
             x.j.Direction, x.r.Reason == null ? "" : x.r.Reason.Description, x.j.Requirements.Mobility.ToString(),
             x.j.CurrentStatus, x.r.ProviderId, x.r.ProviderName, x.r.ContractCode, x.j.ProviderReference, x.j.RetrievalState,
+            x.j.VehicleId, x.j.VehicleId.HasValue ? vehicleNames.GetValueOrDefault(x.j.VehicleId.Value) : null,
+            x.j.DriverName, x.j.ProviderVisibleNotes, x.j.CurrentCancellationReason,
             x.j.ExternallyModified,
             x.j.CurrentStatus == JourneyStatus.Cancelled && x.j.CurrentCancellingParty == CancellingParty.TransportProvider))
             .OrderBy(x => x.OperationalAt)

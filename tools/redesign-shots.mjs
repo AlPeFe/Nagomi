@@ -24,6 +24,9 @@ const ops = (i, status, direction, extra = {}) => ({
   requirements: ['Wheelchair', 'Autonomous', 'Stretcher'][i % 3], status,
   provider: i % 3 === 0 ? 'Ambulancias Centro' : 'Flota propia', contractCode: i % 3 === 0 ? 'CTR-MAD-01' : 'SELF',
   providerReference: `EXT-88${i}`, retrievalState: ['Retrieved', 'Pending', 'NotPublished'][i % 3],
+  vehicleId: i % 3 === 2 ? undefined : `v-${i % 2}`, vehicleName: i % 3 === 2 ? undefined : ['AMB-01', 'AMB-02'][i % 2],
+  driverName: i % 3 === 2 ? undefined : ['Jordi R.', 'Marta S.'][i % 2],
+  notes: i % 4 === 1 ? 'Paciente con oxígeno portátil: avisar en recepción del centro de destino.' : undefined,
   externallyModified: i === 2, providerCancelled: status === 'Cancelled', ...extra,
 })
 
@@ -107,7 +110,7 @@ const anon = await browser.newContext({ viewport: { width: 1440, height: 900 } }
 await shoot(anon, 'anon', [['/', 'landing'], ['/login', 'login']])
 await shoot(authed, 'desk', [
   ['/trayectos', 'operacion'],
-  ['/coordinacion', 'coordinacion'],
+  ['/historico', 'historico'],
   ['/rutas', 'rutas'],
   ['/urgencias', 'urgencias'],
   ['/solicitudes', 'solicitudes'],
@@ -125,7 +128,7 @@ await mobile.addInitScript(() => {
   sessionStorage.setItem('nagomi_roles', JSON.stringify(['admin']))
   sessionStorage.setItem('nagomi_user', 'Administrador')
 })
-await shoot(mobile, 'mob', [['/trayectos', 'operacion'], ['/coordinacion', 'coordinacion']])
+await shoot(mobile, 'mob', [['/trayectos', 'operacion'], ['/historico', 'historico']])
 // Drawer open
 {
   const page = await mobile.newPage()

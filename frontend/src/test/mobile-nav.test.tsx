@@ -29,7 +29,7 @@ describe('mobile navigation drawer', () => {
 
     const drawer = screen.getByRole('navigation', { name: 'Navegación móvil' })
     expect(within(drawer).getByRole('link', { name: 'Operación' })).toBeInTheDocument()
-    expect(within(drawer).getByRole('link', { name: 'Coordinación' })).toBeInTheDocument()
+    expect(within(drawer).getByRole('link', { name: 'Rutas' })).toBeInTheDocument()
     expect(within(drawer).getByRole('link', { name: 'Solicitudes' })).toBeInTheDocument()
     expect(within(drawer).getByRole('link', { name: 'Nueva solicitud' })).toBeInTheDocument()
   })
@@ -45,10 +45,10 @@ describe('mobile navigation drawer', () => {
     await user.click(screen.getByRole('button', { name: 'Abrir menú' }))
     const drawer = screen.getByRole('navigation', { name: 'Navegación móvil' })
 
-    await user.click(within(drawer).getByRole('link', { name: 'Coordinación' }))
+    await user.click(within(drawer).getByRole('link', { name: 'Rutas' }))
 
     expect(screen.queryByRole('navigation', { name: 'Navegación móvil' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Coordinación' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Rutas' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('closes the drawer when tapping the scrim', async () => {
