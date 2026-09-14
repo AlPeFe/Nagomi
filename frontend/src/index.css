@@ -223,7 +223,11 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
 .operations-table { min-width: 1100px; }
 .operations-table td { vertical-align: top; }
 .operations-table tr.row-alert td { background: var(--amber-wash); }
-.operations-table tr.pair-row td { border-left: 3px solid transparent; border-left-color: var(--pair-accent, transparent); }
+/* Acento de ida/vuelta: UNA marca en el borde izquierdo de la fila. Antes se aplicaba
+   a cada `td`, así que dibujaba una línea de color por CADA campo y ensuciaba la fila.
+   El chip del par sigue agrupando los dos trayectos, que es lo que aporta información. */
+.operations-table tr.pair-row td { border-left: 0; }
+.operations-table tr.pair-row td:first-child { border-left: 3px solid var(--pair-accent, transparent); }
 .actions-cell { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 
 /* ------------------------------------------------------------------- badges */
