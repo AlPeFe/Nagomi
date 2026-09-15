@@ -53,6 +53,8 @@ public sealed class ProviderNotification
     public IntegrationEntityType EntityType { get; set; }
     public string EntityPublicId { get; set; } = null!;
     public string RetrievalUrl { get; set; } = null!;
+    /// <summary>Cola concreta a la que publicar; si es null, se usa la del proveedor.</summary>
+    public string? TargetQueue { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public NotificationDeliveryState State { get; set; } = NotificationDeliveryState.Pending;
     public int FailedPublishAttempts { get; set; }

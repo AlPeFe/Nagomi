@@ -70,6 +70,7 @@ public static class TenantSettingsEndpoints
             Phone = ClientMapping.Clean(command.Phone),
             Email = ClientMapping.Clean(command.Email),
             Address = ClientMapping.Clean(command.Address),
+            RabbitQueue = ClientMapping.Clean(command.RabbitQueue),
             IsActive = command.IsActive,
             CreatedAt = now,
             UpdatedAt = now
@@ -92,6 +93,7 @@ public static class TenantSettingsEndpoints
         client.Phone = ClientMapping.Clean(command.Phone);
         client.Email = ClientMapping.Clean(command.Email);
         client.Address = ClientMapping.Clean(command.Address);
+        client.RabbitQueue = ClientMapping.Clean(command.RabbitQueue);
         client.IsActive = command.IsActive;
         client.UpdatedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(cancellationToken);

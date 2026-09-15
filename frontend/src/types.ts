@@ -305,6 +305,8 @@ export interface TenantCapabilities {
 }
 
 export interface TransportClient {
+  /** Cola de Rabbit donde publicar los traslados de este cliente (opcional). */
+  rabbitQueue?: string;
   id: string
   publicId: string
   name: string

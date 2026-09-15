@@ -16,7 +16,7 @@ export function TenantConfigPage() {
   // client editor
   const [editorOpen, setEditorOpen] = useState(false)
   const [editing, setEditing] = useState<TransportClient | null>(null)
-  const [form, setForm] = useState({ name: '', taxId: '', contactPerson: '', phone: '', email: '', address: '' })
+  const [form, setForm] = useState({ name: '', taxId: '', contactPerson: '', phone: '', email: '', address: '', rabbitQueue: '' })
 
   // queue peek
   const [peekFor, setPeekFor] = useState<string | null>(null)
@@ -70,13 +70,13 @@ export function TenantConfigPage() {
 
   const openCreate = () => {
     setEditing(null)
-    setForm({ name: '', taxId: '', contactPerson: '', phone: '', email: '', address: '' })
+    setForm({ name: '', taxId: '', contactPerson: '', phone: '', email: '', address: '', rabbitQueue: '' })
     setEditorOpen(true)
   }
 
   const openEdit = (client: TransportClient) => {
     setEditing(client)
-    setForm({ name: client.name, taxId: client.taxId ?? '', contactPerson: client.contactPerson ?? '', phone: client.phone ?? '', email: client.email ?? '', address: client.address ?? '' })
+    setForm({ name: client.name, taxId: client.taxId ?? '', contactPerson: client.contactPerson ?? '', phone: client.phone ?? '', email: client.email ?? '', address: client.address ?? '', rabbitQueue: client.rabbitQueue ?? '' })
     setEditorOpen(true)
   }
 
@@ -99,7 +99,7 @@ export function TenantConfigPage() {
 
   const toggleClient = async (client: TransportClient) => {
     try {
-      await api.updateClient(client.id, { name: client.name, taxId: client.taxId, contactPerson: client.contactPerson, phone: client.phone, email: client.email, address: client.address, isActive: !client.isActive })
+      await api.updateClient(client.id, { name: client.name, taxId: client.taxId, contactPerson: client.contactPerson, phone: client.phone, email: client.email, address: client.address, rabbitQueue: client.rabbitQueue, isActive: !client.isActive })
       flash(client.isActive ? 'Cliente desactivado.' : 'Cliente activado.')
       await refresh()
     } catch (err) {
@@ -148,7 +148,7 @@ export function TenantConfigPage() {
           <AiSettingsCard />
 
           <section className="config-card">
-            <div className="section-heading"><h2>Clientes facturables</h2><p>Organizaciones o particulares a los que se factura un traslado. No tienen integración ni cola.</p></div>
+            <div className="section-heading"><h2>Clientes facturables</h2><p>Organizaciones o particulares a los que se factura un traslado. La cola de Rabbit es opcional: define dónde se publican sus traslados.</p></div>
             <div className="table-toolbar">
               <button className="button button-accent" onClick={openCreate}>Nuevo cliente</button>
             </div>
@@ -162,6 +162,8 @@ export function TenantConfigPage() {
                   <label className="field"><span>Teléfono</span><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
                   <label className="field"><span>Correo</span><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
                   <label className="field span-2"><span>Dirección</span><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
+                  <label className="field span-2"><span>Cola de Rabbit (opcional)</span><input value={form.rabbitQueue} onChange={(e) => setForm({ ...form, rabbitQueue: e.target.value })} placeholder="p. ej. nagomi.cliente-acme" /></label>
+                  <p className="muted span-2 client-queue-hint">Si le pones cola, los traslados de este cliente se publican en ella. Si la dejas vacía, se publica en la cola del proveedor.</p>
                 </div>
                 <div className="form-actions">
                   <button className="button button-accent" disabled={busy || !form.name.trim()}>{busy ? 'Guardando…' : 'Guardar'}</button>
@@ -171,13 +173,14 @@ export function TenantConfigPage() {
             )}
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>Cliente</th><th>NIF / CIF</th><th>Contacto</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Cliente</th><th>NIF / CIF</th><th>Contacto</th><th>Cola de Rabbit</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
                   {clients.map((client) => (
                     <tr key={client.id}>
                       <td><strong>{client.name}</strong><div className="muted">{client.publicId}</div></td>
                       <td>{client.taxId || '—'}</td>
                       <td>{[client.contactPerson, client.phone, client.email].filter(Boolean).join(' · ') || '—'}</td>
+                      <td>{client.rabbitQueue ? <code>{client.rabbitQueue}</code> : <span className="muted">Sin cola propia</span>}</td>
                       <td><span className={client.isActive ? 'badge badge-ok' : 'badge badge-off'}>{client.isActive ? 'Activo' : 'Desactivado'}</span></td>
                       <td className="actions-cell">
                         <button className="button button-small" onClick={() => openEdit(client)}>Editar</button>

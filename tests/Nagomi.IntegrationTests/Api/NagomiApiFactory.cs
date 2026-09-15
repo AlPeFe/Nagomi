@@ -69,7 +69,7 @@ internal sealed class NoOpProviderOutbox : IProviderOutbox
 {
     public Task<ProviderNotification?> AddAsync(
         string contractCode, string messageType, IntegrationEntityType entityType, string entityPublicId,
-        string retrievalPath, Guid correlationId, CancellationToken cancellationToken = default) =>
+        string retrievalPath, Guid correlationId, CancellationToken cancellationToken = default, string? targetQueue = null) =>
         Task.FromResult<ProviderNotification?>(null);
 }
 

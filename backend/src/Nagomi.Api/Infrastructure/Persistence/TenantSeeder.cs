@@ -21,7 +21,5 @@ public static class TenantSeeder
 
         // When the tenant can execute its own transports, make sure it is
         // registered as a provider so self-execution routes work out of the box.
-        var provisioner = scope.ServiceProvider.GetRequiredService<IAutoProviderProvisioner>();
-        await provisioner.EnsureAsync();
-    }
+            }
 }

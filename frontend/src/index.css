@@ -660,3 +660,5 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
   .request-summary { grid-template-columns: minmax(0, 1fr); gap: 0.7rem; }
   .modal-backdrop { padding: 1rem 0.6rem; }
 }
+
+.client-queue-hint { font-size: 0.6875rem; margin: -0.2rem 0 0; }

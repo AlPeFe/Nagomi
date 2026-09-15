@@ -11,7 +11,8 @@ public interface IProviderOutbox
         string entityPublicId,
         string retrievalPath,
         Guid correlationId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        string? targetQueue = null);
 }
 
 public sealed class ProviderOutbox(IProviderIntegrationDb db, TimeProvider timeProvider) : IProviderOutbox
@@ -23,7 +24,8 @@ public sealed class ProviderOutbox(IProviderIntegrationDb db, TimeProvider timeP
         string entityPublicId,
         string retrievalPath,
         Guid correlationId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? targetQueue = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(contractCode);
         ArgumentException.ThrowIfNullOrWhiteSpace(messageType);
@@ -47,6 +49,7 @@ public sealed class ProviderOutbox(IProviderIntegrationDb db, TimeProvider timeP
             EntityType = entityType,
             EntityPublicId = entityPublicId.Trim(),
             RetrievalUrl = retrievalPath.Trim(),
+            TargetQueue = string.IsNullOrWhiteSpace(targetQueue) ? null : targetQueue.Trim(),
             CreatedAt = now,
             NextAttemptAt = now
         };

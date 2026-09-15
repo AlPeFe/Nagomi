@@ -49,6 +49,12 @@ public sealed class TransportClient
     public string? Phone { get; set; }
     public string? Email { get; set; }
     public string? Address { get; set; }
+    /// <summary>
+    /// Cola de Rabbit donde publicar los traslados de este cliente. OPCIONAL: si está vacía,
+    /// se publica en la cola del proveedor (y en modo empresa de ambulancias, el cliente no
+    /// define cola porque se publica para la flota propia).
+    /// </summary>
+    public string? RabbitQueue { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
@@ -64,16 +70,16 @@ public interface ITenantDb
 public sealed record TenantSettingsCommand(bool PublishesRequests, bool ExecutesTransports, bool HandlesEmergencies);
 public sealed record TenantSettingsResponse(bool PublishesRequests, bool ExecutesTransports, bool HandlesEmergencies);
 
-public sealed record UpsertClientCommand(string Name, string? TaxId, string? ContactPerson, string? Phone, string? Email, string? Address, bool IsActive = true);
+public sealed record UpsertClientCommand(string Name, string? TaxId, string? ContactPerson, string? Phone, string? Email, string? Address, string? RabbitQueue = null, bool IsActive = true);
 public sealed record ClientResponse(
     Guid Id, string PublicId, string Name, string? TaxId, string? ContactPerson,
-    string? Phone, string? Email, string? Address, bool IsActive, DateTimeOffset CreatedAt);
+    string? Phone, string? Email, string? Address, string? RabbitQueue, bool IsActive, DateTimeOffset CreatedAt);
 
 internal static class ClientMapping
 {
     internal static ClientResponse ToResponse(this TransportClient client) =>
         new(client.Id, client.PublicId, client.Name, client.TaxId, client.ContactPerson,
-            client.Phone, client.Email, client.Address, client.IsActive, client.CreatedAt);
+            client.Phone, client.Email, client.Address, client.RabbitQueue, client.IsActive, client.CreatedAt);
 
     internal static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

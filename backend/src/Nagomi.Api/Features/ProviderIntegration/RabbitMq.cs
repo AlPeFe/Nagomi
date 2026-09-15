@@ -1,3 +1,5 @@
+using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.Tenant;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -105,10 +107,13 @@ public sealed class ProviderOutboxWorker(
 
         foreach (var notification in notifications)
         {
-            var queueName = await db.TransportProviders.AsNoTracking()
+            // La cola del cliente (si la define) manda; la del proveedor es el respaldo.
+            var clientQueue = notification.TargetQueue ?? await ClientQueueForAsync(scope.ServiceProvider, notification, cancellationToken);
+            var providerQueue = await db.TransportProviders.AsNoTracking()
                 .Where(x => x.Id == notification.ProviderId && x.IsActive)
                 .Select(x => x.QueueName)
                 .SingleOrDefaultAsync(cancellationToken);
+            var queueName = clientQueue ?? providerQueue;
             if (queueName is null)
             {
                 MarkFailure(notification, now, "provider-inactive");
@@ -154,4 +159,44 @@ public sealed class ProviderOutboxWorker(
             notification.NextAttemptAt = now + options.Value.RetryDelay;
         }
     }
+
+    /// <summary>
+    /// Cola definida por el CLIENTE de la solicitud (opcional). Sólo aplica cuando la instalación
+    /// no ejecuta su propia flota: en modo empresa de ambulancias se publica para las ambulancias
+    /// propias y el cliente es sólo informativo, así que no define cola.
+    /// </summary>
+    private static async Task<string?> ClientQueueForAsync(
+        IServiceProvider services, ProviderNotification notification, CancellationToken cancellationToken)
+    {
+        if (notification.EntityType != IntegrationEntityType.Journey)
+            return null;
+
+        var tenantDb = services.GetRequiredService<ITenantDb>();
+        var settings = await tenantDb.TenantSettings.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == TenantSettings.SingletonId, cancellationToken);
+        if (settings is null || settings.Capabilities.HasFlag(TenantCapabilities.ExecutesTransports))
+            return null;
+
+        var transportDb = services.GetRequiredService<ITransportDb>();
+        var requestId = await transportDb.Journeys.AsNoTracking()
+            .Where(x => x.PublicId == notification.EntityPublicId)
+            .Select(x => (Guid?)x.TransportRequestId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (requestId is null)
+            return null;
+
+        var clientId = await transportDb.TransportRequests.AsNoTracking()
+            .Where(x => x.Id == requestId.Value)
+            .Select(x => x.ClientId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (clientId is null)
+            return null;
+
+        var queue = await tenantDb.TransportClients.AsNoTracking()
+            .Where(x => x.Id == clientId.Value)
+            .Select(x => x.RabbitQueue)
+            .SingleOrDefaultAsync(cancellationToken);
+        return string.IsNullOrWhiteSpace(queue) ? null : queue.Trim();
+    }
+
 }
