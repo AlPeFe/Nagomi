@@ -95,7 +95,9 @@ public static class OperationsEndpoints
     private static async Task<Ok<IReadOnlyList<TransportRequestRecord>>> ListRequests(
         TransportRequestStatus? status, string? search, ITransportDb db, CancellationToken cancellationToken)
     {
-        var requests = db.TransportRequests.AsNoTracking();
+        // El listado de solicitudes son las CABECERAS, pero cada cabecera necesita sus
+        // hijos: contadores de ida/vuelta y próximo traslado. Sin Include venían vacíos.
+        var requests = db.TransportRequests.AsNoTracking().Include(x => x.JourneyRecords);
         if (status.HasValue) requests = requests.Where(x => x.Status == status);
         if (!string.IsNullOrWhiteSpace(search))
         {
