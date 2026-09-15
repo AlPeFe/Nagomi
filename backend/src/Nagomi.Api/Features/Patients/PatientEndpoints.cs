@@ -46,7 +46,7 @@ public static class PatientEndpoints
         var patients = await query
             .OrderBy(x => x.LastName).ThenBy(x => x.FirstName)
             .Select(x => new PatientResponse(x.Id, x.PublicId, x.FirstName, x.LastName,
-                x.DocumentNumber, x.HealthCardNumber, x.Phone, x.Notes, x.IsActive, x.CreatedAt))
+                x.DocumentNumber, x.HealthCardNumber, x.Phone, x.Notes, x.IsActive, x.CreatedAt, x.Address, x.BirthDate))
             .ToListAsync(cancellationToken);
         return TypedResults.Ok<IReadOnlyList<PatientResponse>>(patients);
     }
@@ -68,7 +68,7 @@ public static class PatientEndpoints
             .OrderBy(x => x.LastName).ThenBy(x => x.FirstName)
             .Take(take)
             .Select(x => new PatientResponse(x.Id, x.PublicId, x.FirstName, x.LastName,
-                x.DocumentNumber, x.HealthCardNumber, x.Phone, x.Notes, x.IsActive, x.CreatedAt))
+                x.DocumentNumber, x.HealthCardNumber, x.Phone, x.Notes, x.IsActive, x.CreatedAt, x.Address, x.BirthDate))
             .ToListAsync(cancellationToken);
         return TypedResults.Ok<IReadOnlyList<PatientResponse>>(patients);
     }

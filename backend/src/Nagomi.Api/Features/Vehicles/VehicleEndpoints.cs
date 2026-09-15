@@ -73,7 +73,7 @@ public static class VehicleEndpoints
         var vehicles = await db.Vehicles.AsNoTracking()
             .Where(x => x.ProviderId == providerId && x.IsActive)
             .OrderBy(x => x.Name)
-            .Select(x => new VehicleResponse(x.Id, x.PublicId, x.Name, x.ExternalCode, x.VehicleType, x.IsActive, x.CreatedAt))
+            .Select(x => new VehicleResponse(x.Id, x.PublicId, x.Name, x.ExternalCode, x.VehicleType, x.IsActive, x.CreatedAt, x.Plate, x.Capacity, x.Notes))
             .ToListAsync(cancellationToken);
         return TypedResults.Ok<IReadOnlyList<VehicleResponse>>(vehicles);
     }
