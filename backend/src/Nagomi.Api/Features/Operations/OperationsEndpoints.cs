@@ -50,6 +50,9 @@ public sealed record JourneyOperationsRow(
     Guid? VehicleId,
     string? VehicleName,
     string? DriverName,
+    /// <summary>true = el vehículo está ADJUDICADO (comprometido); false = sólo asignado.</summary>
+    bool VehicleAdjudicated,
+    string? AdjudicatedBy,
     string? Notes,
     CancellationReason? CancellationReason,
     bool ExternallyModified,
@@ -163,7 +166,7 @@ public static class OperationsEndpoints
             x.j.Requirements.IsolationRequired, x.j.Requirements.BariatricRequired, x.j.Requirements.StairsAssistanceRequired,
             x.j.CurrentStatus, x.r.ProviderId, x.r.ProviderName, x.r.ContractCode, x.j.ProviderReference, x.j.RetrievalState,
             x.j.VehicleId, x.j.VehicleId.HasValue ? vehicleNames.GetValueOrDefault(x.j.VehicleId.Value) : null,
-            x.j.DriverName, x.j.ProviderVisibleNotes, x.j.CurrentCancellationReason,
+            x.j.DriverName, x.j.AdjudicatedAt is not null, x.j.AdjudicatedBy, x.j.ProviderVisibleNotes, x.j.CurrentCancellationReason,
             x.j.ExternallyModified,
             x.j.CurrentStatus == JourneyStatus.Cancelled && x.j.CurrentCancellingParty == CancellingParty.TransportProvider))
             .OrderBy(x => x.OperationalAt)

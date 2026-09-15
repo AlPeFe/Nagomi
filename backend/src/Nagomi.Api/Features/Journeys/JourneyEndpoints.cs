@@ -29,6 +29,12 @@ public sealed record AddJourneyStatusCommand(
     CancellationReason? CancellationReason = null,
     CancellingParty? CancellingParty = null);
 
+public sealed record AssignVehicleCommand(Guid VehicleId, string? Actor = null);
+
+public sealed record AdjudicateVehicleCommand(Guid? VehicleId = null, string? Actor = null);
+
+public sealed record UnadjudicateVehicleCommand(string? Actor = null);
+
 public sealed record ResetJourneyCommand(
     ChangeSource Source = ChangeSource.Nagomi,
     string Actor = "simulated-user");
@@ -43,6 +49,9 @@ public static class JourneyEndpoints
         group.MapPost("/{id:guid}/cancel", Cancel);
         group.MapPost("/{id:guid}/reset", Reset);
         group.MapPost("/{id:guid}/statuses", AddStatus);
+        group.MapPost("/{id:guid}/assign-vehicle", AssignVehicle);
+        group.MapPost("/{id:guid}/adjudicate-vehicle", AdjudicateVehicle);
+        group.MapPost("/{id:guid}/unadjudicate-vehicle", UnadjudicateVehicle);
         group.MapGet("/{id:guid}/statuses", GetStatusHistory);
         return endpoints;
     }
@@ -166,6 +175,95 @@ public static class JourneyEndpoints
         catch (DomainValidationException exception) { return Validation(exception); }
     }
 
+    /// <summary>
+    /// ASIGNAR es un placeholder: se propone un vehículo sin comprometerlo. No publica nada,
+    /// no habilita el retrieve y no genera solicitud en Rabbit.
+    /// </summary>
+    private static async Task<IResult> AssignVehicle(
+        Guid id, AssignVehicleCommand command, ITransportDb db, TimeProvider clock,
+        CancellationToken cancellationToken)
+    {
+        var journey = await Query(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (journey is null) return TypedResults.NotFound();
+        if (journey.Terminal()) return TypedResults.Conflict("Un traslado completado o anulado no admite cambios de vehículo.");
+        var vehicle = await db.Vehicles.AsNoTracking().SingleOrDefaultAsync(x => x.Id == command.VehicleId, cancellationToken);
+        if (vehicle is null) return Validation("vehicleId", "El vehículo indicado no existe.");
+        if (journey.AdjudicatedAt is not null && journey.VehicleId != vehicle.Id)
+            return TypedResults.Conflict("El traslado está adjudicado: desadjudícalo antes de cambiar de vehículo.");
+        journey.VehicleId = vehicle.Id;
+        Audit(db, journey, "VehicleAssigned", ChangeSource.Nagomi, ActorName(command.Actor), clock.GetUtcNow());
+        await db.SaveChangesAsync(cancellationToken);
+        return TypedResults.Ok(journey);
+    }
+
+    /// <summary>
+    /// ADJUDICAR compromete el vehículo con este traslado: a partir de aquí el proveedor recibe
+    /// la solicitud en Rabbit y puede hacer retrieve. Es el único punto que publica un traslado.
+    /// </summary>
+    private static async Task<IResult> AdjudicateVehicle(
+        Guid id, AdjudicateVehicleCommand command, ITransportDb db, IProviderOutbox outbox,
+        TimeProvider clock, CancellationToken cancellationToken)
+    {
+        var journey = await Query(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (journey is null) return TypedResults.NotFound();
+        if (journey.Terminal()) return TypedResults.Conflict("Un traslado completado o anulado no se puede adjudicar.");
+        var vehicleId = command.VehicleId ?? journey.VehicleId;
+        if (vehicleId is null) return Validation("vehicleId", "Indica el vehículo que realizará el traslado.");
+        var vehicle = await db.Vehicles.AsNoTracking().SingleOrDefaultAsync(x => x.Id == vehicleId.Value, cancellationToken);
+        if (vehicle is null) return Validation("vehicleId", "El vehículo indicado no existe.");
+
+        journey.VehicleId = vehicle.Id;
+        journey.AdjudicatedAt = clock.GetUtcNow();
+        journey.AdjudicatedBy = ActorName(command.Actor);
+        Audit(db, journey, "VehicleAdjudicated", ChangeSource.Nagomi, journey.AdjudicatedBy, clock.GetUtcNow());
+        // La solicitud al proveedor nace AQUÍ (no al crear el traslado).
+        await NotifyJourney(journey, db, outbox, "JourneyAssigned", cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return TypedResults.Ok(journey);
+    }
+
+    /// <summary>
+    /// DESADJUDICAR libera el vehículo para poder cambiarlo: retira del outbox lo que aún no ha
+    /// salido y avisa al proveedor de lo que ya había recibido. El vehículo asignado se conserva
+    /// como propuesta.
+    /// </summary>
+    private static async Task<IResult> UnadjudicateVehicle(
+        Guid id, UnadjudicateVehicleCommand command, ITransportDb db, IProviderIntegrationDb integrationDb,
+        IProviderOutbox outbox, TimeProvider clock, CancellationToken cancellationToken)
+    {
+        var journey = await Query(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (journey is null) return TypedResults.NotFound();
+        if (journey.AdjudicatedAt is null)
+            return TypedResults.Conflict("El traslado no está adjudicado.");
+
+        var notifications = await integrationDb.ProviderNotifications
+            .Where(x => x.EntityType == IntegrationEntityType.Journey && x.EntityPublicId == journey.PublicId
+                && x.State != NotificationDeliveryState.Dead)
+            .ToListAsync(cancellationToken);
+        var alreadyDelivered = notifications.Any(x => x.State is NotificationDeliveryState.Published or NotificationDeliveryState.Retrieved);
+        var pending = notifications.Where(x => x.State == NotificationDeliveryState.Pending).ToList();
+        if (pending.Count > 0)
+            integrationDb.ProviderNotifications.RemoveRange(pending);
+
+        journey.AdjudicatedAt = null;
+        journey.AdjudicatedBy = null;
+        Audit(db, journey, "VehicleUnadjudicated", ChangeSource.Nagomi, ActorName(command.Actor), clock.GetUtcNow());
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Lo ya publicado se retira explícitamente (el traslado sigue vivo, pero sin vehículo).
+        if (alreadyDelivered)
+        {
+            await NotifyJourney(journey, db, outbox, "JourneyUnassigned", cancellationToken, force: true);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        return TypedResults.Ok(journey);
+    }
+
+    private static string ActorName(string? value) => string.IsNullOrWhiteSpace(value) ? "web-user" : value.Trim();
+
+    private static IResult Validation(string key, string message) =>
+        TypedResults.ValidationProblem(new Dictionary<string, string[]> { [key] = [message] });
+
     private static async Task<Results<Ok<IReadOnlyList<JourneyStatusRecord>>, NotFound>> GetStatusHistory(
         Guid id, ITransportDb db, CancellationToken cancellationToken)
     {
@@ -206,8 +304,13 @@ public static class JourneyEndpoints
 
     private static async Task NotifyJourney(
         JourneyRecord journey, ITransportDb db, IProviderOutbox outbox, string messageType,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool force = false)
     {
+        // Sólo se publica lo ADJUDICADO: mientras el vehículo sea una propuesta, el proveedor
+        // no recibe nada en Rabbit ni puede recuperar el traslado. `force` se usa para la
+        // retirada explícita al desadjudicar (cuando ya no está adjudicado).
+        if (!force && journey.AdjudicatedAt is null)
+            return;
         var request = await db.TransportRequests.AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == journey.TransportRequestId, cancellationToken);
         if (request?.ContractCode is null)

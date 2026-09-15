@@ -75,6 +75,9 @@ export interface Journey {
   cancelledBy?: 'Requester' | 'Provider'
   cancellationReason?: CancellationReason
   vehicleId?: string
+  /** true = el vehículo está ADJUDICADO (comprometido y publicado al proveedor). */
+  vehicleAdjudicated?: boolean
+  adjudicatedBy?: string
   vehicleName?: string
   driverName?: string
   notes?: string

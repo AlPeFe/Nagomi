@@ -79,8 +79,16 @@ public sealed class JourneyRecord
     public string? ProviderReference { get; set; }
     public bool IsRecurrenceException { get; set; }
     public bool IsManuallyAdded { get; set; }
+    /// <summary>Vehículo ASIGNADO: una propuesta, todavía no compromete el servicio.</summary>
     public Guid? VehicleId { get; set; }
     public TransportVehicle? Vehicle { get; set; }
+    /// <summary>
+    /// Marca de ADJUDICACIÓN. Mientras sea null, el vehículo asignado es sólo un placeholder:
+    /// el traslado no se publica al proveedor, no genera solicitud en Rabbit y no se puede
+    /// recuperar. Al adjudicar queda comprometido con este vehículo.
+    /// </summary>
+    public DateTimeOffset? AdjudicatedAt { get; set; }
+    public string? AdjudicatedBy { get; set; }
     /// <summary>Driver assigned to this journey (a simple name — no worker directory, no shifts).</summary>
     public string? DriverName { get; set; }
     public JourneyStatus CurrentStatus { get; set; } = JourneyStatus.Scheduled;

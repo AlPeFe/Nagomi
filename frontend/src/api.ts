@@ -56,6 +56,7 @@ type BackendJourney = {
   id: string; transportRequestId: string; publicId: string; direction: number | Journey['direction']; origin: BackendLocation; destination: BackendLocation
   requirements: BackendRequirements; schedule?: BackendSchedule; currentStatus: number | JourneyStatus; providerVisibleNotes?: string; providerReference?: string
   externallyModified?: boolean; retrievalState?: string; currentCancellingParty?: number | string; vehicleId?: string; vehicle?: { publicId?: string; name?: string }; driverName?: string
+  vehicleAdjudicated?: boolean; adjudicatedBy?: string
   statusHistory?: Array<Record<string, unknown>>
 }
 type OperationsRow = {
@@ -63,7 +64,7 @@ type OperationsRow = {
   patientName: string; patientPhone?: string; origin: string; destination: string; direction: number | Journey['direction']; reason: string
   requirements: string; status: number | JourneyStatus; provider?: string; contractCode?: string; providerReference?: string; retrievalState?: string
   externallyModified?: boolean; providerCancelled?: boolean
-  vehicleId?: string; vehicleName?: string; driverName?: string; notes?: string
+  vehicleId?: string; vehicleName?: string; driverName?: string; vehicleAdjudicated?: boolean; adjudicatedBy?: string; notes?: string
   requiresOxygen?: boolean; companionRequired?: boolean; medicalStaffRequired?: boolean
   isolationRequired?: boolean; bariatricRequired?: boolean; stairsAssistanceRequired?: boolean
   cancellationReason?: number | string
@@ -110,6 +111,7 @@ function mapJourney(value: BackendJourney, parent?: BackendRequest): Journey {
     contract: parent?.contractCode, providerReference: value.providerReference, deliveryState: enumValue(value.retrievalState, deliveryStates, 'NotPublished'),
     externallyModified: value.externallyModified, cancelledBy: value.currentCancellingParty === 1 || value.currentCancellingParty === 'TransportProvider' ? 'Provider' : undefined,
     notes: value.providerVisibleNotes, vehicleId: value.vehicleId, vehicleName: value.vehicle?.name, driverName: value.driverName,
+    vehicleAdjudicated: value.vehicleAdjudicated, adjudicatedBy: value.adjudicatedBy,
     statusEvents: (value.statusHistory ?? []).map((event) => ({ id: String(event.id), status: enumValue(event.status as number | string, journeyStatuses, 'Scheduled'), occurredAt: String(event.occurredAt), recordedAt: event.recordedAt ? String(event.recordedAt) : undefined, actor: event.actor ? String(event.actor) : undefined, source: event.source === 1 || event.source === 'TransportProvider' ? 'Provider' : 'Nagomi', externalResourceCode: event.externalResourceCode ? String(event.externalResourceCode) : undefined, latitude: typeof event.latitude === 'number' ? event.latitude : event.latitude != null ? Number(event.latitude) : undefined, longitude: typeof event.longitude === 'number' ? event.longitude : event.longitude != null ? Number(event.longitude) : undefined })),
   }
 }
@@ -131,6 +133,7 @@ function mapOperationsRow(value: OperationsRow): Journey {
     },
     status: enumValue(value.status, journeyStatuses, 'Scheduled'), provider: value.provider, contract: value.contractCode, providerReference: value.providerReference,
     vehicleId: value.vehicleId, vehicleName: value.vehicleName, driverName: value.driverName, notes: value.notes,
+    vehicleAdjudicated: value.vehicleAdjudicated, adjudicatedBy: value.adjudicatedBy,
     cancellationReason: value.cancellationReason == null ? undefined : enumValue(value.cancellationReason, cancellationReasons, 'Other'),
     deliveryState: enumValue(value.retrievalState, deliveryStates, 'NotPublished'), externallyModified: value.externallyModified, cancelledBy: value.providerCancelled ? 'Provider' : undefined,
   }
@@ -324,8 +327,17 @@ export const api = {
   deletePatient: (id: string) => request<void>(`/admin/patients/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   ensurePatient: (body: PatientInput) => request<Patient>('/patients/ensure', { method: 'POST', body: JSON.stringify(body) }),
   listCoordination: () => request<CoordinationRow[]>('/coordination'),
-  async assignJourneyVehicle(journeyId: string, vehicleId?: string) {
-    return await request<Vehicle | null>(`/journeys/${encodeURIComponent(journeyId)}/vehicle`, { method: 'PUT', body: JSON.stringify({ vehicleId }) })
+  /** ASIGNAR: propone un vehículo. No compromete ni publica al proveedor. */
+  async assignJourneyVehicle(journeyId: string, vehicleId: string) {
+    return await request<Journey>(`/journeys/${encodeURIComponent(journeyId)}/assign-vehicle`, { method: 'POST', body: JSON.stringify({ vehicleId, actor: 'simulated-user' }) })
+  },
+  /** ADJUDICAR: compromete el vehículo, genera la solicitud en Rabbit y habilita el retrieve. */
+  async adjudicateJourneyVehicle(journeyId: string, vehicleId?: string) {
+    return await request<Journey>(`/journeys/${encodeURIComponent(journeyId)}/adjudicate-vehicle`, { method: 'POST', body: JSON.stringify({ vehicleId, actor: 'simulated-user' }) })
+  },
+  /** DESADJUDICAR: libera el vehículo (para cambiarlo) y retira la solicitud del proveedor. */
+  async unadjudicateJourneyVehicle(journeyId: string) {
+    return await request<Journey>(`/journeys/${encodeURIComponent(journeyId)}/unadjudicate-vehicle`, { method: 'POST', body: JSON.stringify({ actor: 'simulated-user' }) })
   },
   async assignJourneyDriver(journeyId: string, driverName?: string) {
     return await request<string | null>(`/journeys/${encodeURIComponent(journeyId)}/driver`, { method: 'PUT', body: JSON.stringify({ driverName }) })

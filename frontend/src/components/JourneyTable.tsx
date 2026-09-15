@@ -1,4 +1,4 @@
-import { Eye, MapTrifold, Note } from '@phosphor-icons/react'
+import { Eye, Gavel, MapTrifold, Note, ShieldCheck, Warning } from '@phosphor-icons/react'
 import { Link } from '../router'
 import type { Journey, Vehicle } from '../types'
 import { VEHICLE_TYPE_LABELS } from '../types'
@@ -22,6 +22,29 @@ function accentFor(requestId: string) {
  */
 function isPending(journey: Journey) {
   return journey.status === 'Scheduled' && !journey.vehicleId
+}
+
+/**
+ * Asignado NO es adjudicado: un vehículo propuesto no compromete el servicio, así que
+ * hay que distinguirlo a simple vista (no publica ni habilita el retrieve).
+ */
+function isUnadjudicated(journey: Journey) {
+  return !!journey.vehicleId && !journey.vehicleAdjudicated
+}
+
+/**
+ * El vehículo en la mesa diaria es SÓLO lectura: se cambia desde el panel de
+ * asignación/adjudicación, no desde un desplegable en la fila.
+ */
+export function VehicleCell({ journey }: { journey: Journey }) {
+  if (!journey.vehicleId) return <span className="vehicle-cell-empty">—</span>
+  const label = journey.vehicleName ?? 'Vehículo'
+  const state = journey.vehicleAdjudicated ? 'adjudicado' : 'asignado sin adjudicar'
+  return <span className={`vehicle-tag ${journey.vehicleAdjudicated ? 'vehicle-tag-adjudicated' : 'vehicle-tag-assigned'}`}
+    title={`${label} · ${state}`}>
+    {journey.vehicleAdjudicated && <ShieldCheck size={11} aria-hidden="true" />}
+    {label}
+  </span>
 }
 
 export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDriver, showDriver = false }: {
@@ -59,7 +82,7 @@ export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDri
   </div>
 }
 
-export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onOpen, onShowMap }: {
+export function JourneyTable({ journeys, onOpen, onShowMap, onAssign }: {
   journeys: Journey[]
   vehicles?: Vehicle[]
   onAssignVehicle?: (journeyId: string, vehicleId: string) => void
@@ -67,6 +90,8 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onOpen,
   onOpen?: (journeyId: string) => void
   /** Abre el mapa del trayecto (origen, destino y posiciones del vehículo). */
   onShowMap?: (journeyId: string) => void
+  /** Abre el panel de vehículo: asignar (placeholder) o adjudicar (compromete y publica). */
+  onAssign?: (journeyId: string) => void
 }) {
   const pairs = new Map<string, { outbound?: Journey; return?: Journey }>()
   for (const journey of journeys) {
@@ -79,7 +104,7 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onOpen,
     <caption className="sr-only">Trayectos del resultado operativo actual</caption>
     <thead><tr>
       <th>Hora / trayecto</th><th>Paciente</th><th>Ruta</th><th>Motivo / movilidad</th>
-      <th>Estado</th><th>Vehículo</th><th>Acciones</th><th>Proveedor</th>
+      <th>Estado</th><th>Vehículo</th><th>Acciones</th>
     </tr></thead>
     <tbody>{journeys.map((journey) => {
       const pair = pairs.get(journey.requestId)
@@ -93,20 +118,21 @@ export function JourneyTable({ journeys, vehicles = [], onAssignVehicle, onOpen,
         <td data-label="Motivo / movilidad"><strong>{journey.reason}</strong><RequirementsIcons requirements={journey.requirements} className="req-icons-cell" /></td>
         <td data-label="Estado">
           {isPending(journey) ? <span className="badge badge-pending"><span aria-hidden="true" />Pendiente de vehículo</span> : <StatusBadge status={journey.status} />}
+          {isUnadjudicated(journey) && <span className="badge badge-unadjudicated"><Warning size={11} aria-hidden="true" /> Sin adjudicar</span>}
           <Indicators external={journey.externallyModified} cancelledBy={journey.cancelledBy} delivery={journey.deliveryState} />
         </td>
         <td data-label="Vehículo">
-          <AssignmentCell journey={journey} vehicles={vehicles} onAssignVehicle={onAssignVehicle} />
+          <VehicleCell journey={journey} />
         </td>
         <td data-label="Acciones"><div className="row-actions">
           {onOpen && <button type="button" className="icon-button row-action" title={`Vista rápida de ${journey.publicId}`} aria-label={`Vista rápida de ${journey.publicId}`} onClick={() => onOpen(journey.id)}><Eye size={15} aria-hidden="true" /></button>}
+          {onAssign && <button type="button" className="icon-button row-action row-action-primary" title={`Asignar o adjudicar vehículo a ${journey.publicId}`} aria-label={`Asignar o adjudicar vehículo a ${journey.publicId}`} onClick={() => onAssign(journey.id)}><Gavel size={15} aria-hidden="true" /></button>}
           {onShowMap && <button type="button" className="icon-button row-action" title={`Ver en el mapa ${journey.publicId}`} aria-label={`Ver en el mapa ${journey.publicId}`} onClick={() => onShowMap(journey.id)}><MapTrifold size={15} aria-hidden="true" /></button>}
           {journey.notes && <details className="row-pop">
             <summary className="icon-button row-action" title="Observaciones" aria-label={`Observaciones de ${journey.publicId}`}><Note size={15} aria-hidden="true" /></summary>
             <p className="row-pop-body">{journey.notes}</p>
           </details>}
         </div></td>
-        <td data-label="Proveedor"><strong>{journey.provider || 'Sin asignar'}</strong><small>{journey.contract || 'Sin contrato'}</small></td>
       </tr>
     })}</tbody>
   </table></div>

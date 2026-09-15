@@ -1,3 +1,4 @@
+using Nagomi.Api.Features.Tenant;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
@@ -85,7 +86,7 @@ public static class TransportRequestEndpoints
     }
 
     private static async Task<IResult> SubmitOneOff(
-        Guid id, SubmitOneOffCommand command, ITransportDb db, IProviderOutbox outbox,
+        Guid id, SubmitOneOffCommand command, ITransportDb db, IProviderOutbox outbox, ITenantDb tenantDb,
         TimeProvider clock, IPublicIdGenerator ids, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -100,7 +101,8 @@ public static class TransportRequestEndpoints
             foreach (var journey in request.JourneyRecords)
                 db.Add(journey);
             Audit(db, request.PublicId!, "Submitted", ChangeSource.Nagomi, "simulated-user", request.UpdatedAt);
-            await NotifyRequest(request, outbox, "TransportRequestCreated", cancellationToken);
+            if (await PublishesOnSubmitAsync(tenantDb, cancellationToken))
+                await NotifyRequest(request, outbox, "TransportRequestCreated", cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return TypedResults.Ok(request);
         }
@@ -108,7 +110,7 @@ public static class TransportRequestEndpoints
     }
 
     private static async Task<IResult> SubmitRecurring(
-        Guid id, SubmitRecurringCommand command, ITransportDb db, IProviderOutbox outbox,
+        Guid id, SubmitRecurringCommand command, ITransportDb db, IProviderOutbox outbox, ITenantDb tenantDb,
         TimeProvider clock, IPublicIdGenerator ids, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -134,7 +136,7 @@ public static class TransportRequestEndpoints
 
     private static async Task<IResult> UpdateSnapshot(
         Guid id, UpdateRequestCommand command, ITransportDb db, IProviderIntegrationDb integrationDb,
-        IProviderOutbox outbox, TimeProvider clock, CancellationToken cancellationToken)
+        IProviderOutbox outbox, ITenantDb tenantDb, TimeProvider clock, CancellationToken cancellationToken)
     {
         var request = await Requests(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (request is null) return TypedResults.NotFound();
@@ -158,7 +160,8 @@ public static class TransportRequestEndpoints
         }
         Audit(db, request.PublicId!, "Updated", command.Source, command.Actor, request.UpdatedAt);
         if (!provider)
-            await NotifyRequest(request, outbox, "TransportRequestUpdated", cancellationToken);
+            if (await PublishesOnSubmitAsync(tenantDb, cancellationToken))
+                await NotifyRequest(request, outbox, "TransportRequestUpdated", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.Ok(request);
     }
@@ -295,6 +298,20 @@ public static class TransportRequestEndpoints
 
     private static void Audit(ITransportDb db, string id, string action, ChangeSource source, string actor, DateTimeOffset at) =>
         db.Add(new TransportAuditRecord { EntityType = "TransportRequest", EntityIdentifier = id, Action = action, Source = source, Actor = actor, RecordedAt = at });
+
+
+    /// <summary>
+    /// En modo empresa de ambulancias (la instalación ejecuta sus propios traslados) el envío NO
+    /// publica nada: la solicitud al proveedor nace al ADJUDICAR un vehículo, de forma que un
+    /// traslado sin vehículo comprometido no se pueda recuperar. Si la instalación sólo publica
+    /// (no ejecuta), sí se publica al enviar, porque ahí no hay flota propia que adjudicar.
+    /// </summary>
+    private static async Task<bool> PublishesOnSubmitAsync(ITenantDb tenantDb, CancellationToken cancellationToken)
+    {
+        var settings = await tenantDb.TenantSettings.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == TenantSettings.SingletonId, cancellationToken);
+        return settings is not null && !settings.Capabilities.HasFlag(TenantCapabilities.ExecutesTransports);
+    }
 
     private static IResult Validation(DomainValidationException exception) =>
         TypedResults.ValidationProblem(new Dictionary<string, string[]> { ["request"] = [exception.Message] });

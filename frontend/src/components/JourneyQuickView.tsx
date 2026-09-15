@@ -18,12 +18,12 @@ import {
 } from '@phosphor-icons/react'
 import type { Icon } from '@phosphor-icons/react'
 import { api } from '../api'
-import type { Journey, JourneyStatus, Vehicle } from '../types'
+import type { Journey, JourneyStatus } from '../types'
 import { CANCELLATION_REASON_LABELS } from '../types'
 import { directionLabel, formatDateTime, operationalTime, statusLabel } from '../utils'
 import { Indicators, StatusBadge } from './Badges'
 import { Link } from '../router'
-import { AssignmentCell } from './JourneyTable'
+import { VehicleCell } from './JourneyTable'
 import { RequirementsIcons } from './RequirementsIcons'
 
 /** Icono y color por fase: ayuda a leer el estado de un vistazo. */
@@ -54,14 +54,13 @@ function isPending(journey: Journey) {
  * Detalle rápido en panel lateral: se abre desde la lista sin salir de ella, con
  * navegación ‹ › entre los traslados del resultado y acceso al detalle completo.
  */
-export function JourneyQuickView({ journeys, index, onClose, onNavigate, vehicles, onAssignVehicle, onAssignDriver, onChanged }: {
+export function JourneyQuickView({ journeys, index, onClose, onNavigate, onManageVehicle, onChanged }: {
   journeys: Journey[]
   index: number
   onClose: () => void
   onNavigate: (index: number) => void
-  vehicles: Vehicle[]
-  onAssignVehicle: (journeyId: string, vehicleId: string) => void
-  onAssignDriver: (journeyId: string, driverName: string) => void
+  /** Abre el panel de vehículo (asignar / adjudicar / desadjudicar / anular). */
+  onManageVehicle: (journeyId: string) => void
   onChanged: () => void
 }) {
   const row = journeys[index]
@@ -158,7 +157,10 @@ export function JourneyQuickView({ journeys, index, onClose, onNavigate, vehicle
 
         <section className="qv-block">
           <h3>Vehículo y conductor</h3>
-          <AssignmentCell journey={shown} vehicles={vehicles} onAssignVehicle={onAssignVehicle} onAssignDriver={onAssignDriver} showDriver />
+          <div className="quick-vehicle">
+            <VehicleCell journey={shown} />
+            <button className="button button-secondary button-small" type="button" onClick={() => onManageVehicle(shown.id)}>Asignar / adjudicar</button>
+          </div>
         </section>
 
         {mutable && <section className="qv-block">

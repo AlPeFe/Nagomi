@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useState } from 'react'
 import { api } from '../api'
 import { JourneyTable } from '../components/JourneyTable'
 import { JourneyQuickView } from '../components/JourneyQuickView'
+import { JourneyAssignmentPanel } from '../components/JourneyAssignmentPanel'
 import { JourneyMapModal } from '../components/JourneyMapModal'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { Journey, JourneyFilters, Vehicle } from '../types'
@@ -29,6 +30,8 @@ export function JourneysPage() {
   const [refreshedAt, setRefreshedAt] = useState<Date>()
   const [quickId, setQuickId] = useState<string | null>(null)
   const [mapId, setMapId] = useState<string | null>(null)
+  // Traslado cuyo panel de vehículo (asignar / adjudicar / desadjudicar / anular) está abierto.
+  const [assignId, setAssignId] = useState<string | null>(null)
 
   async function load(silent = false) {
     if (!silent) setLoading(true)
@@ -58,15 +61,6 @@ export function JourneysPage() {
 
   function change(name: keyof JourneyFilters, value: string) { setFilters((current) => ({ ...current, [name]: value })) }
 
-  async function assignVehicle(journeyId: string, vehicleId: string) {
-    await api.assignJourneyVehicle(journeyId, vehicleId || undefined)
-    await load(true)
-  }
-
-  async function assignDriver(journeyId: string, driverName: string) {
-    await api.assignJourneyDriver(journeyId, driverName.trim() || undefined)
-    await load(true)
-  }
 
   function exportCsv() {
     const blob = new Blob([csvForJourneys(journeys)], { type: 'text/csv;charset=utf-8' })
@@ -99,7 +93,7 @@ export function JourneysPage() {
         vehicles={vehicles}
         onOpen={setQuickId}
         onShowMap={setMapId}
-        onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
+        onAssign={setAssignId}
       />
     </>}
     {quickId && journeys.some((journey) => journey.id === quickId) && <JourneyQuickView
@@ -107,9 +101,13 @@ export function JourneysPage() {
       index={journeys.findIndex((journey) => journey.id === quickId)}
       onClose={() => setQuickId(null)}
       onNavigate={(nextIndex) => setQuickId(journeys[nextIndex]?.id ?? null)}
+      onManageVehicle={setAssignId}
+      onChanged={() => void load(true)}
+    />}
+    {assignId && journeys.some((journey) => journey.id === assignId) && <JourneyAssignmentPanel
+      journey={journeys.find((journey) => journey.id === assignId)!}
       vehicles={vehicles}
-      onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
-      onAssignDriver={(id, name) => void assignDriver(id, name)}
+      onClose={() => setAssignId(null)}
       onChanged={() => void load(true)}
     />}
     {mapId && journeys.some((journey) => journey.id === mapId) && <JourneyMapModal

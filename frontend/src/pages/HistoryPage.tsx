@@ -3,6 +3,7 @@ import { api } from '../api'
 import { JourneyTable } from '../components/JourneyTable'
 import { JourneyQuickView } from '../components/JourneyQuickView'
 import { JourneyMapModal } from '../components/JourneyMapModal'
+import { JourneyAssignmentPanel } from '../components/JourneyAssignmentPanel'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { Journey, JourneyFilters, Vehicle } from '../types'
 import { csvForJourneys, localDate } from '../utils'
@@ -31,6 +32,7 @@ export function HistoryPage() {
   const [error, setError] = useState('')
   const [quickId, setQuickId] = useState<string | null>(null)
   const [mapId, setMapId] = useState<string | null>(null)
+  const [assignId, setAssignId] = useState<string | null>(null)
 
   useEffect(() => {
     // La lista de vehículos solo alimenta el selector de asignación: si falla, la
@@ -71,15 +73,7 @@ export function HistoryPage() {
     setError('')
   }
 
-  async function assignVehicle(journeyId: string, vehicleId: string) {
-    await api.assignJourneyVehicle(journeyId, vehicleId || undefined)
-    if (applied) await search(applied)
-  }
 
-  async function assignDriver(journeyId: string, driverName: string) {
-    await api.assignJourneyDriver(journeyId, driverName.trim() || undefined)
-    if (applied) await search(applied)
-  }
 
   function exportCsv() {
     const blob = new Blob([csvForJourneys(journeys)], { type: 'text/csv;charset=utf-8' })
@@ -141,10 +135,9 @@ export function HistoryPage() {
       <div className="result-bar"><strong>{journeys.length}</strong><span>traslados</span><span>· ordenados del más reciente al más antiguo</span></div>
       <JourneyTable
         journeys={journeys}
-        vehicles={vehicles}
         onOpen={setQuickId}
         onShowMap={setMapId}
-        onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
+        onAssign={setAssignId}
       />
     </>}
     {quickId && journeys.some((journey) => journey.id === quickId) && <JourneyQuickView
@@ -152,10 +145,13 @@ export function HistoryPage() {
       index={journeys.findIndex((journey) => journey.id === quickId)}
       onClose={() => setQuickId(null)}
       onNavigate={(nextIndex) => setQuickId(journeys[nextIndex]?.id ?? null)}
-      vehicles={vehicles}
-      onAssignVehicle={(id, vehicleId) => void assignVehicle(id, vehicleId)}
-      onAssignDriver={(id, name) => void assignDriver(id, name)}
+      onManageVehicle={setAssignId}
       onChanged={() => applied ? void search(applied) : undefined}
+    />}    {assignId && journeys.some((journey) => journey.id === assignId) && <JourneyAssignmentPanel
+      journey={journeys.find((journey) => journey.id === assignId)!}
+      vehicles={vehicles}
+      onClose={() => setAssignId(null)}
+      onChanged={() => (applied ? void search(applied) : undefined)}
     />}
     {mapId && journeys.some((journey) => journey.id === mapId) && <JourneyMapModal
       journey={journeys.find((journey) => journey.id === mapId)!}
