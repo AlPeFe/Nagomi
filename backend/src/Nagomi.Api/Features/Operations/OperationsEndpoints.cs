@@ -97,7 +97,8 @@ public static class OperationsEndpoints
     {
         // El listado de solicitudes son las CABECERAS, pero cada cabecera necesita sus
         // hijos: contadores de ida/vuelta y próximo traslado. Sin Include venían vacíos.
-        var requests = db.TransportRequests.AsNoTracking().Include(x => x.JourneyRecords);
+        IQueryable<TransportRequestRecord> requests = db.TransportRequests.AsNoTracking()
+            .Include(x => x.JourneyRecords);
         if (status.HasValue) requests = requests.Where(x => x.Status == status);
         if (!string.IsNullOrWhiteSpace(search))
         {
