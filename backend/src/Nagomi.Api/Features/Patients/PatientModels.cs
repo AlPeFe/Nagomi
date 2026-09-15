@@ -18,6 +18,10 @@ public sealed class Patient
     /// <summary>Health card number (CIP/TSI). Not unique — can be unknown or repeated.</summary>
     public string? HealthCardNumber { get; set; }
     public string? Phone { get; set; }
+    /// <summary>Dirección habitual del paciente (opcional).</summary>
+    public string? Address { get; set; }
+    /// <summary>Fecha de nacimiento (opcional; útil para pediátricos).</summary>
+    public DateOnly? BirthDate { get; set; }
     public string? Notes { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
@@ -34,7 +38,9 @@ public sealed record PatientResponse(
     string? Phone,
     string? Notes,
     bool IsActive,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? Address = null,
+    DateOnly? BirthDate = null);
 
 /// <summary>Create/update payload. A patient needs at least a name or a document number.</summary>
 public sealed record UpsertPatientCommand(
@@ -43,14 +49,16 @@ public sealed record UpsertPatientCommand(
     string? DocumentNumber = null,
     string? HealthCardNumber = null,
     string? Phone = null,
-    string? Notes = null);
+    string? Notes = null,
+    string? Address = null,
+    DateOnly? BirthDate = null);
 
 internal static class PatientMapping
 {
     internal static PatientResponse ToResponse(this Patient patient) =>
         new(patient.Id, patient.PublicId, patient.FirstName, patient.LastName,
             patient.DocumentNumber, patient.HealthCardNumber, patient.Phone,
-            patient.Notes, patient.IsActive, patient.CreatedAt);
+            patient.Notes, patient.IsActive, patient.CreatedAt, patient.Address, patient.BirthDate);
 
     internal static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

@@ -16,6 +16,7 @@ using Nagomi.Api.Domain;
 using Nagomi.Api.Features.Journeys;
 using Nagomi.Api.Features.ProviderIntegration;
 using Nagomi.Api.Features.TransportRequests;
+using Nagomi.Api.Features.Vehicles;
 using Nagomi.Api.Infrastructure.Persistence;
 using RabbitMQ.Client;
 using Testcontainers.PostgreSql;
@@ -199,15 +200,51 @@ public sealed class TransportRequestProviderFlowTests(TransportRequestProviderFl
         var submitted = await submitResponse.Content.ReadFromJsonAsync<JsonElement>();
         var requestPublicId = submitted.GetProperty("publicId").GetString()!;
         var journey = submitted.GetProperty("journeyRecords")[0];
+        var journeyId = journey.GetProperty("id").GetGuid();
         var journeyPublicId = journey.GetProperty("publicId").GetString()!;
+
+        // Enviar la solicitud NO publica nada: la instalación ejecuta su propia flota, así que la
+        // solicitud al proveedor nace al ADJUDICAR un vehículo. El traslado no debe ser recuperable
+        // todavía (no existe notificación).
+        await using (var db = fixture.CreateDbContext())
+        {
+            (await db.ProviderNotifications.AnyAsync(x => x.EntityPublicId == requestPublicId ||
+                x.EntityPublicId == journeyPublicId)).Should().BeFalse(
+                "un traslado sin vehículo adjudicado no se publica ni se puede recuperar");
+        }
+
+        // Adjudicar un vehículo es lo que compromete el servicio y genera la solicitud.
+        // El vehículo se crea por BD (como el proveedor y el contrato del fixture): aquí se
+        // prueba el flujo de publicación, no el CRUD de vehículos.
+        var vehicleId = Guid.NewGuid();
+        await using (var db = fixture.CreateDbContext())
+        {
+            db.Vehicles.Add(new TransportVehicle
+            {
+                Id = vehicleId,
+                ProviderId = fixture.ProviderId,
+                PublicId = "VHC-E2E-1",
+                Name = "E2E Ambulance",
+                ExternalCode = "E2E-AMB-1",
+                VehicleType = VehicleType.Conventional,
+                IsActive = true,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var adjudicateResponse = await client.PostAsJsonAsync(
+            $"/api/journeys/{journeyId}/adjudicate-vehicle", new { vehicleId, actor = "e2e-test" });
+        adjudicateResponse.EnsureSuccessStatusCode();
 
         using var rabbitTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var rabbitBody = await fixture.GetRabbitMessageAsync(rabbitTimeout.Token);
         var notification = JsonSerializer.Deserialize<ProviderNotificationMessage>(rabbitBody, JsonOptions)!;
-        notification.MessageType.Should().Be("TransportRequestCreated");
-        notification.EntityPublicId.Should().Be(requestPublicId);
+        notification.MessageType.Should().Be("JourneyAssigned");
+        notification.EntityPublicId.Should().Be(journeyPublicId);
         notification.ContractCode.Should().Be(fixture.ContractCode);
-        notification.RetrievalUrl.Should().Be($"/api/provider/requests/{requestPublicId}");
+        notification.RetrievalUrl.Should().Be($"/api/provider/journeys/{journeyPublicId}");
         rabbitBody.Should().NotContain("Ana").And.NotContain("DNI-E2E-SECRET")
             .And.NotContain("CARD-E2E-SECRET").And.NotContain("Calle Mayor")
             .And.NotContain("clinical").And.NotContain("600123123");
@@ -225,7 +262,7 @@ public sealed class TransportRequestProviderFlowTests(TransportRequestProviderFl
             $"{notification.RetrievalUrl}?messageId={notification.MessageId}");
         retrievalResponse.EnsureSuccessStatusCode();
         var retrieved = await retrievalResponse.Content.ReadFromJsonAsync<JsonElement>();
-        retrieved.GetProperty("publicId").GetString().Should().Be(requestPublicId);
+        retrieved.GetProperty("publicId").GetString().Should().Be(journeyPublicId);
 
         var replacement = new
         {

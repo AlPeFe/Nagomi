@@ -101,6 +101,9 @@ public static class VehicleEndpoints
             Name = command.Name.Trim(),
             VehicleType = command.VehicleType,
             ExternalCode = VehicleMapping.Clean(command.ExternalCode),
+            Plate = VehicleMapping.Clean(command.Plate),
+            Capacity = command.Capacity,
+            Notes = VehicleMapping.Clean(command.Notes),
             IsActive = command.IsActive,
             CreatedAt = clock.GetUtcNow(),
             UpdatedAt = clock.GetUtcNow()
@@ -132,6 +135,9 @@ public static class VehicleEndpoints
         if (!string.IsNullOrWhiteSpace(code))
             vehicle.PublicId = code;
         vehicle.ExternalCode = VehicleMapping.Clean(command.ExternalCode);
+        vehicle.Plate = VehicleMapping.Clean(command.Plate);
+        vehicle.Capacity = command.Capacity;
+        vehicle.Notes = VehicleMapping.Clean(command.Notes);
         vehicle.IsActive = command.IsActive;
         vehicle.UpdatedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(cancellationToken);

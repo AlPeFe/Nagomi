@@ -3,9 +3,9 @@ import { api } from '../api'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import type { Patient } from '../types'
 
-interface PatientForm { firstName: string; lastName: string; documentNumber: string; healthCardNumber: string; phone: string; notes: string }
+interface PatientForm { firstName: string; lastName: string; documentNumber: string; healthCardNumber: string; phone: string; notes: string; address: string; birthDate: string }
 
-const emptyForm: PatientForm = { firstName: '', lastName: '', documentNumber: '', healthCardNumber: '', phone: '', notes: '' }
+const emptyForm: PatientForm = { firstName: '', lastName: '', documentNumber: '', healthCardNumber: '', phone: '', notes: '', address: '', birthDate: '' }
 
 export function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([])
@@ -33,7 +33,7 @@ export function PatientsPage() {
   function startCreate() { reset(); setMessage('') }
   function startEdit(patient: Patient) {
     setEditing(patient)
-    setForm({ firstName: patient.firstName ?? '', lastName: patient.lastName ?? '', documentNumber: patient.documentNumber ?? '', healthCardNumber: patient.healthCardNumber ?? '', phone: patient.phone ?? '', notes: patient.notes ?? '' })
+    setForm({ firstName: patient.firstName ?? '', lastName: patient.lastName ?? '', documentNumber: patient.documentNumber ?? '', healthCardNumber: patient.healthCardNumber ?? '', phone: patient.phone ?? '', notes: patient.notes ?? '', address: patient.address ?? '', birthDate: patient.birthDate ?? '' })
     setMessage('')
   }
 
@@ -45,6 +45,8 @@ export function PatientsPage() {
       healthCardNumber: form.healthCardNumber.trim() || undefined,
       phone: form.phone.trim() || undefined,
       notes: form.notes.trim() || undefined,
+      address: form.address.trim() || undefined,
+      birthDate: form.birthDate || undefined,
     }
   }
 
@@ -72,6 +74,16 @@ export function PatientsPage() {
     catch (caught) { setMessage(caught instanceof Error ? caught.message : 'No se pudo eliminar.') }
   }
 
+  /** Edad cumplida a partir de una fecha ISO (DateOnly). */
+  function age(birthDate: string) {
+    const born = new Date(birthDate + 'T00:00:00')
+    const today = new Date()
+    let years = today.getFullYear() - born.getFullYear()
+    const monthDiff = today.getMonth() - born.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < born.getDate())) years -= 1
+    return years
+  }
+
   const fullName = (patient: Patient) => [patient.firstName, patient.lastName].filter(Boolean).join(' ') || patient.publicId
 
   if (loading) return <div className="page"><LoadingState label="Cargando pacientes" /></div>
@@ -86,6 +98,8 @@ export function PatientsPage() {
       <label><span>Documento</span><input value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder="DNI / NIE" /></label>
       <label><span>Tarjeta sanitaria</span><input value={form.healthCardNumber} onChange={(e) => setForm({ ...form, healthCardNumber: e.target.value })} placeholder="CIP / TSI" /></label>
       <label><span>Teléfono</span><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} type="tel" placeholder="600 000 000" /></label>
+      <label><span>Fecha de nacimiento</span><input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} /></label>
+      <label className="span-2"><span>Dirección</span><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Calle, número, municipio" /></label>
       <label className="span-2"><span>Notas</span><input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Observaciones (opcional)" /></label>
       <div className="inline-actions">
         <button className="button button-accent" type="submit">{editing ? 'Guardar cambios' : 'Añadir paciente'}</button>
@@ -97,7 +111,15 @@ export function PatientsPage() {
     </div>
     {patients.length ? <div className="card-list">{patients.map((patient) => (
       <article key={patient.id} className="list-row">
-        <div><strong>{fullName(patient)}</strong><span>{patient.publicId}{patient.documentNumber ? ` · ${patient.documentNumber}` : ''}{patient.phone ? ` · ${patient.phone}` : ''}</span></div>
+        <div>
+          <strong>{fullName(patient)}</strong>
+          <span>{patient.publicId}{patient.documentNumber ? ` · ${patient.documentNumber}` : ''}{patient.phone ? ` · ${patient.phone}` : ''}{patient.healthCardNumber ? ` · TSI ${patient.healthCardNumber}` : ''}</span>
+          <span className="vehicle-meta">
+            {patient.birthDate ? `${age(patient.birthDate)} años` : 'Sin fecha de nacimiento'}
+            {patient.address ? ` · ${patient.address}` : ''}
+          </span>
+          {patient.notes && <span className="vehicle-note">{patient.notes}</span>}
+        </div>
         <div className="list-actions">
           <button className="button button-small" onClick={() => startEdit(patient)}>Editar</button>
           <button className="button button-danger" onClick={() => void remove(patient.id)}>Eliminar</button>

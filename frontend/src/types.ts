@@ -157,6 +157,12 @@ export interface Vehicle {
   vehicleType: VehicleType
   isActive: boolean
   createdAt: string
+  /** Matrícula real del vehículo (opcional). */
+  plate?: string
+  /** Plazas/capacidad, camilla incluida (opcional). */
+  capacity?: number
+  /** Notas internas de flota (opcional). */
+  notes?: string
 }
 
 export type VehicleType = 'Conventional' | 'Sva' | 'Pediatric' | 'Collective'
@@ -179,6 +185,10 @@ export interface Patient {
   notes?: string
   isActive: boolean
   createdAt: string
+  /** Dirección habitual (opcional). */
+  address?: string
+  /** Fecha de nacimiento (opcional). */
+  birthDate?: string
 }
 
 export interface PatientInput {

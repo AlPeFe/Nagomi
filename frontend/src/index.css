@@ -662,3 +662,8 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
 }
 
 .client-queue-hint { font-size: 0.6875rem; margin: -0.2rem 0 0; }
+
+/* ============ Fichas de flota y pacientes: datos secundarios ============ */
+.vehicle-meta { display: block; font-size: 0.75rem; color: var(--muted); }
+.vehicle-note { display: block; font-size: 0.75rem; color: var(--ink-2); margin-top: 0.15rem; }
+.list-row > div:first-child { display: grid; gap: 0.1rem; min-width: 0; }

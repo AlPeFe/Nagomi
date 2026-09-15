@@ -25,6 +25,12 @@ public sealed class TransportVehicle
     /// named vehicle without exposing fleet management.
     /// </summary>
     public string? ExternalCode { get; set; }
+    /// <summary>Matrícula real del vehículo (opcional).</summary>
+    public string? Plate { get; set; }
+    /// <summary>Plazas/capacidad de transporte (opcional; incluye la camilla).</summary>
+    public int? Capacity { get; set; }
+    /// <summary>Notas internas de flota (opcional).</summary>
+    public string? Notes { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
@@ -37,14 +43,17 @@ public sealed record VehicleResponse(
     string? ExternalCode,
     VehicleType VehicleType,
     bool IsActive,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? Plate = null,
+    int? Capacity = null,
+    string? Notes = null);
 
-public sealed record UpsertVehicleCommand(string Name, string? ExternalCode, string? Code = null, VehicleType VehicleType = VehicleType.Conventional, bool IsActive = true);
+public sealed record UpsertVehicleCommand(string Name, string? ExternalCode, string? Code = null, VehicleType VehicleType = VehicleType.Conventional, bool IsActive = true, string? Plate = null, int? Capacity = null, string? Notes = null);
 
 internal static class VehicleMapping
 {
     internal static VehicleResponse ToResponse(this TransportVehicle vehicle) =>
-        new(vehicle.Id, vehicle.PublicId, vehicle.Name, vehicle.ExternalCode, vehicle.VehicleType, vehicle.IsActive, vehicle.CreatedAt);
+        new(vehicle.Id, vehicle.PublicId, vehicle.Name, vehicle.ExternalCode, vehicle.VehicleType, vehicle.IsActive, vehicle.CreatedAt, vehicle.Plate, vehicle.Capacity, vehicle.Notes);
 
     internal static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

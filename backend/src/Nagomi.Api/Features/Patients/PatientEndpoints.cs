@@ -94,6 +94,8 @@ public static class PatientEndpoints
             HealthCardNumber = PatientMapping.Clean(command.HealthCardNumber),
             Phone = PatientMapping.Clean(command.Phone),
             Notes = PatientMapping.Clean(command.Notes),
+            Address = PatientMapping.Clean(command.Address),
+            BirthDate = command.BirthDate,
             CreatedAt = clock.GetUtcNow(),
             UpdatedAt = clock.GetUtcNow()
         };
@@ -122,6 +124,8 @@ public static class PatientEndpoints
         patient.HealthCardNumber = PatientMapping.Clean(command.HealthCardNumber);
         patient.Phone = PatientMapping.Clean(command.Phone);
         patient.Notes = PatientMapping.Clean(command.Notes);
+        patient.Address = PatientMapping.Clean(command.Address);
+        patient.BirthDate = command.BirthDate;
         patient.UpdatedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.Ok(patient.ToResponse());
@@ -198,6 +202,8 @@ public static class PatientEndpoints
             HealthCardNumber = PatientMapping.Clean(command.HealthCardNumber),
             Phone = PatientMapping.Clean(command.Phone),
             Notes = PatientMapping.Clean(command.Notes),
+            Address = PatientMapping.Clean(command.Address),
+            BirthDate = command.BirthDate,
             CreatedAt = clock.GetUtcNow(),
             UpdatedAt = clock.GetUtcNow()
         };

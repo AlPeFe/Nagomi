@@ -3,9 +3,9 @@ import { api } from '../api'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/States'
 import { VEHICLE_TYPE_LABELS, type Vehicle, type VehicleType } from '../types'
 
-interface VehicleForm { name: string; code: string; externalCode: string; vehicleType: VehicleType }
+interface VehicleForm { name: string; code: string; externalCode: string; vehicleType: VehicleType; plate: string; capacity: string; notes: string }
 
-const emptyForm: VehicleForm = { name: '', code: '', externalCode: '', vehicleType: 'Conventional' }
+const emptyForm: VehicleForm = { name: '', code: '', externalCode: '', vehicleType: 'Conventional', plate: '', capacity: '', notes: '' }
 
 export function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -28,7 +28,7 @@ export function VehiclesPage() {
   function startCreate() { reset(); setMessage('') }
   function startEdit(vehicle: Vehicle) {
     setEditing(vehicle)
-    setForm({ name: vehicle.name, code: vehicle.publicId, externalCode: vehicle.externalCode ?? '', vehicleType: vehicle.vehicleType })
+    setForm({ name: vehicle.name, code: vehicle.publicId, externalCode: vehicle.externalCode ?? '', vehicleType: vehicle.vehicleType, plate: vehicle.plate ?? '', capacity: vehicle.capacity ? String(vehicle.capacity) : '', notes: vehicle.notes ?? '' })
     setMessage('')
   }
 
@@ -37,10 +37,10 @@ export function VehiclesPage() {
     if (!form.name.trim()) return
     try {
       if (editing) {
-        await api.updateVehicle(editing.id, { name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined, vehicleType: form.vehicleType })
+        await api.updateVehicle(editing.id, { name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined, vehicleType: form.vehicleType, plate: form.plate.trim() || undefined, capacity: form.capacity ? Number(form.capacity) : undefined, notes: form.notes.trim() || undefined })
         setMessage('Vehículo actualizado.')
       } else {
-        await api.createVehicle({ name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined, vehicleType: form.vehicleType })
+        await api.createVehicle({ name: form.name.trim(), code: form.code.trim() || undefined, externalCode: form.externalCode.trim() || undefined, vehicleType: form.vehicleType, plate: form.plate.trim() || undefined, capacity: form.capacity ? Number(form.capacity) : undefined, notes: form.notes.trim() || undefined })
         setMessage('Vehículo creado.')
       }
       reset(); await load(true)
@@ -64,6 +64,9 @@ export function VehiclesPage() {
       <label><span>Tipo</span><select value={form.vehicleType} onChange={(e) => setForm({ ...form, vehicleType: e.target.value as VehicleType })}>{(Object.keys(VEHICLE_TYPE_LABELS) as VehicleType[]).map((t) => <option key={t} value={t}>{VEHICLE_TYPE_LABELS[t]}</option>)}</select></label>
       <label><span>Código interno</span><input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="AMB-01 (si lo dejas vacío, se genera)" /></label>
       <label><span>Código externo</span><input value={form.externalCode} onChange={(e) => setForm({ ...form, externalCode: e.target.value })} placeholder="REF-EXT-01" /></label>
+      <label><span>Matrícula</span><input value={form.plate} onChange={(e) => setForm({ ...form, plate: e.target.value })} placeholder="1234 ABC" /></label>
+      <label><span>Plazas</span><input type="number" min="1" max="20" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} placeholder="2" /></label>
+      <label className="span-2"><span>Notas de flota</span><input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Camilla bariátrica, revisión pendiente…" /></label>
       <div className="inline-actions">
         <button className="button button-accent" type="submit">{editing ? 'Guardar cambios' : 'Añadir vehículo'}</button>
         {editing && <button className="button" type="button" onClick={startCreate}>Cancelar</button>}
@@ -71,10 +74,19 @@ export function VehiclesPage() {
     </form>
     {vehicles.length ? <div className="card-list">{vehicles.map((vehicle) => (
       <article key={vehicle.id} className="list-row">
-        <div><strong>{vehicle.name}</strong><span>{vehicle.publicId}{vehicle.externalCode ? ` · ${vehicle.externalCode}` : ''}{` · ${VEHICLE_TYPE_LABELS[vehicle.vehicleType]}`}</span></div>
+        <div>
+          <strong>{vehicle.name}</strong>
+          <span>{vehicle.publicId}{vehicle.externalCode ? ` · ${vehicle.externalCode}` : ''}{` · ${VEHICLE_TYPE_LABELS[vehicle.vehicleType]}`}</span>
+          <span className="vehicle-meta">
+            {vehicle.plate ? `Matrícula ${vehicle.plate}` : 'Sin matrícula'}
+            {vehicle.capacity ? ` · ${vehicle.capacity} plazas` : ''}
+            {vehicle.isActive ? '' : ' · Inactivo'}
+          </span>
+          {vehicle.notes && <span className="vehicle-note">{vehicle.notes}</span>}
+        </div>
         <div className="list-actions">
-          <button className="button button-small" onClick={() => startEdit(vehicle)}>Editar</button>
-          <button className="button button-danger" onClick={() => void remove(vehicle.id)}>Eliminar</button>
+          <button className="button button-small" onClick={() => startEdit(vehicle)} aria-label={`Editar ${vehicle.name}`}>Editar</button>
+          <button className="button button-danger button-small" onClick={() => void remove(vehicle.id)} aria-label={`Eliminar ${vehicle.name}`}>Eliminar</button>
         </div>
       </article>
     ))}</div> : <EmptyState title="Sin vehículos" message="Añade tu primer vehículo para poder asignarlo a los traslados." />}
