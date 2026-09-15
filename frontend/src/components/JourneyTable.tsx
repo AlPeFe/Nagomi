@@ -1,4 +1,4 @@
-import { Eye, Gavel, MapTrifold, Note, ShieldCheck, Warning } from '@phosphor-icons/react'
+import { Eye, Gavel, MapTrifold, Note } from '@phosphor-icons/react'
 import { Link } from '../router'
 import type { Journey, Vehicle } from '../types'
 import { VEHICLE_TYPE_LABELS } from '../types'
@@ -24,13 +24,6 @@ function isPending(journey: Journey) {
   return journey.status === 'Scheduled' && !journey.vehicleId
 }
 
-/**
- * Asignado NO es adjudicado: un vehículo propuesto no compromete el servicio, así que
- * hay que distinguirlo a simple vista (no publica ni habilita el retrieve).
- */
-function isUnadjudicated(journey: Journey) {
-  return !!journey.vehicleId && !journey.vehicleAdjudicated
-}
 
 /**
  * El vehículo en la mesa diaria es SÓLO lectura: se cambia desde el panel de
@@ -38,13 +31,7 @@ function isUnadjudicated(journey: Journey) {
  */
 export function VehicleCell({ journey }: { journey: Journey }) {
   if (!journey.vehicleId) return <span className="vehicle-cell-empty">—</span>
-  const label = journey.vehicleName ?? 'Vehículo'
-  const state = journey.vehicleAdjudicated ? 'adjudicado' : 'asignado sin adjudicar'
-  return <span className={`vehicle-tag ${journey.vehicleAdjudicated ? 'vehicle-tag-adjudicated' : 'vehicle-tag-assigned'}`}
-    title={`${label} · ${state}`}>
-    {journey.vehicleAdjudicated && <ShieldCheck size={11} aria-hidden="true" />}
-    {label}
-  </span>
+  return <span className="vehicle-tag">{journey.vehicleName ?? 'Vehículo'}</span>
 }
 
 export function AssignmentCell({ journey, vehicles, onAssignVehicle, onAssignDriver, showDriver = false }: {
@@ -118,7 +105,6 @@ export function JourneyTable({ journeys, onOpen, onShowMap, onAssign }: {
         <td data-label="Motivo / movilidad"><strong>{journey.reason}</strong><RequirementsIcons requirements={journey.requirements} className="req-icons-cell" /></td>
         <td data-label="Estado">
           {isPending(journey) ? <span className="badge badge-pending"><span aria-hidden="true" />Pendiente de vehículo</span> : <StatusBadge status={journey.status} />}
-          {isUnadjudicated(journey) && <span className="badge badge-unadjudicated"><Warning size={11} aria-hidden="true" /> Sin adjudicar</span>}
           <Indicators external={journey.externallyModified} cancelledBy={journey.cancelledBy} delivery={journey.deliveryState} />
         </td>
         <td data-label="Vehículo">

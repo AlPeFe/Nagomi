@@ -631,12 +631,7 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
 
 /* ============ Vehículo en la mesa diaria: sólo código, compacto ============ */
 .vehicle-tag { display: inline-flex; align-items: center; gap: 0.25rem; max-width: 9.5rem; padding: 0.05rem 0.4rem; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface-3); color: var(--ink-2); font-size: 0.75rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vehicle-tag svg { flex: 0 0 auto; }
-.vehicle-tag-adjudicated { background: #e2f1ee; border-color: #c4e2de; color: #0a5f5b; }
-/* Asignado sin adjudicar: se distingue con borde discontinuo, no con texto extra. */
-.vehicle-tag-assigned { background: var(--surface); border-style: dashed; border-color: var(--line-3); color: var(--ink-2); }
 .vehicle-cell-empty { color: var(--faint); }
-.badge-unadjudicated { background: #fbeed7; border: 1px solid #eed9b0; color: #804a07; display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.25rem; }
 .row-action-primary { color: var(--brand); }
 
 /* ============ Panel de vehículo (asignar / adjudicar / desadjudicar / anular) ============ */

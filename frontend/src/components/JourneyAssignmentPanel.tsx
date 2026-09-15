@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CheckCircle, Gavel, Prohibit, ShieldCheck, UserMinus, Warning } from '@phosphor-icons/react'
+import { CheckCircle, Gavel, Prohibit, UserMinus } from '@phosphor-icons/react'
 import { api } from '../api'
 import type { CancellationReason, Journey, Vehicle } from '../types'
 import { VEHICLE_TYPE_LABELS } from '../types'
@@ -63,10 +63,10 @@ export function JourneyAssignmentPanel({ journey, vehicles, onClose, onChanged }
 
       <p className="assignment-panel-state">
         {adjudicated
-          ? <><ShieldCheck size={14} aria-hidden="true" /> Adjudicado{journey.vehicleName ? ` con ${journey.vehicleName}` : ''}{journey.adjudicatedBy ? ` por ${journey.adjudicatedBy}` : ''}. El proveedor ya recibió la solicitud.</>
+          ? <>Adjudicado{journey.vehicleName ? ` con ${journey.vehicleName}` : ''}{journey.adjudicatedBy ? ` por ${journey.adjudicatedBy}` : ''}. El proveedor ya recibió la solicitud.</>
           : journey.vehicleId
-            ? <><Warning size={14} aria-hidden="true" /> Vehículo asignado como propuesta: sin adjudicar, el traslado no se publica ni se puede recuperar.</>
-            : <><Warning size={14} aria-hidden="true" /> Sin vehículo. Hasta adjudicar uno, el traslado no se publica ni se puede recuperar.</>}
+            ? <>Vehículo asignado{journey.vehicleName ? `: ${journey.vehicleName}` : ''}. Al adjudicar se envía la solicitud al proveedor.</>
+            : <>Sin vehículo asignado.</>}
       </p>
 
       {message && <div className="alert alert-success" role="status"><CheckCircle size={14} aria-hidden="true" /> {message}</div>}
