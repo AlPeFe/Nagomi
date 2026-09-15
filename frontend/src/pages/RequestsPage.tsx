@@ -113,7 +113,9 @@ export function RequestsPage() {
               <div className="request-card-main">
                 <div className="request-card-line">
                   <span className={`request-status request-status-${request.status.toLowerCase()}`}>{STATUS_LABEL[request.status]}</span>
-                  <strong className={`request-card-id ${request.publicId ? '' : 'request-card-id-missing'}`}>{request.publicId ?? 'Sin identificador'}</strong>
+                  {/* Un borrador sin identificador no debe desalinear la columna: guion fijo. */}
+                  <strong className={`request-card-id ${request.publicId ? '' : 'request-card-id-missing'}`}
+                    aria-label={request.publicId ? undefined : 'Sin identificador'}>{request.publicId ?? '—'}</strong>
                   <span className="request-card-updated">{formatDateTime(request.updatedAt)}</span>
                 </div>
                 <div className="request-card-line request-card-patient">
