@@ -113,7 +113,7 @@ export function RequestsPage() {
               <div className="request-card-main">
                 <div className="request-card-line">
                   <span className={`request-status request-status-${request.status.toLowerCase()}`}>{STATUS_LABEL[request.status]}</span>
-                  <strong className="request-card-id">{request.publicId ?? 'Borrador sin identificador'}</strong>
+                  <strong className={`request-card-id ${request.publicId ? '' : 'request-card-id-missing'}`}>{request.publicId ?? 'Sin identificador'}</strong>
                   <span className="request-card-updated">{formatDateTime(request.updatedAt)}</span>
                 </div>
                 <div className="request-card-line request-card-patient">
@@ -134,13 +134,15 @@ export function RequestsPage() {
                   <span className="request-card-periodicity">{periodicity(request)}</span>
                 </div>
                 <div className="request-card-line request-card-children">
-                  <span className="count-badge">{summary.total} traslados</span>
+                  <span className="count-badge">{summary.total} {summary.total === 1 ? 'traslado' : 'traslados'}</span>
                   {summary.outbound > 0 && <span className="direction-chip">ida {summary.outbound}</span>}
                   {summary.returns > 0 && <span className="direction-chip">vuelta {summary.returns}</span>}
                 </div>
                 <div className="request-card-line request-card-next">
                   <CalendarBlank size={13} aria-hidden="true" />
-                  <span>{summary.next ? `Próximo: ${formatDateTime(summary.next)}` : 'Sin traslados pendientes'}</span>
+                  <span>{summary.next
+                    ? `Próximo: ${formatDateTime(summary.next)}`
+                    : request.status === 'Draft' ? 'Aún sin enviar: no ha generado traslados' : 'Sin traslados pendientes'}</span>
                 </div>
               </div>
 

@@ -601,19 +601,22 @@ legend { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter
 .request-card:hover { border-color: var(--line-3); box-shadow: 0 1px 2px rgba(15, 27, 29, 0.05); }
 .request-card-main, .request-card-side { display: grid; gap: 0.28rem; min-width: 0; align-content: start; }
 .request-card-line { display: flex; align-items: center; gap: 0.4rem; min-width: 0; font-size: 0.8125rem; }
-.request-card-line > span, .request-card-line > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.request-card-line > span, .request-card-line > strong { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.request-card-id-missing { font-weight: 500; color: var(--muted); font-style: italic; }
+.request-card-patient > strong { flex: 0 1 auto; min-width: 0; }
+.count-badge { flex: 0 0 auto; }
 .request-card-line svg { color: var(--brand); flex: 0 0 auto; }
 .request-card-id { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .request-card-updated { font-size: 0.75rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
 .request-card-patient strong { font-weight: 500; }
 .request-card-patient .muted { font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.2rem; }
 .request-card-route { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--muted); min-width: 0; }
-.request-card-route span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.request-card-route span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .request-card-route svg { flex: 0 0 auto; color: var(--faint); }
 .request-card-periodicity { font-size: 0.75rem; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .request-card-children { gap: 0.3rem; }
 .direction-chip { font-size: 0.6875rem; color: var(--ink-2); background: var(--surface-3); border: 1px solid var(--line); border-radius: var(--r-full); padding: 0.05rem 0.4rem; }
-.request-card-next { font-size: 0.75rem; color: var(--muted); }
+.request-card-next { font-size: 0.75rem; color: var(--ink-2); }
 .request-card-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; padding-top: 0.5rem; border-top: 1px solid var(--line); font-size: 0.6875rem; color: var(--muted); }
 .request-card-go { margin-left: auto; display: inline-flex; align-items: center; gap: 0.25rem; color: var(--brand); font-weight: 500; }
 .request-card-go svg { color: var(--brand); }

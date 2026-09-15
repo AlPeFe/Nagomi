@@ -47,5 +47,9 @@ const overlap = await page.evaluate(() => {
   return hits.length ? hits : 'sin solapamientos';
 });
 console.log('solapamiento:', JSON.stringify(overlap));
+// Alturas uniformes: una ruta larga no debe hacer la tarjeta mas alta que las demas.
+const heights = await page.evaluate(() => [...document.querySelectorAll('.request-card')]
+  .map((c) => Math.round(c.getBoundingClientRect().height)));
+console.log('alturas de tarjeta:', JSON.stringify([...new Set(heights)]), 'de', heights.length, 'tarjetas');
 console.log('errores de consola:', errors.length, errors.slice(0, 3));
 await browser.close();
