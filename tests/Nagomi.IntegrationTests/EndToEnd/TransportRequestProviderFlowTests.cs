@@ -238,6 +238,23 @@ public sealed class TransportRequestProviderFlowTests(TransportRequestProviderFl
             $"/api/journeys/{journeyId}/adjudicate-vehicle", new { vehicleId, actor = "e2e-test" });
         adjudicateResponse.EnsureSuccessStatusCode();
 
+        // El outbox debe tener la solicitud antes de que salga por Rabbit: si no existe la fila,
+        // el problema está en la creación (no en el broker), y eso se ve aquí y no en un timeout.
+        Nagomi.Api.Features.ProviderIntegration.ProviderNotification? outboxRow = null;
+        using (var pollTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+        {
+            while (!pollTimeout.IsCancellationRequested)
+            {
+                await using var db = fixture.CreateDbContext();
+                outboxRow = await db.ProviderNotifications.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.EntityPublicId == journeyPublicId, pollTimeout.Token);
+                if (outboxRow is not null) break;
+                await Task.Delay(100, CancellationToken.None);
+            }
+        }
+        outboxRow.Should().NotBeNull("adjudicar un vehículo debe generar la solicitud en el outbox");
+        Console.WriteLine($"outbox: tipo={outboxRow!.MessageType} estado={outboxRow.State} cola={outboxRow.TargetQueue ?? "(proveedor)"}");
+
         using var rabbitTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var rabbitBody = await fixture.GetRabbitMessageAsync(rabbitTimeout.Token);
         var notification = JsonSerializer.Deserialize<ProviderNotificationMessage>(rabbitBody, JsonOptions)!;

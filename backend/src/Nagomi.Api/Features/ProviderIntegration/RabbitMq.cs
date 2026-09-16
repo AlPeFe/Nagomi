@@ -174,6 +174,7 @@ public sealed class ProviderOutboxWorker(
         var tenantDb = services.GetRequiredService<ITenantDb>();
         var settings = await tenantDb.TenantSettings.AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == TenantSettings.SingletonId, cancellationToken);
+        // Sin configuración conocida no se asume modo publicador: se deja la cola del proveedor.
         if (settings is null || settings.Capabilities.HasFlag(TenantCapabilities.ExecutesTransports))
             return null;
 

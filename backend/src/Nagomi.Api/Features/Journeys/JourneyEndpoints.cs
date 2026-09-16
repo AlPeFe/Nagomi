@@ -326,11 +326,17 @@ public static class JourneyEndpoints
         return string.IsNullOrWhiteSpace(queue) ? null : queue.Trim();
     }
 
+    /// <summary>
+    /// ¿La instalación ejecuta su propia flota? Si no hay fila de configuración (instalación recién
+    /// creada o entorno de pruebas) se asume que SÍ: es el default del modelo y, sobre todo, evita
+    /// callar publicaciones por un dato que aún no existe. Sólo se deja de publicar cuando consta
+    /// que la instalación no ejecuta flota Y el cliente no tiene cola.
+    /// </summary>
     private static async Task<bool> ExecutesOwnFleetAsync(ITenantDb tenantDb, CancellationToken cancellationToken)
     {
         var settings = await tenantDb.TenantSettings.AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == TenantSettings.SingletonId, cancellationToken);
-        return settings is not null && settings.Capabilities.HasFlag(TenantCapabilities.ExecutesTransports);
+        return settings is null || settings.Capabilities.HasFlag(TenantCapabilities.ExecutesTransports);
     }
 
     private static async Task NotifyJourney(
