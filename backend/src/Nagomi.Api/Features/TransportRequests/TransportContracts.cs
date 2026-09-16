@@ -30,7 +30,12 @@ public sealed record RecurrencePatternSubmission(
     DateOnly StartDate,
     DateOnly EndDate,
     IReadOnlyList<WeekdayScheduleSubmission> WeekdaySchedules,
-    TimeSpan UtcOffset = default);
+    /// <summary>
+    /// Desplazamiento UTC en texto ("+02:00" o "02:00:00"). Es string y no TimeSpan porque el
+    /// exportador de esquemas de System.Text.Json no sabe documentar un TimeSpan y rompía la
+    /// generación de OpenAPI; para el dominio se convierte en <see cref="TimeSpan"/>.
+    /// </summary>
+    string? UtcOffset = null);
 public sealed record SubmitRecurringCommand(RecurrencePatternSubmission Recurrence);
 public sealed record UpdateRequestCommand(
     TransportRequestSnapshot Snapshot,
@@ -92,7 +97,18 @@ internal static class TransportMapping
             source.WeekdaySchedules.Select(w => new WeekdaySchedule(
                 w.DayOfWeek, w.OutboundAppointmentTime, w.ReturnPickupTime,
                 w.OutboundStartTime, w.OutboundPickupTime, w.ReturnPickupNextDay, w.ReturnPickupTimePending)),
-            source.UtcOffset);
+            ParseUtcOffset(source.UtcOffset));
+
+    /// <summary>Acepta "+02:00", "-03:00", "02:00:00" o vacío (queda en cero).</summary>
+    internal static TimeSpan ParseUtcOffset(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return TimeSpan.Zero;
+        var text = value.Trim();
+        var sign = text.StartsWith('-') ? -1 : 1;
+        var body = text.TrimStart('+', '-');
+        return TimeSpan.TryParse(body, out var parsed) ? sign * parsed : TimeSpan.Zero;
+    }
 
     internal static JourneyRecord ToRecord(this Journey source, Guid requestId) => new()
     {

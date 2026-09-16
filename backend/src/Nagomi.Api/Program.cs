@@ -50,7 +50,22 @@ builder.Services.AddScoped<IHelpChatSettingsProvider, HelpChatSettingsProvider>(
 
 // Documentación de la API generada desde el propio código: GET /openapi/v1.json
 // (con navegador o Postman encima). Evita que la doc se quede vieja.
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    // System.Text.Json no sabe exportar el esquema de un TimeSpan y la generación del
+    // documento entero fallaba con 500. Se documenta como duración ISO-8601.
+    options.AddSchemaTransformer((schema, context, _) =>
+    {
+        var type = Nullable.GetUnderlyingType(context.JsonTypeInfo.Type) ?? context.JsonTypeInfo.Type;
+        if (type == typeof(TimeSpan))
+        {
+            schema.Type = Microsoft.OpenApi.JsonSchemaType.String;
+            schema.Format = "duration";
+            schema.Example = System.Text.Json.Nodes.JsonValue.Create("00:15:00");
+        }
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddHttpClient(HelpChatEndpoints.HttpClientName).ConfigurePrimaryHttpMessageHandler(static () =>
     new HttpClientHandler { AllowAutoRedirect = true });
 builder.Services.AddMcpServer().WithHttpTransport().WithTools<NagomiMcpTools>();

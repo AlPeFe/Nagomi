@@ -7,15 +7,22 @@ coincide, manda el código.
 ## Dos formas de leer la API
 
 1. **Esta guía** — pensada para entender el modelo y encontrar el endpoint que necesitas.
-2. **OpenAPI generado** — el backend sirve el documento OpenAPI 3 en
-   **`GET /openapi/v1.json`** (sin autenticación). Se genera desde el propio código, así que
-   nunca se queda viejo. Con ese JSON puedes abrir Postman, Insomnia o cualquier visor de
-   OpenAPI y tener todas las rutas y sus esquemas de datos.
+2. **OpenAPI generado** — el backend sirve el documento **OpenAPI 3.1** en
+   **`GET /openapi/v1.json`** (sin autenticación), y nginx lo publica en la misma URL que la API.
+   Se genera desde el código, así que no se queda viejo: hoy son **87 rutas / 107 operaciones /
+   98 esquemas**. Con ese JSON cargas Postman, Insomnia, Bruno o cualquier visor de OpenAPI y
+   tienes todas las rutas con sus cuerpos de ejemplo.
 
 ```bash
-# El documento completo (en la instancia local)
-curl -s http://localhost:8080/openapi/v1.json | head -c 300
+# El contrato vivo, en la instancia local (y en http://192.168.31.223:8080/openapi/v1.json)
+curl -s http://localhost:8080/openapi/v1.json -o nagomi-openapi.json
+
+# Cargarlo en Postman: Import → File → nagomi-openapi.json
+# (o Import → Link → http://192.168.31.223:8080/openapi/v1.json, y se refresca solo)
 ```
+
+> Nota de contrato: el desplazamiento UTC de la recurrencia (`utcOffset`) viaja como **texto**
+> (`"+02:00"`), no como duración binaria: es lo que ya enviaba la web y además permite documentarlo.
 
 Otros documentos: [`estados-y-publicacion.md`](estados-y-publicacion.md) (estados y publicación),
 [`security.md`](security.md) (auth y endurecimiento), [`provider-onboarding.md`](provider-onboarding.md)
