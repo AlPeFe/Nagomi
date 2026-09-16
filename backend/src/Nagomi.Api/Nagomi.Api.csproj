@@ -32,4 +32,9 @@
     <PackageReference Include="RabbitMQ.Client" Version="7.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Documentación de la API generada desde el código (GET /openapi/v1.json). -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+  </ItemGroup>
+
 </Project>

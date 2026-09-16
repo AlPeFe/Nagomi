@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Nagomi.Api.Domain;
 using Nagomi.Api.Features.TransportRequests;
 using Nagomi.Api.Features.ProviderIntegration;
+using Nagomi.Api.Features.Tenant;
 using Nagomi.Api.Infrastructure.Authentication;
 
 namespace Nagomi.Api.Features.Journeys;
@@ -202,7 +203,7 @@ public static class JourneyEndpoints
     /// </summary>
     private static async Task<IResult> AdjudicateVehicle(
         Guid id, AdjudicateVehicleCommand command, ITransportDb db, IProviderOutbox outbox,
-        TimeProvider clock, CancellationToken cancellationToken)
+        ITenantDb tenantDb, TimeProvider clock, CancellationToken cancellationToken)
     {
         var journey = await Query(db).SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (journey is null) return TypedResults.NotFound();
@@ -216,8 +217,14 @@ public static class JourneyEndpoints
         journey.AdjudicatedAt = clock.GetUtcNow();
         journey.AdjudicatedBy = ActorName(command.Actor);
         Audit(db, journey, "VehicleAdjudicated", ChangeSource.Nagomi, journey.AdjudicatedBy, clock.GetUtcNow());
-        // La solicitud al proveedor nace AQUÍ (no al crear el traslado).
-        await NotifyJourney(journey, db, outbox, "JourneyAssigned", cancellationToken);
+        // La solicitud al proveedor nace AQUÍ (no al crear el traslado), y sólo si hay destino:
+        // en modo publicador el destino lo define la cola del CLIENTE; si el cliente no tiene cola
+        // no se publica en ninguna cola y el traslado queda expuesto únicamente por la API.
+        var clientQueue = await ClientQueueAsync(journey, db, tenantDb, cancellationToken);
+        if (PublicationPolicy.ShouldPublish(await ExecutesOwnFleetAsync(tenantDb, cancellationToken), clientQueue))
+            await NotifyJourney(journey, db, outbox, "JourneyAssigned", cancellationToken, targetQueue: clientQueue);
+        else
+            Audit(db, journey, "VehicleAdjudicatedNotPublished", ChangeSource.Nagomi, journey.AdjudicatedBy, clock.GetUtcNow());
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.Ok(journey);
     }
@@ -302,9 +309,33 @@ public static class JourneyEndpoints
     private static IResult Validation(DomainValidationException exception) =>
         TypedResults.ValidationProblem(new Dictionary<string, string[]> { ["journey"] = [exception.Message] });
 
+    /// <summary>Cola del cliente del traslado, si la define (opcional por diseño).</summary>
+    private static async Task<string?> ClientQueueAsync(
+        JourneyRecord journey, ITransportDb db, ITenantDb tenantDb, CancellationToken cancellationToken)
+    {
+        var clientId = await db.TransportRequests.AsNoTracking()
+            .Where(x => x.Id == journey.TransportRequestId)
+            .Select(x => x.ClientId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (clientId is null)
+            return null;
+        var queue = await tenantDb.TransportClients.AsNoTracking()
+            .Where(x => x.Id == clientId.Value)
+            .Select(x => x.RabbitQueue)
+            .SingleOrDefaultAsync(cancellationToken);
+        return string.IsNullOrWhiteSpace(queue) ? null : queue.Trim();
+    }
+
+    private static async Task<bool> ExecutesOwnFleetAsync(ITenantDb tenantDb, CancellationToken cancellationToken)
+    {
+        var settings = await tenantDb.TenantSettings.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == TenantSettings.SingletonId, cancellationToken);
+        return settings is not null && settings.Capabilities.HasFlag(TenantCapabilities.ExecutesTransports);
+    }
+
     private static async Task NotifyJourney(
         JourneyRecord journey, ITransportDb db, IProviderOutbox outbox, string messageType,
-        CancellationToken cancellationToken, bool force = false)
+        CancellationToken cancellationToken, bool force = false, string? targetQueue = null)
     {
         // Sólo se publica lo ADJUDICADO: mientras el vehículo sea una propuesta, el proveedor
         // no recibe nada en Rabbit ni puede recuperar el traslado. `force` se usa para la
@@ -316,7 +347,8 @@ public static class JourneyEndpoints
         if (request?.ContractCode is null)
             return;
         await outbox.AddAsync(request.ContractCode, messageType, IntegrationEntityType.Journey,
-            journey.PublicId, $"/api/provider/journeys/{journey.PublicId}", Guid.NewGuid(), cancellationToken);
+            journey.PublicId, $"/api/provider/journeys/{journey.PublicId}", Guid.NewGuid(), cancellationToken,
+            targetQueue);
     }
 }
 

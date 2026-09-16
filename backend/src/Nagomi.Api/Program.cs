@@ -47,6 +47,10 @@ builder.Services.Configure<HelpChatOptions>(builder.Configuration.GetSection(Hel
 // La configuración efectiva del asistente vive en la BD (editable desde la web) con
 // respaldo en appsettings, así que se resuelve por petición.
 builder.Services.AddScoped<IHelpChatSettingsProvider, HelpChatSettingsProvider>();
+
+// Documentación de la API generada desde el propio código: GET /openapi/v1.json
+// (con navegador o Postman encima). Evita que la doc se quede vieja.
+builder.Services.AddOpenApi();
 builder.Services.AddHttpClient(HelpChatEndpoints.HttpClientName).ConfigurePrimaryHttpMessageHandler(static () =>
     new HttpClientHandler { AllowAutoRedirect = true });
 builder.Services.AddMcpServer().WithHttpTransport().WithTools<NagomiMcpTools>();
@@ -93,6 +97,7 @@ app.MapVehicleEndpoints();
 app.MapPatientEndpoints();
 app.MapRouteEndpoints();
 app.MapDispatchEndpoints();
+app.MapOpenApi();
 app.MapAiSettingsEndpoints();
 app.MapHelpChatEndpoints();
 app.MapMcp("/mcp")
