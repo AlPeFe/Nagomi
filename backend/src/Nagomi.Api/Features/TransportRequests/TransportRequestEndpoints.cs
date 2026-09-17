@@ -325,7 +325,7 @@ public static class TransportRequestEndpoints
 
     /// <summary>
     /// When a web request is created with the SELF contract (own execution) and no provider was
-    /// supplied, resolve the auto-provider SELF so the request belongs to the tenant's own fleet
+    /// supplied, resolve the tenant's own fleet provider so the request belongs to it
     /// (appears on the coordination board and can be assigned a vehicle).
     /// </summary>
     private static async Task ResolveSelfProviderAsync(
@@ -334,10 +334,7 @@ public static class TransportRequestEndpoints
         if (!string.Equals(request.ContractCode, "SELF", StringComparison.OrdinalIgnoreCase)
             || request.ProviderId is not null || request.ProviderName is not null)
             return;
-        var provider = await integrationDb.TransportProviders.AsNoTracking()
-            .Where(x => x.Code == "SELF")
-            .Select(x => new { x.Id, x.Name })
-            .SingleOrDefaultAsync(cancellationToken);
+        var provider = await FleetProvider.FindAsync(integrationDb, cancellationToken);
         if (provider is not null)
         {
             request.ProviderId = provider.Id;

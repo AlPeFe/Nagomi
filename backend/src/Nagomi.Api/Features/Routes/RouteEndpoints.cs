@@ -317,12 +317,9 @@ public static class RouteEndpoints
                     journey?.CurrentStatus.ToString() ?? "");
             }).ToArray());
 
-    /// <summary>Resolves the tenant's own provider (self-execution) used to scope route vehicle assignment.</summary>
+    /// <summary>Proveedor propio de la flota, que delimita la asignación de vehículo en las rutas.</summary>
     private static async Task<Guid?> TenantProviderIdAsync(IProviderIntegrationDb db, CancellationToken cancellationToken) =>
-        await db.TransportProviders.AsNoTracking()
-            .Where(x => x.Code == "SELF")
-            .Select(x => (Guid?)x.Id)
-            .SingleOrDefaultAsync(cancellationToken);
+        (await FleetProvider.FindAsync(db, cancellationToken))?.Id;
 
     private static ValidationProblem ValidationProblem(string message) =>
         TypedResults.ValidationProblem(new Dictionary<string, string[]> { ["route"] = [message] });

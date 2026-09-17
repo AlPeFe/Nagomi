@@ -21,7 +21,7 @@ const fields = await page.evaluate(() => [...document.querySelectorAll('input')]
 console.log('campos del formulario:', JSON.stringify(fields));
 
 await page.fill('input[autocomplete="username"]', user);
-await page.fill('input[autocomplete="current-password"]', pass);
+await page.fill('input[autocomplete="current-password"]', pass ?? process.env.PW);
 await page.click('button[type="submit"]');
 await page.waitForTimeout(4000);
 

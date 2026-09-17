@@ -69,7 +69,8 @@ public static class VehicleEndpoints
         ITransportDb db, IProviderIntegrationDb integrationDb, CancellationToken cancellationToken)
     {
         var providerId = await TenantProviderIdAsync(integrationDb, cancellationToken);
-        if (providerId is null) return TypedResults.NotFound();
+        // Sin proveedor todavía (instalación nueva) la flota está vacía: no es un error.
+        if (providerId is null) return TypedResults.Ok<IReadOnlyList<VehicleResponse>>([]);
         var vehicles = await db.Vehicles.AsNoTracking()
             .Where(x => x.ProviderId == providerId && x.IsActive)
             .OrderBy(x => x.Name)
@@ -82,8 +83,9 @@ public static class VehicleEndpoints
         UpsertVehicleCommand command, ITransportDb db, IProviderIntegrationDb integrationDb,
         IPublicIdGenerator ids, TimeProvider clock, CancellationToken cancellationToken)
     {
-        var providerId = await TenantProviderIdAsync(integrationDb, cancellationToken);
-        if (providerId is null) return TypedResults.NotFound();
+        // El primer vehículo crea la flota propia: así una instalación nueva puede empezar sin
+        // tener que inventarse antes un proveedor.
+        var providerId = (await FleetProvider.EnsureAsync(integrationDb, cancellationToken)).Id;
         if (string.IsNullOrWhiteSpace(command.Name))
             return ValidationProblem("Vehicle name is required.");
 
@@ -94,7 +96,7 @@ public static class VehicleEndpoints
 
         var vehicle = new TransportVehicle
         {
-            ProviderId = providerId.Value,
+            ProviderId = providerId,
             PublicId = string.IsNullOrWhiteSpace(code)
                 ? await ids.NextAsync("VHC", cancellationToken)
                 : code,
@@ -258,15 +260,10 @@ public static class VehicleEndpoints
     }
 
     /// <summary>Resolves the tenant's own provider (the self-execution auto-provider) used to scope web vehicle management.</summary>
+    /// <summary>Proveedor propio de la flota (antes «auto-proveedor SELF»).</summary>
     private static async Task<Guid?> TenantProviderIdAsync(
-        IProviderIntegrationDb db, CancellationToken cancellationToken)
-    {
-        var code = await db.TransportProviders.AsNoTracking()
-            .Where(x => x.Code == "SELF")
-            .Select(x => (Guid?)x.Id)
-            .SingleOrDefaultAsync(cancellationToken);
-        return code;
-    }
+        IProviderIntegrationDb db, CancellationToken cancellationToken) =>
+        (await FleetProvider.FindAsync(db, cancellationToken))?.Id;
 
     private static ValidationProblem ValidationProblem(string message) =>
         TypedResults.ValidationProblem(new Dictionary<string, string[]> { ["vehicle"] = [message] });
