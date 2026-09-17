@@ -96,6 +96,7 @@ public static class UserAdministrationEndpoints
         Guid id,
         UpdateUserCommand command,
         UserManager<ApplicationUser> userManager,
+        IEnumerable<IPasswordValidator<ApplicationUser>> passwordValidators,
         ClaimsPrincipal principal,
         CancellationToken cancellationToken)
     {
@@ -107,6 +108,15 @@ public static class UserAdministrationEndpoints
 
         if (!string.IsNullOrWhiteSpace(command.Password))
         {
+            // Validar la contraseña ANTES de tocar nada. Si no cumple la política y se quitaba
+            // primero la antigua, la cuenta quedaba SIN contraseña (nadie podía entrar con ninguna)
+            // y el 400 de validación ni lo advertía: había que arreglarlo a mano por base de datos.
+            foreach (var validator in passwordValidators)
+            {
+                var validation = await validator.ValidateAsync(userManager, user, command.Password);
+                if (!validation.Succeeded) return IdentityErrors(validation);
+            }
+
             // RemovePasswordAsync/AddPasswordAsync avoid the two-factor token provider that
             // GeneratePasswordResetTokenAsync/ResetPasswordAsync require (not registered here),
             // which otherwise throws NotSupportedException -> 500 on every admin password reset.
